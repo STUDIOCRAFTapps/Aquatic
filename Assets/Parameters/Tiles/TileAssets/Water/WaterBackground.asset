@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0dbd25b5dfbd796458a8b753b279847b, type: 3}
+  m_Name: WaterBackground
+  m_EditorClassIdentifier: 
+  fullName: Water Background
+  uiSprite: {fileID: 6384272779083108136, guid: c5f5d3244effa3147ab793867d2b7982,
+    type: 3}
+  previewSprite: {fileID: -6239149888809447465, guid: c5f5d3244effa3147ab793867d2b7982,
+    type: 3}
+  id: water_bg
+  defaultPlacingLayer: 3
+  allowsConnection: 1
+  connectsByDefault: 1
+  hasTextures: 1
+  textures:
+  - {fileID: 1254958308094377585, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -45311274751301609, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -1345399917477104480, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 1596859861871386700, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 3284479770361938438, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -6302122174346950431, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 7189399357828628810, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -2690001263905734671, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -303468891970925213, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -7196635002305362410, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -4212180335314252926, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 7517259220800451410, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 191871541828004131, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -2756000572052435413, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 3249816857561013258, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -6006047173646603134, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 5326967936216593736, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 5407510596893853984, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 1963664715599410968, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 127976364884624230, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -5988269160179498606, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -7444108819291772151, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -1517044866342874192, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 3135275762094368306, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -4870730259787544110, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 3227791091457503124, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 7239798260983555020, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -1316449589792736066, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -531126190861933530, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -5769881838072237824, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -1149641192957480601, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -121432723199153553, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 7955546604602013835, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -8679408541075843457, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -8154451979910565028, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -6169061181588989555, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -9191530627471660336, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 812174329887043275, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 5623630436656694077, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 4076057691857304347, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -9056254408036101331, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 4610253177970985329, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -2249360279580969140, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -2607085260575219332, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -211676855656117008, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: -2819722725831496196, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  - {fileID: 4222434577439675041, guid: c5f5d3244effa3147ab793867d2b7982, type: 3}
+  verts:
+  - {x: 0, y: 0, z: 0.25}
+  - {x: 1, y: 0, z: 0.25}
+  - {x: 0, y: 1, z: 0.25}
+  - {x: 1, y: 1, z: 0.25}
+  uvs:
+  - {x: 0, y: 0}
+  - {x: 0.5, y: 0}
+  - {x: 0, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  hasCollision: 0
+  collisionBoxes:
+  - m_Center: {x: 0.5, y: 0.5, z: 0}
+    m_Extent: {x: 0.5, y: 0.5, z: 0}

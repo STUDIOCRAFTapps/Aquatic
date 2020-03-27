@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 100056178c6a8974899d82337d733b81, type: 3}
+  m_Name: Grass
+  m_EditorClassIdentifier: 
+  fullName: Grass
+  uiSprite: {fileID: 6127888822093338905, guid: b00ca6b20f69ca240b42abd85ef0c642,
+    type: 3}
+  previewSprite: {fileID: -1095268608884389796, guid: b00ca6b20f69ca240b42abd85ef0c642,
+    type: 3}
+  id: grass
+  defaultPlacingLayer: 0
+  allowsConnection: 0
+  connectsByDefault: 1
+  hasTextures: 1
+  textures:
+  - {fileID: -1347532211411968617, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  - {fileID: -7645372005702169758, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  - {fileID: 6891631753638271631, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  - {fileID: 475435623110610922, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  - {fileID: 5299400320964040512, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  - {fileID: -7255497285719700247, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  - {fileID: 6828908663453297030, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  - {fileID: 6694032873506494867, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  - {fileID: 2289616372777055746, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  - {fileID: 7471297114442723461, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  - {fileID: 8577017789959637929, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  - {fileID: -6796477259373386654, guid: b00ca6b20f69ca240b42abd85ef0c642, type: 3}
+  verts:
+  - {x: 0, y: -0.5625, z: 0.125}
+  - {x: 1, y: -0.5625, z: 0.125}
+  - {x: 0, y: 0.4375, z: 0.125}
+  - {x: 1, y: 0.4375, z: 0.125}
+  uvs:
+  - {x: 0, y: 0}
+  - {x: 0.5, y: 0}
+  - {x: 0, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  hasCollision: 0
+  collisionBoxes:
+  - m_Center: {x: 0.5, y: 0.5, z: 0}
+    m_Extent: {x: 0.5, y: 0.5, z: 0}
+  mass: 0.1
+  frameCount: 4
+  frameSpeed: 2
+  variationCount: 3

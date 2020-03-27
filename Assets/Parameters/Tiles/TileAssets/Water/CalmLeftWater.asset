@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7790c8710467e7b4e9421e15ac3811a1, type: 3}
+  m_Name: CalmLeftWater
+  m_EditorClassIdentifier: 
+  fullName: Calm Water Flowing Left
+  uiSprite: {fileID: -4996796871098367559, guid: fb59020ba09029940827ba27755aba93,
+    type: 3}
+  previewSprite: {fileID: -4996796871098367559, guid: fb59020ba09029940827ba27755aba93,
+    type: 3}
+  id: calm_left_water
+  defaultPlacingLayer: 1
+  allowsConnection: 1
+  connectsByDefault: 1
+  hasTextures: 1
+  textures:
+  - {fileID: -4153025209510876918, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 4590966530653800162, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -1065125471515215948, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -363539426068996590, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 3762113538916678673, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 8867970776262527922, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 1472272092756682366, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 2517462200163592813, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 7705875885394382148, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 1794629156244269910, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -5478402844842754761, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 669493555722776436, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 4590444141694303316, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -5285028294320757897, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 4896483727778723186, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -5509335964017407036, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 7715362591870473620, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -6280738950259519493, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -2594383943717343663, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -3358003009570787923, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 4525551475266294028, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 5783605683043801347, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 1703427424615001883, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 7424777648198514258, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 1970674673501889930, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 6913949315870617805, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -1784487561451291879, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 6251813479256398827, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -7551884215530483186, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -1010283804633372760, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -3189590134016521853, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -6411104965913060561, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 5313881064792064129, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -4128256049697497820, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -4920919487081415846, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -8203289818871261917, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 1285649652097259179, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -4806329361951800001, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 3301025524285841889, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -8539131599404904182, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -4276142102282541943, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -517850463996215117, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -5697456944544984434, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -5599893005035097185, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 6421931189513632808, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: -7443153942619736658, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 6717660745271807141, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  - {fileID: 1116751725116186092, guid: fb59020ba09029940827ba27755aba93, type: 3}
+  verts:
+  - {x: 0, y: 0, z: 0.0625}
+  - {x: 1, y: 0, z: 0.0625}
+  - {x: 0, y: 1, z: 0.0625}
+  - {x: 1, y: 1, z: 0.0625}
+  uvs:
+  - {x: 0, y: 0}
+  - {x: 0.5, y: 0}
+  - {x: 0, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  hasCollision: 0
+  collisionBoxes:
+  - m_Center: {x: 0.5, y: 0.5, z: 0}
+    m_Extent: {x: 0.5, y: 0.5, z: 0}
+  frameCount: 8
+  frameSpeed: 15
+  isFlowingLeft: 1
+  replaceBy: {fileID: 11400000, guid: e4bc185ace75612449f2dd31e3a2d0ac, type: 2}
+  counterPart: {fileID: 11400000, guid: 867bba0aa69ed234a9d368f26642265c, type: 2}

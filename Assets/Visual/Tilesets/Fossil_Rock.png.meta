@@ -1,0 +1,1837 @@
+fileFormatVersion: 2
+guid: 1d5cbca8a85cae549a8ff2df3b45834a
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5788611699155792820
+    second: Fossile_Rocks_0
+  - first:
+      213: 7651077642954737842
+    second: Fossile_Rocks_1
+  - first:
+      213: -3499586384950717206
+    second: Fossile_Rocks_2
+  - first:
+      213: 670448702557241690
+    second: Fossile_Rocks_3
+  - first:
+      213: 5769151156149299725
+    second: Fossile_Rocks_4
+  - first:
+      213: 2319995116426274249
+    second: Fossile_Rocks_5
+  - first:
+      213: 2223553563116348224
+    second: Fossile_Rocks_6
+  - first:
+      213: -3837966687905625678
+    second: Fossile_Rocks_7
+  - first:
+      213: -8015478667625358580
+    second: Fossile_Rocks_8
+  - first:
+      213: 6434076720770316140
+    second: Fossile_Rocks_9
+  - first:
+      213: -4739492822690234030
+    second: Fossile_Rocks_10
+  - first:
+      213: 2767150096898670930
+    second: Fossile_Rocks_11
+  - first:
+      213: 5061425153041484963
+    second: Fossile_Rocks_12
+  - first:
+      213: -1485042454245847110
+    second: Fossile_Rocks_13
+  - first:
+      213: -6763285548341731977
+    second: Fossile_Rocks_14
+  - first:
+      213: -4545657545189638739
+    second: Fossile_Rocks_15
+  - first:
+      213: 5398015734813861234
+    second: Fossile_Rocks_16
+  - first:
+      213: 3907599988396887124
+    second: Fossile_Rocks_17
+  - first:
+      213: 6109632345095688883
+    second: Fossile_Rocks_18
+  - first:
+      213: -1599394503060552986
+    second: Fossile_Rocks_19
+  - first:
+      213: -7207000998463835913
+    second: Fossile_Rocks_20
+  - first:
+      213: 7290458051886019514
+    second: Fossile_Rocks_21
+  - first:
+      213: -4970415056967308397
+    second: Fossile_Rocks_22
+  - first:
+      213: 5525744390286984264
+    second: Fossile_Rocks_23
+  - first:
+      213: 3589043649788380885
+    second: Fossile_Rocks_24
+  - first:
+      213: 969732963479545944
+    second: Fossile_Rocks_25
+  - first:
+      213: -2374279474998719240
+    second: Fossile_Rocks_26
+  - first:
+      213: -4748327349122923477
+    second: Fossile_Rocks_27
+  - first:
+      213: -819095242472106431
+    second: Fossile_Rocks_28
+  - first:
+      213: -4246085701880568834
+    second: Fossile_Rocks_29
+  - first:
+      213: 5942876704247871800
+    second: Fossile_Rocks_30
+  - first:
+      213: -3477712286273240116
+    second: Fossile_Rocks_31
+  - first:
+      213: 5271678038129547750
+    second: Fossile_Rocks_32
+  - first:
+      213: 3114284439170077615
+    second: Fossile_Rocks_33
+  - first:
+      213: -1805399265359748499
+    second: Fossile_Rocks_34
+  - first:
+      213: -6585545842523064948
+    second: Fossile_Rocks_35
+  - first:
+      213: -3905151356246519475
+    second: Fossile_Rocks_36
+  - first:
+      213: -2563652902010645377
+    second: Fossile_Rocks_37
+  - first:
+      213: 9190655554136211634
+    second: Fossile_Rocks_38
+  - first:
+      213: -6316884453775156778
+    second: Fossile_Rocks_39
+  - first:
+      213: -5247641898516442938
+    second: Fossile_Rocks_40
+  - first:
+      213: -7729558469341845659
+    second: Fossile_Rocks_41
+  - first:
+      213: -5441192849379017614
+    second: Fossile_Rocks_42
+  - first:
+      213: -147350752814104442
+    second: Fossile_Rocks_43
+  - first:
+      213: 6676225393105444975
+    second: Fossile_Rocks_44
+  - first:
+      213: -5408826190303336605
+    second: Fossile_Rocks_45
+  - first:
+      213: 3986762173706911936
+    second: Fossile_Rocks_46
+  - first:
+      213: -5193741279135815909
+    second: Fossile_Rocks_UI
+  - first:
+      213: 794040236979541716
+    second: Fossile_Rocks_Alt0
+  - first:
+      213: -4807381265711115697
+    second: Fossile_Rocks_Alt1
+  - first:
+      213: -1247856440699311081
+    second: Fossil_Rock_0
+  - first:
+      213: -7758216712000626516
+    second: Fossil_Rock_1
+  - first:
+      213: -5957136618635507973
+    second: Fossil_Rock_2
+  - first:
+      213: 1753462600328846829
+    second: Fossil_Rock_3
+  - first:
+      213: -5960604219827240883
+    second: Fossil_Rock_4
+  - first:
+      213: 4423908472489900646
+    second: Fossil_Rock_5
+  - first:
+      213: 9083043179209633042
+    second: Fossil_Rock_6
+  - first:
+      213: 3429137929616800379
+    second: Fossil_Rock_7
+  - first:
+      213: 280272106239190179
+    second: Fossil_Rock_8
+  - first:
+      213: -6031006609239420215
+    second: Fossil_Rock_9
+  - first:
+      213: -6525259049110929238
+    second: Fossil_Rock_10
+  - first:
+      213: -8072122793612465769
+    second: Fossil_Rock_11
+  - first:
+      213: 5493420212954117194
+    second: Fossil_Rock_12
+  - first:
+      213: -8648756103632433824
+    second: Fossil_Rock_13
+  - first:
+      213: 2778131025287090610
+    second: Fossil_Rock_14
+  - first:
+      213: 6441227702056048121
+    second: Fossil_Rock_15
+  - first:
+      213: 3652363321449670336
+    second: Fossil_Rock_16
+  - first:
+      213: -3225085419188744663
+    second: Fossil_Rock_17
+  - first:
+      213: -5995666476324990717
+    second: Fossil_Rock_18
+  - first:
+      213: 4700631284696649471
+    second: Fossil_Rock_19
+  - first:
+      213: 2145448471179839485
+    second: Fossil_Rock_20
+  - first:
+      213: 5643301187820201581
+    second: Fossil_Rock_21
+  - first:
+      213: 8006136210173609983
+    second: Fossil_Rock_22
+  - first:
+      213: -4157022375260277841
+    second: Fossil_Rock_23
+  - first:
+      213: 7575817187198791622
+    second: Fossil_Rock_24
+  - first:
+      213: -6476779827738748272
+    second: Fossil_Rock_25
+  - first:
+      213: 5105181910436413356
+    second: Fossil_Rock_26
+  - first:
+      213: -6901557645436040456
+    second: Fossil_Rock_27
+  - first:
+      213: 114273524222824140
+    second: Fossil_Rock_28
+  - first:
+      213: -170228985317118917
+    second: Fossil_Rock_29
+  - first:
+      213: -8060100344447284822
+    second: Fossil_Rock_30
+  - first:
+      213: 3634024033455239093
+    second: Fossil_Rock_31
+  - first:
+      213: -3617901108982941279
+    second: Fossil_Rock_32
+  - first:
+      213: -2117395825381447867
+    second: Fossil_Rock_33
+  - first:
+      213: -4627885535116690597
+    second: Fossil_Rock_34
+  - first:
+      213: 7717365427315592991
+    second: Fossil_Rock_35
+  - first:
+      213: 2758057587755722103
+    second: Fossil_Rock_36
+  - first:
+      213: -6093042067585937984
+    second: Fossil_Rock_37
+  - first:
+      213: 352798177828042921
+    second: Fossil_Rock_38
+  - first:
+      213: 2049103054913716322
+    second: Fossil_Rock_39
+  - first:
+      213: 5441103943429625520
+    second: Fossil_Rock_40
+  - first:
+      213: -8252238129863652926
+    second: Fossil_Rock_41
+  - first:
+      213: 3581837466727751392
+    second: Fossil_Rock_42
+  - first:
+      213: 1337384745719514894
+    second: Fossil_Rock_43
+  - first:
+      213: -7733600068776958066
+    second: Fossil_Rock_44
+  - first:
+      213: 9132416979170979749
+    second: Fossil_Rock_45
+  - first:
+      213: 3011518564447530013
+    second: Fossil_Rock_46
+  - first:
+      213: 6577554327115546164
+    second: Fossil_Rock_47
+  - first:
+      213: -2977800954209996699
+    second: Fossil_Rock_48
+  - first:
+      213: -5607799570151128388
+    second: Fossil_Rock_49
+  - first:
+      213: -2905520205828785032
+    second: Fossil_Rock_50
+  - first:
+      213: 2626352959221021364
+    second: Fossil_Rock_51
+  - first:
+      213: 984270614443199551
+    second: Fossil_Rock_52
+  - first:
+      213: 8168810999001965044
+    second: Fossil_Rock_53
+  - first:
+      213: -6110315083034859795
+    second: Fossil_Rock_54
+  - first:
+      213: 1150045426160383257
+    second: Fossil_Rock_55
+  - first:
+      213: 1090306731214334945
+    second: Fossil_Rock_56
+  - first:
+      213: -829140518702326391
+    second: Fossil_Rock_57
+  - first:
+      213: 6865357448809849548
+    second: Fossil_Rock_58
+  - first:
+      213: -6992690365441693955
+    second: Fossil_Rock_59
+  - first:
+      213: -824632158511543852
+    second: Fossil_Rock_60
+  - first:
+      213: -329679836454123744
+    second: Fossil_Rock_61
+  - first:
+      213: 2984816214631286761
+    second: Fossil_Rock_62
+  - first:
+      213: 6452484885724794591
+    second: Fossil_Rock_UI
+  - first:
+      213: 2998458397181694874
+    second: Fossil_Rock_Overlay0
+  - first:
+      213: 1920891149810736091
+    second: Fossil_Rock_Overlay1
+  externalObjects: {}
+  serializedVersion: 10
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: -1
+    mipBias: -100
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 16
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Fossil_Rock_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 144
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 390a669623c6b5549a5c8e0b2a24d86d
+      internalID: -1247856440699311081
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_1
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 144
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b3fd971ebeec61140891d922975e7a45
+      internalID: -7758216712000626516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_2
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 144
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f7cda1dbe619906489150701b795d572
+      internalID: -5957136618635507973
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_3
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 144
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8857a7d0bcd8dd74aba72ea54c37ce9c
+      internalID: 1753462600328846829
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_4
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 144
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 93d153efa326c6b4c81eeb3615de822f
+      internalID: -5960604219827240883
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_5
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 144
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d9bac9537fe427547a829a2331c1954a
+      internalID: 4423908472489900646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_6
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 144
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 734829925d784dc49a42430ce64b101b
+      internalID: 9083043179209633042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_7
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 144
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0ee750804aff3884a8d19744383ce6e9
+      internalID: 3429137929616800379
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_8
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 144
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fc84c244ea6ed794bb0e80afb9f99fce
+      internalID: 280272106239190179
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_9
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 144
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 995263f788e9b5d46b124e1310b69d07
+      internalID: -6031006609239420215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_10
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 128
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bf49042268a45894a8c6c6513973c8e5
+      internalID: -6525259049110929238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_11
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 128
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a5781ba14ae715f4f9e9a82a2f248a30
+      internalID: -8072122793612465769
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_12
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 128
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b06529d7b414e3247a400bb88bf4c60b
+      internalID: 5493420212954117194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_13
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 128
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6680ffbf098bf604c8941f4b9da9f257
+      internalID: -8648756103632433824
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_14
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 128
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2fa064acdbe6c654384ab79131cddb29
+      internalID: 2778131025287090610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_15
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 128
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 987617fded3fdd84183f85c75770253e
+      internalID: 6441227702056048121
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_16
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 128
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bc3e85d30ced0d14b9c73038d8f3a326
+      internalID: 3652363321449670336
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_17
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 128
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 36ac0194840f6f549b79ac29f04ea736
+      internalID: -3225085419188744663
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_18
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 128
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: becd8ae79a70d3d43b3c49e8e9f1605b
+      internalID: -5995666476324990717
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_19
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 128
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5d655919631281548a35dddc83af722a
+      internalID: 4700631284696649471
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_20
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 112
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a030bae770bfe784988a018765b8756d
+      internalID: 2145448471179839485
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_21
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 112
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f8d0f92a815ecd49903b3bdb9932e6a
+      internalID: 5643301187820201581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_22
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 112
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 94ecbfe6a66f19f43a36d58bf3c4bf18
+      internalID: 8006136210173609983
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_23
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 112
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ea330543d6742944acd569ec67c401b
+      internalID: -4157022375260277841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_24
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 112
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bc785691615f3a94b9dd341402f30137
+      internalID: 7575817187198791622
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_25
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 112
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f79c96c4e238f544b6d80dd06b6defc
+      internalID: -6476779827738748272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_26
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 112
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2b89c56b51f1d854393f035b76565bf4
+      internalID: 5105181910436413356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_27
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 112
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b74e4657e8ed082428857935ad1cd072
+      internalID: -6901557645436040456
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_28
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 112
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 13d2d650142b9524ab058d410b300589
+      internalID: 114273524222824140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_29
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 112
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 446dffee36b96e240a00a4f51fa2fa6c
+      internalID: -170228985317118917
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_30
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 96
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c8df1fa0e0a5ca24f9145557e8ee238b
+      internalID: -8060100344447284822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_31
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 96
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c0ce9d33404adb24286e5a6c2c3ad904
+      internalID: 3634024033455239093
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_32
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 96
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fa662ab9a783e7d498d462735b3c467d
+      internalID: -3617901108982941279
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_33
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 96
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1fab550ec47d95840968e71e6ef75959
+      internalID: -2117395825381447867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_34
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 96
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a7d9d8ede1065bd49b88af8cf628cf60
+      internalID: -4627885535116690597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_35
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 96
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4f77340e5c37ddf439f521f0b75893fb
+      internalID: 7717365427315592991
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_36
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 96
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 833d70b61dc88ee4dabb5f9f698ef4fb
+      internalID: 2758057587755722103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_37
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 96
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6b1ac5da1acb8044ba5b631cf491049f
+      internalID: -6093042067585937984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_38
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 96
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8405a2f06afd70541a0dfa0a882e9083
+      internalID: 352798177828042921
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_39
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 80
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9769569f1462c1842b2fa4cb34056980
+      internalID: 2049103054913716322
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_40
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 80
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: de0ebbba79f6404478be01eeefeb28c2
+      internalID: 5441103943429625520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_41
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 80
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d874d3e599f9dda4d9aa6f10b22489f1
+      internalID: -8252238129863652926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_42
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 80
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 700ce4b6128b46247a97743db58e9eb0
+      internalID: 3581837466727751392
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_43
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 80
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1a989d5ad715fcd49b381426ff957077
+      internalID: 1337384745719514894
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_44
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 80
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b2a86e944ac228a49abac458f7d9a23c
+      internalID: -7733600068776958066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_45
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 80
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 41c9be123d849114fb2b9b846a759851
+      internalID: 9132416979170979749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_46
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 80
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b2cc9db1368b08b4b824212244a66fd9
+      internalID: 3011518564447530013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_47
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 64
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d8ef22a7baab000419315de2b38bcf14
+      internalID: 6577554327115546164
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_48
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 64
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: db6dbec5b7f01e843beaafeaeb45482c
+      internalID: -2977800954209996699
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_49
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 64
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7877d3da9e257864eb573906712da8c5
+      internalID: -5607799570151128388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_50
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 64
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e8b7f98d43b060240b053b006a8fd86f
+      internalID: -2905520205828785032
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_51
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 64
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b71a651b57215b24d9db7ea7a024e5fc
+      internalID: 2626352959221021364
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_52
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 64
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4f0c8a3e1e09a0241b71288ebdc087cb
+      internalID: 984270614443199551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_53
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 64
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3ca8fc510899da5459c50a3a656c9607
+      internalID: 8168810999001965044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_54
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 64
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9d18c946ce00e5a43a4b60b2d275b98f
+      internalID: -6110315083034859795
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_55
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 48
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c02d72d086dd51e43a36acdb65ea17c4
+      internalID: 1150045426160383257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_56
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 48
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: acb7d724279e03143bff525bca0b29c7
+      internalID: 1090306731214334945
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_57
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 48
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8ed9d4a7a4f485843a1db817f949cf4d
+      internalID: -829140518702326391
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_58
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 48
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e621ef80260193b43968040a55fe6a50
+      internalID: 6865357448809849548
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_59
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dbaba08c98f97f648beba5f40c72cc3e
+      internalID: -6992690365441693955
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_60
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 32
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6350535af20b1054287756ce72811a50
+      internalID: -824632158511543852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_61
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e5ed8817284fc50469b8e99ba84a4064
+      internalID: -329679836454123744
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_62
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 32
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f9515c053380d246983aaaa287a288a
+      internalID: 2984816214631286761
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_UI
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9c218eff9c6709840a89f41199dc78a3
+      internalID: 6452484885724794591
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_Overlay0
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7ee2187b8c066ed47bb5a83cec60f963
+      internalID: 2998458397181694874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_Overlay1
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 889f1eb28e508a845b56a444383b756c
+      internalID: 1920891149810736091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+  spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

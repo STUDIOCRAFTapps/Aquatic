@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7e37862714c2754b9d807669f0b13a9, type: 3}
+  m_Name: OnLand
+  m_EditorClassIdentifier: 
+  actionModules:
+  - {fileID: 11400000, guid: 9b6c48bcd46dddd4390d22f3e3ae2ad0, type: 2}
+  - {fileID: 11400000, guid: 151c9273679f90a46bb61c48dfdde986, type: 2}
+  - {fileID: 11400000, guid: 19740adebd446cd4693fb683c20db4a2, type: 2}
+  - {fileID: 11400000, guid: 45302bc5e209bca478fc0bd0ee0d0bef, type: 2}
+  - {fileID: 11400000, guid: 0480e2f5a51e948459a8e01e41505118, type: 2}
