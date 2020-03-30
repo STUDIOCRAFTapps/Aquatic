@@ -12,7 +12,7 @@ public class GroundedModule : BasePlayerModule {
         info.status.isGrounded = info.rbody.isCollidingDown;
         if(info.status.isGrounded && info.rbody.velocity.y <= 0) {
             info.status.isInAirBecauseOfJump = false;
-            info.status.lastGroundedTime = Time.unscaledTime;
+            info.status.lastGroundedTime = Time.time;
         }
 
         // Update fluid time

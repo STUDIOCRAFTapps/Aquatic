@@ -88,6 +88,8 @@ MonoBehaviour:
   - {fileID: 2984816214631286761, guid: 1d5cbca8a85cae549a8ff2df3b45834a, type: 3}
   - {fileID: 2998458397181694874, guid: 1d5cbca8a85cae549a8ff2df3b45834a, type: 3}
   - {fileID: 1920891149810736091, guid: 1d5cbca8a85cae549a8ff2df3b45834a, type: 3}
+  - {fileID: -6950979355018124700, guid: 1d5cbca8a85cae549a8ff2df3b45834a, type: 3}
+  - {fileID: -8614963582827391981, guid: 1d5cbca8a85cae549a8ff2df3b45834a, type: 3}
   verts:
   - {x: 0, y: 0, z: 0}
   - {x: 1, y: 0, z: 0}
@@ -103,7 +105,7 @@ MonoBehaviour:
   - m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 0.5, y: 0.5, z: 0}
   mass: 4.4
-  overlayCount: 2
+  overlayCount: 4
   overlayChances: 0.2
   overlayZOffset: -0.001
   generateOverlayOnPost47: 0

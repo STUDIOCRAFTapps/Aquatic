@@ -11,6 +11,8 @@ public class DataChunk {
     public List<int> globalIDPalette;
     public float timeOfLastAutosave = 0f;
 
+    bool[] hasLayerBeenEdited;
+
     public DataChunk(int chunkSize) {
         this.chunkSize = chunkSize;
         tileData = new Dictionary<TerrainLayers, Tile[][]>();
@@ -25,21 +27,38 @@ public class DataChunk {
                 }
             }
         }
+
+        hasLayerBeenEdited = new bool[TerrainManager.inst.layerParameters.Length];
     }
 
     virtual public void Init (Vector2Int chunkPosition) {
         this.chunkPosition = chunkPosition;
         globalIDPalette.Clear();
         timeOfLastAutosave = Time.time;
+
+        for(int i = 0; i < hasLayerBeenEdited.Length; i++) {
+            hasLayerBeenEdited[i] = false;
+        }
     }
 
     public void ClearTiles () {
         for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
+            hasLayerBeenEdited[l] = false;
             for(int x = 0; x < chunkSize; x++) {
                 for(int y = 0; y < chunkSize; y++) {
                     SetGlobalID(x, y, (TerrainLayers)l, 0);
                     SetBitmask(x, y, (TerrainLayers)l, 0);
                 }
+            }
+        }
+    }
+
+    public void ClearTilesLayer (int l) {
+        hasLayerBeenEdited[l] = false;
+        for(int x = 0; x < chunkSize; x++) {
+            for(int y = 0; y < chunkSize; y++) {
+                SetGlobalID(x, y, (TerrainLayers)l, 0);
+                SetBitmask(x, y, (TerrainLayers)l, 0);
             }
         }
     }
@@ -63,6 +82,8 @@ public class DataChunk {
     #region Tile Editing / Reading
 
     public void SetGlobalID (int x, int y, TerrainLayers layer, int gid) {
+        hasLayerBeenEdited[(int)layer] = true;
+
         if(gid != 0 && !globalIDPalette.Contains(gid)) {
             globalIDPalette.Add(gid);
             if(globalIDPalette.Count >= 256) {
@@ -85,6 +106,10 @@ public class DataChunk {
 
     public ushort GetBitmask (int x, int y, TerrainLayers layer) {
         return tileData[layer][x][y].bitmask;
+    }
+
+    public bool HasLayerBeenEdited (TerrainLayers layer) {
+        return hasLayerBeenEdited[(int)layer];
     }
     #endregion
 }

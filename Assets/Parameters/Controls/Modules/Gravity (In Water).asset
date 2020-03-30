@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a18b46e63973e144ab45e0c2f1d90d2a, type: 3}
   m_Name: Gravity (In Water)
   m_EditorClassIdentifier: 
-  upwardGravityForce: 65
-  downwardGravityForce: 85
+  upwardGravityForce: 45
+  downwardGravityForce: 71
   twoForceGravity: 1
+  submergionReduceGravity: 0

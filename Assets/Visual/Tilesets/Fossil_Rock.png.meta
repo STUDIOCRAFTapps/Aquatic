@@ -350,6 +350,12 @@ TextureImporter:
   - first:
       213: 1920891149810736091
     second: Fossil_Rock_Overlay1
+  - first:
+      213: -6950979355018124700
+    second: Fossil_Rock_Overlay2
+  - first:
+      213: -8614963582827391981
+    second: Fossil_Rock_Overlay3
   externalObjects: {}
   serializedVersion: 10
   mipmaps:
@@ -1815,6 +1821,48 @@ TextureImporter:
       bones: []
       spriteID: 889f1eb28e508a845b56a444383b756c
       internalID: 1920891149810736091
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_Overlay2
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 0
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 159dedb9d24178d4f826860b8d7c3ca1
+      internalID: -6950979355018124700
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Fossil_Rock_Overlay3
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a8a3911b1fd845247b5c8381041a28b6
+      internalID: -8614963582827391981
       vertices: []
       indices: 
       edges: []

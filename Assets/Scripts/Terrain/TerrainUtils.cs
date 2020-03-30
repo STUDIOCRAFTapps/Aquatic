@@ -7,7 +7,8 @@ public enum TerrainLayers {
     Ground,
     WaterSurface,
     Background,
-    WaterBackground
+    WaterBackground,
+    Overlay
 }
 
 public struct MeshData {

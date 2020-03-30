@@ -86,7 +86,7 @@ public class Tile63OverlayAsset : BaseTileAsset {
     public override int GetOverlayTextureIndex (int x, int y, TerrainLayers layer, MobileDataChunk mdc = null) {
 
         TerrainManager.inst.GetBitmaskAt(x, y, layer, out ushort bitmask, mdc);
-        if(!generateOverlayOnPost47 && bitmask >= 47) {
+        if(!generateOverlayOnPost47 && maskIndex[bitmask] >= 47) {
             return -1;
         }
 

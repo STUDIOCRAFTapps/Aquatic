@@ -77,8 +77,18 @@ public class PlayerController : MonoBehaviour {
     private void FixedUpdate () {
         status.playerPos = transform.position;
 
-        CheckModifier();
-        currentState?.UpdatePlayerStateGroup(info);
+        bool isChunkAbsent = true; 
+        Vector2Int chunkPos = TerrainManager.inst.WorldToChunk(transform.position);
+        if(ChunkLoader.inst.loadCounters.ContainsKey(chunkPos)) {
+            if(ChunkLoader.inst.loadCounters[chunkPos].loadCount > 0) {
+                isChunkAbsent = false;
+            }
+        }
+
+        if(!isChunkAbsent) {
+            CheckModifier();
+            currentState?.UpdatePlayerStateGroup(info);
+        }
 
         /*CheckIfGrounded();
         CheckFluidTime();

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using System;
+using System.Linq;
 
 public class DataChunkSaving : MonoBehaviour {
 
@@ -35,6 +36,7 @@ public class DataChunkSaving : MonoBehaviour {
     string mobileChunkDatapath;
     StringBuilder sb;
     Dictionary<char, byte> charToByte;
+    List<string> layerNames;
 
     // Shared Ressources
     static byte[] buffer = new byte[bufferSize];
@@ -55,6 +57,12 @@ public class DataChunkSaving : MonoBehaviour {
         for(byte i = 0; i < authorizedChars.Length; i++) {
             charToByte.Add(authorizedChars[i], i);
         }
+
+        layerNames = Enum.GetNames(typeof(TerrainLayers)).ToList();
+    }
+
+    public int GetLayerCount () {
+        return layerNames.Count;
     }
     #endregion
 
@@ -312,7 +320,21 @@ public class DataChunkSaving : MonoBehaviour {
 
     #region TileData
     void SerializeTileData (BinaryWriter ms, DataChunk dataChunk) {
+        int layerCount = 0;
         for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
+            if(dataChunk.HasLayerBeenEdited((TerrainLayers)l)) {
+                layerCount++;
+            }
+        }
+
+        ms.Write((byte)layerCount);
+
+        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
+            if(!dataChunk.HasLayerBeenEdited((TerrainLayers)l)) {
+                continue;
+            }
+            ms.Write(layerNames[l]);
+
             for(int x = 0; x < dataChunk.chunkSize; x++) {
                 for(int y = 0; y < dataChunk.chunkSize; y++) {
                     // If the index is not found (is air), it'll be -1. To get the corrected palette index, add 1.
@@ -320,9 +342,7 @@ public class DataChunkSaving : MonoBehaviour {
                     ms.Write((byte)(dataChunk.globalIDPalette.IndexOf(dataChunk.GetGlobalID(x, y, (TerrainLayers)l)) + 1));
                 }
             }
-        }
 
-        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
             for(int x = 0; x < dataChunk.chunkSize; x++) {
                 for(int y = 0; y < dataChunk.chunkSize; y++) {
                     ms.Write(dataChunk.GetBitmask(x, y, (TerrainLayers)l));
@@ -332,7 +352,15 @@ public class DataChunkSaving : MonoBehaviour {
     }
 
     bool DeserializeTileData (BinaryReader ms, DataChunk dataChunk) {
-        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
+        int layerCount = ms.ReadByte();
+
+        for(int ll = 0; ll < layerCount; ll++) {
+            string layerName = ms.ReadString();
+            int l = layerNames.IndexOf(layerName);
+            if(l < 0) {
+                return false;
+            }
+
             for(int x = 0; x < dataChunk.chunkSize; x++) {
                 for(int y = 0; y < dataChunk.chunkSize; y++) {
                     byte tileInt = ms.ReadByte();
@@ -351,13 +379,17 @@ public class DataChunkSaving : MonoBehaviour {
                     }
                 }
             }
-        }
 
-        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
             for(int x = 0; x < dataChunk.chunkSize; x++) {
                 for(int y = 0; y < dataChunk.chunkSize; y++) {
                     dataChunk.SetBitmask(x, y, (TerrainLayers)l, ms.ReadUInt16());
                 }
+            }
+        }
+
+        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
+            if(!dataChunk.HasLayerBeenEdited((TerrainLayers)l)) {
+                dataChunk.ClearTilesLayer(l);
             }
         }
 

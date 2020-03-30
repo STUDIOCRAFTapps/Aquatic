@@ -35,7 +35,7 @@ public class BaseTileAsset : ScriptableObject {
     /// Called whenever this tile is placed.
     /// </summary>
     public virtual void OnPlaced (int x, int y, TerrainLayers layer, MobileDataChunk mdc = null) {
-
+        ParticleManager.inst.PlayTilePlace(new Vector2Int(x, y), this);
     }
 
     /// <summary>

@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Particle
+  m_Name: BubblesMat
   m_Shader: {fileID: 4800000, guid: bee8e962adb2c3042a1b6fb95dfd522a, type: 3}
   m_ShaderKeywords: _ALPHATEST_ON
   m_LightmapFlags: 0

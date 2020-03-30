@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Gyeser_Smoke
+  m_Name: LandDustMat
   m_Shader: {fileID: 4800000, guid: bee8e962adb2c3042a1b6fb95dfd522a, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
@@ -20,7 +20,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 029c553318163c5468c7a4ca29b9caac, type: 3}
+        m_Texture: {fileID: 2800000, guid: e868976c50a0e69448c15065ccb901e8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:

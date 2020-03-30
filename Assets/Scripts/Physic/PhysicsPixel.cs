@@ -588,10 +588,12 @@ public class PhysicsPixel : MonoBehaviour {
             return false;
         }
 
+
+
         // Vector from A to B
-        Vector2 n = B.aabb.center - A.aabb.center;
-        Bounds abox = A.aabb;
-        Bounds bbox = B.aabb;
+        Bounds abox = A.GetBoundFromCollider();
+        Bounds bbox = B.GetBoundFromCollider();
+        Vector2 n = bbox.center - abox.center;
         
         float a_extent = (abox.max.x - abox.min.x) * 0.5f; // Calculate half extents along x axis for each object
         float b_extent = (bbox.max.x - bbox.min.x) * 0.5f;

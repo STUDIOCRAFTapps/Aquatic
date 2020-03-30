@@ -248,6 +248,9 @@ TextureImporter:
   - first:
       213: 8226431022551404380
     second: SelectionKnob
+  - first:
+      213: -3905479446118610454
+    second: DropD_L4
   externalObjects: {}
   serializedVersion: 10
   mipmaps:
@@ -2041,7 +2044,7 @@ TextureImporter:
         width: 5
         height: 5
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -2049,6 +2052,27 @@ TextureImporter:
       bones: []
       spriteID: f3bc03e729d794b408af0f072fab86c9
       internalID: 8226431022551404380
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DropD_L4
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 162
+        width: 19
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b406f801ce90f1740ba4f6458d57d21e
+      internalID: -3905479446118610454
       vertices: []
       indices: 
       edges: []

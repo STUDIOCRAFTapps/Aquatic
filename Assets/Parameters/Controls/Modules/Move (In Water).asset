@@ -15,6 +15,9 @@ MonoBehaviour:
   directionSmoothingFactor: 0.4
   directionSmoothingSpeed: 16
   directionSmoothVelInfluence: 0
-  propulsionModuleAcc: 2
-  propulsionModuleFriction: 1
+  propulsionAcc: 1.5
+  propulsionFriction: 0.5
+  propulsionMax: 1
+  propulsionMaxOutOfWater: -0.5
+  propulsionUpBoost: 1.2
   groundNavigation: {fileID: 11400000, guid: d0ce656d8b51c974a97fc91869ab8164, type: 2}

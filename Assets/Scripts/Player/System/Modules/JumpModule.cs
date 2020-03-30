@@ -11,6 +11,7 @@ public class JumpModule : BasePlayerModule {
     public float maxUngroundedJumpTime;
     public float minFluidJumpTime;
     public float outOfFluidJumpForce;
+    public float outOfFluidGroundJumpForce;
 
     public float jumpCancelForce;
     public bool jumpCancelEnabled;
@@ -32,7 +33,8 @@ public class JumpModule : BasePlayerModule {
         // Jump Checks
         bool jumpOptReq0 = info.status.isGrounded;
         bool jumpOptReq1 = (ungroundedCooldownTimer < maxUngroundedJumpTime && !info.status.isInAirBecauseOfJump);
-        bool jumpOptReq2 = (info.rbody.submergedPercentage > 0.5f && info.rbody.submergedPercentage < 0.6f) && info.status.fluidTime > minFluidJumpTime && !info.status.isGrounded;
+        bool jumpOptReq2 = (info.rbody.submergedPercentage > 0.4f && info.rbody.submergedPercentage < 0.6f) && info.status.fluidTime > minFluidJumpTime && !info.status.isGrounded;
+        bool jumpOptReq3 = (info.rbody.submergedPercentage > 0f && info.rbody.submergedPercentage < 0.9f && info.status.isGrounded);
         bool jumpReq0 = info.status.onGoingJump;
         bool jumpReq1 = (jumpCooldownTimer > jumpCooldown);
 
@@ -40,7 +42,7 @@ public class JumpModule : BasePlayerModule {
         bool canJump = jumpReq0 && jumpReq1 && (jumpOptReq0 || jumpOptReq1 || jumpOptReq2);
         if(canJump) {
             info.rbody.velocity.y = 0;
-            info.rbody.velocity += Vector2.up * ((jumpOptReq2) ? outOfFluidJumpForce : initialJumpForce);
+            info.rbody.velocity += Vector2.up * (jumpOptReq2 ? outOfFluidJumpForce : (jumpOptReq3 ? outOfFluidGroundJumpForce : initialJumpForce));
             info.status.lastJumpTime = Time.time;
             info.status.isInAirBecauseOfJump = true;
         }

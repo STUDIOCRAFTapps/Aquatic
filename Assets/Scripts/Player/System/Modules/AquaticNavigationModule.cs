@@ -9,8 +9,11 @@ public class AquaticNavigationModule : BasePlayerModule {
     public float directionSmoothingFactor;
     public float directionSmoothingSpeed;
     public float directionSmoothVelInfluence;
-    public float propulsionModuleAcc;
-    public float propulsionModuleFriction;
+    public float propulsionAcc;
+    public float propulsionFriction;
+    public float propulsionMax;
+    public float propulsionMaxOutOfWater;
+    public float propulsionUpBoost;
     public BasicNavigationModule groundNavigation;
 
     // Direction
@@ -76,12 +79,13 @@ public class AquaticNavigationModule : BasePlayerModule {
 
         if(accDirX != 0f || accDirY != 0f) {
             if(wallNormal == Vector2.zero) {
-                info.status.propulsionValue += propulsionModuleAcc * Time.deltaTime;
+                info.status.propulsionValue += propulsionAcc * Time.deltaTime;
             } else {
-                info.status.propulsionValue += propulsionModuleAcc * Time.deltaTime * Mathf.Min(1f, (-Vector2.Dot(wallNormal, info.status.combinedDirection) + 1f));
+                info.status.propulsionValue += propulsionAcc * Time.deltaTime * Mathf.Min(1f, (-Vector2.Dot(wallNormal, info.status.combinedDirection) + 1f));
             }
         }
-        info.status.propulsionValue *= (1f - Time.fixedDeltaTime * propulsionModuleFriction);
+        info.status.propulsionValue = Mathf.Min(info.status.propulsionValue, Mathf.Lerp(propulsionMaxOutOfWater, propulsionMax, info.rbody.submergedPercentage));
+        info.status.propulsionValue *= (1f - Time.fixedDeltaTime * propulsionFriction);
         #endregion
     }
     public override void UpdateAction (PlayerInfo info) {
@@ -90,7 +94,11 @@ public class AquaticNavigationModule : BasePlayerModule {
             return;
         }
 
-        info.rbody.velocity += info.status.combinedDirection * info.status.propulsionValue;
+        Vector2 impulse = info.status.combinedDirection * info.status.propulsionValue;
+        if(impulse.y > 0f) {
+            impulse.y *= propulsionUpBoost;
+        }
+        info.rbody.velocity += impulse;
     }
 
     
