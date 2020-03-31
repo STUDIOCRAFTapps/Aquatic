@@ -9,6 +9,7 @@ public class GroundedModule : BasePlayerModule {
 
     public override void UpdateStatus (PlayerInfo info) {
         // Checks if the player is on the ground and adjusts the player status accordingly
+        bool wasGrounded = info.status.isGrounded;
         info.status.isGrounded = info.rbody.isCollidingDown;
         if(info.status.isGrounded && info.rbody.velocity.y <= 0) {
             info.status.isInAirBecauseOfJump = false;
@@ -21,6 +22,12 @@ public class GroundedModule : BasePlayerModule {
         } else {
             info.status.fluidTime = 0f;
         }
+
+        // Land particle
+        if(!wasGrounded && info.status.isGrounded && info.status.prevVel.y < -20f) {
+            ParticleManager.inst.PlayEntityParticle(info.rbody.transform.position, 1);
+        }
+        info.status.prevVel = info.rbody.velocity;
     }
 
     public override void UpdateAction (PlayerInfo info) {

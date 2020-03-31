@@ -7,8 +7,6 @@ public class PlayerAnimator : MonoBehaviour {
     public SpriteRenderer spriteRenderer;
     public AnimationState[] animationStates;
 
-    public ParticleSystem splashParticleDebug;
-
     AnimationState currentState;
     float cS_StartFrame = 0f;
     Dictionary<string, AnimationState> idToState;
@@ -40,11 +38,6 @@ public class PlayerAnimator : MonoBehaviour {
         }
         currentState = idToState[stateID];
         cS_StartFrame = Time.time;
-    }
-
-    public void EmitParticle () {
-        splashParticleDebug.transform.position = transform.position + ((rbody.box.size.y * rbody.submergedPercentage) * Vector3.up) + new Vector3(0f, -0.75f, -1f);
-        splashParticleDebug.Emit(1);
     }
 }
 

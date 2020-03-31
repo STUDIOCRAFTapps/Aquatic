@@ -12,6 +12,7 @@ public class BasicNavigationModule : BasePlayerModule {
     public float floatingAcceleration;
 
     public override void UpdateStatus (PlayerInfo info) {
+        info.status.lastCombinedDirection = info.status.combinedDirection;
         int accDirX = 0;
         if(Input.GetKey(KeyCode.A))
             accDirX--;
@@ -27,6 +28,12 @@ public class BasicNavigationModule : BasePlayerModule {
                 info.status.combinedDirection,
                 groundMaxSpeed, groundAcceleration
             );
+            if(info.status.lastCombinedDirection.x <= 0 && info.status.combinedDirection.x > 0) {
+                ParticleManager.inst.PlayEntityParticle(info.rbody.transform.position, 2);
+            }
+            if(info.status.lastCombinedDirection.x >= 0 && info.status.combinedDirection.x < 0) {
+                ParticleManager.inst.PlayEntityParticle(info.rbody.transform.position, 3);
+            }
         } else {
             AccelerateBody(
                 info,

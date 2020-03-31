@@ -35,7 +35,14 @@ public class BaseTileAsset : ScriptableObject {
     /// Called whenever this tile is placed.
     /// </summary>
     public virtual void OnPlaced (int x, int y, TerrainLayers layer, MobileDataChunk mdc = null) {
-        ParticleManager.inst.PlayTilePlace(new Vector2Int(x, y), this);
+        ParticleManager.inst.PlayTilePlace(new Vector2Int(x, y), this, mdc);
+    }
+
+    /// <summary>
+    /// Called whenever this tile is breaked.
+    /// </summary>
+    public virtual void OnBreaked (int x, int y, TerrainLayers layer, MobileDataChunk mdc = null) {
+        ParticleManager.inst.PlayTileBreak(new Vector2Int(x, y), this, mdc);
     }
 
     /// <summary>

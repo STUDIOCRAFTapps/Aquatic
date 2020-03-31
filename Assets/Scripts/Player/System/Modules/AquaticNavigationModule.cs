@@ -18,12 +18,6 @@ public class AquaticNavigationModule : BasePlayerModule {
 
     // Direction
     public override void UpdateStatus (PlayerInfo info) {
-        if(groundNavigation != null && info.status.isGrounded) {
-            groundNavigation.UpdateStatus(info);
-            return;
-        }
-
-        #region Direction
         int accDirX = 0;
         int accDirY = 0;
         if(Input.GetKey(KeyCode.A))
@@ -34,8 +28,14 @@ public class AquaticNavigationModule : BasePlayerModule {
             accDirY++;
         if(Input.GetKey(KeyCode.S) && !info.status.onGoingJump)
             accDirY--;
+        
+        if(groundNavigation != null && info.status.isGrounded && !(accDirY > 0)) {
+            groundNavigation.UpdateStatus(info);
+            return;
+        }
 
-        Vector2 targetDir = new Vector2(accDirX, accDirY);
+        #region Direction
+        Vector2 targetDir = new Vector2(info.status.isGrounded ? 0 : accDirX, accDirY);
         float blend = 1f - Mathf.Pow(1f - directionSmoothingFactor, Time.deltaTime * directionSmoothingSpeed);
 
         bool isCurrentDirectionNull = accDirX == 0 && accDirY == 0;

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(CustomTileParticleEditor))]
+[CustomEditor(typeof(CustomTileParticle))]
 public class CustomTileParticleEditor : Editor {
 
     public override void OnInspectorGUI () {

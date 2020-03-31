@@ -248,6 +248,11 @@ public class TerrainManager : MonoBehaviour {
 
     public bool SetGlobalIDAt (int x, int y, TerrainLayers layer, int globalID, MobileDataChunk mdc = null) {
         if(mdc != null) {
+            int oldGID = mdc.GetGlobalID(x, y, layer);
+            if(oldGID != 0) {
+                tiles.GetTileAssetFromGlobalID(oldGID).OnBreaked(x, y, layer, mdc);
+            }
+
             mdc.SetGlobalID(x, y, layer, globalID);
             if(globalID != 0) {
                 tiles.GetTileAssetFromGlobalID(globalID).OnPlaced(x, y, layer, mdc);
@@ -259,9 +264,14 @@ public class TerrainManager : MonoBehaviour {
         Vector2Int cpos = GetChunkPositionAtTile(x, y);
 
         if(GetChunkAtPosition(cpos, out DataChunk dataChunk)) {
+            int oldGID = dataChunk.GetGlobalID(x - cpos.x * chunkSize, y - cpos.y * chunkSize, layer);
+            if(oldGID != 0) {
+                tiles.GetTileAssetFromGlobalID(oldGID).OnBreaked(x, y, layer, mdc);
+            }
+
             dataChunk.SetGlobalID(x - cpos.x * chunkSize, y - cpos.y * chunkSize, layer, globalID);
             if(globalID != 0) {
-                tiles.GetTileAssetFromGlobalID(globalID).OnPlaced(x, y, layer);
+                tiles.GetTileAssetFromGlobalID(globalID).OnPlaced(x, y, layer, mdc);
             }
             RefreshTilesAround(x, y, layer);
             return true;

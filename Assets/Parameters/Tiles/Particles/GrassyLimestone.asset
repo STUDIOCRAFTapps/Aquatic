@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe178e1afe6744f46bd40a83dde45cfa, type: 3}
   m_Name: GrassyLimestone
   m_EditorClassIdentifier: 
-  tileAsset: {fileID: 11400000, guid: e45f61f83ac901f4aa4d16d82e57f76b, type: 2}
-  zOffset: 0
+  tileAssets:
+  - {fileID: 11400000, guid: e45f61f83ac901f4aa4d16d82e57f76b, type: 2}
+  zOffset: -1
   placingUnits:
   - model: 1
     texture: {fileID: 0}
@@ -48,11 +49,11 @@ MonoBehaviour:
     limitVelocityAxesFactor: {x: 1, y: 1}
     limitVelocityDampen: 0.1
   - model: 3
-    texture: {fileID: 21300000, guid: 00a162000bd382d47b0545475772f0fd, type: 3}
+    texture: {fileID: 21300000, guid: a4e2324460ef9d24cb126be684eefbcd, type: 3}
     textureCount: {x: 4, y: 3}
     useFPS: 1
     fps: 20
-    randomTextureCyclePositon: 0
+    randomTextureCyclePositon: 1
     particleCount: 5
     lifetimeMin: 0.5
     lifetimeMax: 1
@@ -98,10 +99,10 @@ MonoBehaviour:
     limitVelocityDampen: 0.1
   - model: 2
     texture: {fileID: 21300000, guid: a4e2324460ef9d24cb126be684eefbcd, type: 3}
-    textureCount: {x: 3, y: 4}
+    textureCount: {x: 4, y: 3}
     useFPS: 1
     fps: 20
-    randomTextureCyclePositon: 0
+    randomTextureCyclePositon: 1
     particleCount: 5
     lifetimeMin: 1
     lifetimeMax: 2

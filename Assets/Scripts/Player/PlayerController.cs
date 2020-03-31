@@ -6,11 +6,13 @@ using UnityEngine;
 [System.Serializable]
 public class PlayerStatus {
     public Vector3 playerPos;
+    public Vector2 prevVel;
 
     public bool isGrounded;
     public float lastGroundedTime;
 
     public Vector2 combinedDirection;
+    public Vector2 lastCombinedDirection;
     public float propulsionValue;
     public bool wasLastDirNull;
 
@@ -128,10 +130,10 @@ public class PlayerController : MonoBehaviour {
         }
 
         if(rbody.submergedPercentage > 0f && status.lastSubmergedPercentage <= 0f) {
-            playerAnimator.EmitParticle();
+            ParticleManager.inst.PlayEntityParticle(transform.position, 4);
         }
         if(rbody.submergedPercentage <= 0f && status.lastSubmergedPercentage > 0f) {
-            playerAnimator.EmitParticle();
+            ParticleManager.inst.PlayEntityParticle(transform.position + Vector3.down, 4);
         }
 
         status.lastSubmergedPercentage = rbody.submergedPercentage;

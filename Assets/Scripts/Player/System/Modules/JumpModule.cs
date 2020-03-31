@@ -45,6 +45,10 @@ public class JumpModule : BasePlayerModule {
             info.rbody.velocity += Vector2.up * (jumpOptReq2 ? outOfFluidJumpForce : (jumpOptReq3 ? outOfFluidGroundJumpForce : initialJumpForce));
             info.status.lastJumpTime = Time.time;
             info.status.isInAirBecauseOfJump = true;
+
+            if(jumpOptReq0) {
+                ParticleManager.inst.PlayEntityParticle(info.status.playerPos, 0);
+            }
         }
 
         // Jump Cancel

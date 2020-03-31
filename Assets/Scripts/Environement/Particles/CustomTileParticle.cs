@@ -42,4 +42,5 @@ public enum CustomParticleModelType {
     ApparitionDust,
     BreakParticles,
     SuctionRingParticles,
+    WaterSplash
 }

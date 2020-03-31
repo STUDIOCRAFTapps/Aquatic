@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 public class TileParticleConfigurator : MonoBehaviour {
-    public int modelType;
+    [HideInInspector] public int modelType;
     public ParticleSystem target;
     new public ParticleSystemRenderer renderer;
 
@@ -14,22 +14,22 @@ public class TileParticleConfigurator : MonoBehaviour {
         mpb = new MaterialPropertyBlock();
     }
 
-    public void PlayPlace (CustomTileParticle reference, int unitID, Vector2Int pos) {
+    public void PlayPlace (CustomTileParticle reference, int unitID, Vector2Int pos, MobileDataChunk mdc = null) {
         this.reference = reference;
         this.unitID = unitID;
 
-        transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, reference.zOffset);
+        transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, reference.zOffset) + ((mdc != null) ? mdc.mobileChunk.position : Vector3.zero);
         unit = reference.placingUnits[unitID];
         Configure();
 
         Emit();
     }
 
-    public void PlayBreak (CustomTileParticle reference, int unitID, Vector2Int pos) {
+    public void PlayBreak (CustomTileParticle reference, int unitID, Vector2Int pos, MobileDataChunk mdc = null) {
         this.reference = reference;
         this.unitID = unitID;
 
-        transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, reference.zOffset);
+        transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, reference.zOffset) + ((mdc != null) ? mdc.mobileChunk.position : Vector3.zero);
         unit = reference.breakingUnits[unitID];
         Configure();
 
@@ -37,7 +37,7 @@ public class TileParticleConfigurator : MonoBehaviour {
     }
 
     public void OnParticleSystemStopped () {
-        // Call Particle Manager to tell him it's all done now
+        ParticleManager.inst.SetTileParticleAsUnused(modelType, this);
     }
 
     private void Configure () {
@@ -49,6 +49,7 @@ public class TileParticleConfigurator : MonoBehaviour {
         ParticleSystem.TextureSheetAnimationModule tsam = target.textureSheetAnimation;
         ParticleSystem.MainModule main = target.main;
         ParticleSystem.LimitVelocityOverLifetimeModule lvolm = target.limitVelocityOverLifetime;
+        main.stopAction = ParticleSystemStopAction.Callback;
 
         if(supportCustomization) {
             tsam.numTilesX = unit.textureCount.x;
@@ -63,7 +64,7 @@ public class TileParticleConfigurator : MonoBehaviour {
             main.startRotation = new ParticleSystem.MinMaxCurve(-unit.rotationVariation, unit.rotationVariation);
 
             mpb.Clear();
-            mpb.SetTexture("Sprite Texture", unit.texture.texture);
+            mpb.SetTexture("_MainTex", unit.texture.texture);
             renderer.SetPropertyBlock(mpb);
         }
 
@@ -90,6 +91,9 @@ public class TileParticleConfigurator : MonoBehaviour {
             break;
             case CustomParticleModelType.SuctionRingParticles:
             target.Emit(reference.placingUnits[unitID].particleCount);
+            break;
+            case CustomParticleModelType.WaterSplash:
+            target.Emit(1);
             break;
         }
     }

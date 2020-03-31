@@ -18,6 +18,8 @@ public class RandomAnimatedTileAsset : BaseTileAsset {
         if(!IsPresenceValid(x, y, layer, mdc)) {
             TerrainManager.inst.SetGlobalIDAt(x, y, layer, 0, mdc);
             return;
+        } else {
+            base.OnPlaced(x, y, layer, mdc);
         }
     }
 
