@@ -21,6 +21,7 @@ public class CustomTileParticleUnit {
     public bool randomTextureCyclePositon = false;
 
     [Header("General Parameters")]
+    public Vector2 offset = Vector2.zero;
     public int particleCount = 5;
     public float lifetimeMin = 0.5f;
     public float lifetimeMax = 1f;

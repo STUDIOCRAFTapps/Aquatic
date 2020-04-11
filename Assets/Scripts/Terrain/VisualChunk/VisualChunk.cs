@@ -11,8 +11,11 @@ public class VisualChunk : MonoBehaviour {
     DataChunk dataChunk;
     MobileDataChunk mdc;
 
+    List<Bounds>[][] collisionBounds;
+
     public void Initiate (Vector2Int chunkPosition, bool changePosition) {
         // Create layer object once
+        int chunkSize = TerrainManager.inst.chunkSize;
         if(layers.Length == 0) {
             layers = new VisualChunkLayer[TerrainManager.inst.layerParameters.Length];
 
@@ -31,15 +34,25 @@ public class VisualChunk : MonoBehaviour {
 
                 layers[i].meshFilter.mesh = new Mesh();
             }
-            transform.localScale = new Vector3(TerrainManager.inst.tileScale, TerrainManager.inst.tileScale, 1f);
+            transform.localScale = new Vector3(1, 1, 1f);
 
             meshData.Initiate();
         }
 
+        if(collisionBounds == null) {
+            collisionBounds = new List<Bounds>[chunkSize][];
+            for(int x = 0; x < chunkSize; x++) {
+                collisionBounds[x] = new List<Bounds>[chunkSize];
+                for(int y = 0; y < chunkSize; y++) {
+                    collisionBounds[x][y] = new List<Bounds>(2);
+                }
+            }
+        }
+
         if(changePosition) {
             transform.position = new Vector3(
-            chunkPosition.x * TerrainManager.inst.chunkSize * TerrainManager.inst.tileScale,
-            chunkPosition.y * TerrainManager.inst.chunkSize * TerrainManager.inst.tileScale);
+            chunkPosition.x * TerrainManager.inst.chunkSize,
+            chunkPosition.y * TerrainManager.inst.chunkSize);
         }
 
         position = chunkPosition;
@@ -50,17 +63,39 @@ public class VisualChunk : MonoBehaviour {
         this.dataChunk = dataChunk;
         mdc = mobileDataChunk;
 
+        ReadOnlyNodeChunk nc = PathgridManager.inst.GetNodeChunkAt(position);
         for(int l = 0; l < layers.Length; l++) {
             meshData.Clear();
             for(int x = 0; x < chunkSize; x++) {
                 for(int y = 0; y < chunkSize; y++) {
-                    if(dataChunk.GetGlobalID(x, y, (TerrainLayers)l) == 0) {
+                    int worldX = x + (position.x * TerrainManager.inst.chunkSize);
+                    int worldY = y + (position.y * TerrainManager.inst.chunkSize);
+
+                    int gid = dataChunk.GetGlobalID(x, y, (TerrainLayers)l);
+
+                    BaseTileAsset tileAsset = (gid != 0)?TerrainManager.inst.tiles.GetTileAssetFromGlobalID(gid):null;
+                    if((TerrainLayers)l == TerrainLayers.Ground && nc != null) {
+                        Vector2Int tilePos = new Vector2Int(worldX, worldY);
+                        bool isSolid = gid != 0 && tileAsset.hasCollision;
+                        nc.nodeGrid[x][y].SetData(!isSolid, (Vector2)tilePos, tilePos.x, tilePos.y, 0);
+                    }
+
+                    collisionBounds[x][y].Clear();
+                    if(gid == 0) {
                         continue;
                     }
-                    BaseTileAsset tileAsset = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(dataChunk.GetGlobalID(x, y, (TerrainLayers)l));
                     if(tileAsset.hasTextures) {
                         AddTileToMeshData(x, y, (TerrainLayers)l, tileAsset);
                         AddOverlayTileToMeshData(x, y, (TerrainLayers)l, tileAsset);
+                    }
+                    if(tileAsset.hasCollision) {
+                        for(int i = 0; i < tileAsset.collisionBoxes.Length; i++) {
+                            collisionBounds[x][y].Add(
+                                new Bounds(
+                                    (Vector2)tileAsset.collisionBoxes[i].center + Vector2.one * 0.5f + new Vector2(worldX, worldY),
+                                    tileAsset.collisionBoxes[i].size)
+                                );
+                        }
                     }
                 }
             }

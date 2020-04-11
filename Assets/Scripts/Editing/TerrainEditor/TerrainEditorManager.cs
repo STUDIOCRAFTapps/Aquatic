@@ -22,7 +22,7 @@ public class TerrainEditorManager : MonoBehaviour {
     public RectTransform[] draggingKnobs;
 
     public bool enableEditor = true;
-    int selectedSidebar = 0;
+    public int selectedSidebar = 0;
     public int renderingMode = 0;
     public TerrainLayers selectedLayer = TerrainLayers.Ground;
     public int selectedMaterialID = 1;
@@ -44,6 +44,14 @@ public class TerrainEditorManager : MonoBehaviour {
     public bool isDraggingMobile = false;
     public Vector2 draggingMobileDelta;
 
+    public int selectedEntityID = 1;
+    public int selectedEntityTool = 0;
+    Entity selectedE;
+    RigidbodyPixel selectedERigibody;
+    public bool isDraggingEntity = false;
+    public Vector2 draggingEntityDelta;
+    public DNAEditorManager dnaEditor;
+
     public BaseToolAsset[] tools;
     public BaseBrushAsset[] brushes;
 
@@ -56,6 +64,7 @@ public class TerrainEditorManager : MonoBehaviour {
         if(inst == null) {
             inst = this;
         }
+        dnaEditor.Init();
 
         uiGroup.SetActive(false);
 
@@ -94,18 +103,61 @@ public class TerrainEditorManager : MonoBehaviour {
             ToolAndBrushMode();
         } else if(selectedSidebar == 1) {
             MobileMode();
+        } else if(selectedSidebar == 2) {
+            EntityMode();
         }
 
-        //Select mobile mode
+
+
+        Vector2 worldPos = camera.ScreenToWorldPoint(Input.mousePosition);
+        if(Input.GetKeyDown(KeyCode.Alpha1)) {
+            pathFS = worldPos;
+        }
+        if(Input.GetKeyDown(KeyCode.Alpha2)) {
+            pathFE = worldPos;
+        }
+        if(Input.GetKey(KeyCode.Alpha3)) {
+            PathRequestManager.inst.RequestPath(new PathRequest(pathFS, pathFE, OnPathReceived));
+            PathRequestManager.inst.RequestPath(new PathRequest(pathFS, pathFE, OnPathReceived));
+        }
+
+        DrawPath();
+    }
+
+    Vector2 pathFS;
+    Vector2 pathFE;
+    List<Vector2> path;
+
+    public void OnPathReceived (List<Vector2> waypoints, bool pathSuccessful) {
+        if(pathSuccessful) {
+            path = waypoints;
+        } else {
+            path = null;
+        }
+    }
+
+    void DrawPath () {
+        if(path == null) {
+            return;
+        }
+        if(path.Count <= 0) {
+            Debug.Log(path.Count);
+            return;
+        }
+        
+        for(int i = 0; i < path.Count - 1; i++) {
+            Debug.DrawLine(path[i], path[i+1], Color.red);
+        }
     }
     #endregion
 
     #region Modes
     void AnyMode () {
         bool pointerOverUI = EventSystem.current.IsPointerOverGameObject();
-
-        chunkSelection.SetActive(selectedMC != null || (selectedSidebar == 1 && selectedMobileTool == 4 && !pointerOverUI));
+        
+        chunkSelection.SetActive(selectedMC != null || (selectedSidebar == 1 && selectedMobileTool == 4 && !pointerOverUI) || selectedE != null);
         chunkCollider.SetActive(selectedMC != null);
+        dnaEditor.gameObject.SetActive(selectedE != null && selectedEntityTool == 4);
 
         foreach(RectTransform knb in draggingKnobs) {
             knb.gameObject.SetActive(selectedMC != null && selectedMobileTool == 3);
@@ -151,7 +203,7 @@ public class TerrainEditorManager : MonoBehaviour {
             if(selectedMC != null) {
                 Vector3 destination = worldPos + draggingMobileDelta;
                 if(Input.GetKey(KeyCode.LeftShift)) {
-                    destination = (Vector2)Vector2Int.RoundToInt(destination / TerrainManager.inst.tileScale) * TerrainManager.inst.tileScale;
+                    destination = (Vector2)Vector2Int.RoundToInt(destination);
                 }
                 destination.z = selectedMC.transform.position.z;
                 selectedMC.transform.position = destination;
@@ -170,7 +222,7 @@ public class TerrainEditorManager : MonoBehaviour {
             float blend = 1f - Mathf.Pow(1f - 0.5f, Time.deltaTime * 45f);
             Vector3 destination = worldPos + draggingMobileDelta;
             if(Input.GetKey(KeyCode.LeftShift)) {
-                destination = (Vector2)Vector2Int.RoundToInt(destination / TerrainManager.inst.tileScale) * TerrainManager.inst.tileScale;
+                destination = (Vector2)Vector2Int.RoundToInt(destination);
             }
             destination.z = selectedMC.transform.position.z;
 
@@ -212,7 +264,7 @@ public class TerrainEditorManager : MonoBehaviour {
             draggingKnobs[3].position = camera.WorldToScreenPoint(new Vector2(corner.x + size.x, corner.y + size.y));
         }
 
-        if(selectedMobileTool == 4 ) {
+        if(selectedMobileTool == 4) {
             selectedMC = null;
 
             if(Input.GetMouseButtonDown(0)) {
@@ -338,6 +390,113 @@ public class TerrainEditorManager : MonoBehaviour {
 
         
     }
+
+    void EntityMode () {
+        bool pointerOverUI = EventSystem.current.IsPointerOverGameObject();
+        
+        Vector2 worldPos = camera.ScreenToWorldPoint(Input.mousePosition);
+        Vector2Int tilePos = TerrainManager.inst.WorldToTile(worldPos);
+        Entity entity = EntityManager.inst.GetEntityAtPoint(worldPos);
+
+        //SELECT
+        if(!pointerOverUI) {
+            if(entity != null) {
+                if(Input.GetMouseButtonDown(0)) {
+                    selectedE = entity;
+                    selectedERigibody = selectedE.GetComponent<RigidbodyPixel>();
+
+                    // Prepare DNA here
+                    DNAEditorManager.inst.Setup(selectedE);
+                }
+            }
+            if(Input.GetMouseButtonDown(1)) {
+                selectedE = null;
+            }
+        }
+
+        // DRAG START-END
+        if(selectedEntityTool == 3 && !pointerOverUI) {
+            if(!isDraggingEntity && entity != null && Input.GetMouseButtonDown(0)) {
+                draggingEntityDelta = (Vector2)selectedE.transform.position - worldPos;
+                isDraggingEntity = true;
+                //EntityRegionManager.inst.RemoveMobileChunk(selectedMC);
+            }
+        }
+        if(isDraggingEntity && (Input.GetMouseButtonUp(0) || pointerOverUI)) {
+            if(selectedE != null) {
+                Vector3 destination = worldPos + draggingEntityDelta;
+                if(Input.GetKey(KeyCode.LeftShift)) {
+                    destination = (Vector2)Vector2Int.RoundToInt(destination);
+                }
+                destination.z = selectedE.transform.position.z;
+                selectedE.transform.position = destination;
+
+                //EntityRegionManager.inst.AddMobileChunk(selectedE);
+            }
+
+            isDraggingEntity = false;
+        } else if(pointerOverUI) {
+            isDraggingEntity = false;
+        }
+
+        // WHILE DRAG
+        if(isDraggingEntity && selectedE != null) {
+            float blend = 1f - Mathf.Pow(1f - 0.5f, Time.deltaTime * 45f);
+            Vector3 destination = worldPos + draggingEntityDelta;
+            if(Input.GetKey(KeyCode.LeftShift)) {
+                destination = (Vector2)Vector2Int.RoundToInt(destination);
+            }
+            destination.z = selectedE.transform.position.z;
+
+            selectedE.transform.position = Vector3.Lerp(selectedE.transform.position, destination, blend);
+            if(selectedERigibody != null) {
+                selectedERigibody.velocity = Vector2.zero;
+                selectedERigibody.disableForAFrame = true;
+            }
+        }
+
+        //SELECTION
+        if(selectedE != null) {
+            chunkSelection.transform.position = selectedE.transform.position + (Vector3)(selectedERigibody.box.offset - (selectedERigibody.box.size * 0.5f));
+            chunkSelectionSprite.size = selectedERigibody.box.size;
+        }
+
+        if(selectedEntityTool == 1 && !pointerOverUI) {
+            if(Input.GetMouseButtonDown(0)) {
+                Entity spawnEntity = EntityManager.inst.Spawn(worldPos, new EntityString("default", "salmod"));
+                if(spawnEntity != null) {
+                    selectedE = spawnEntity;
+                    selectedERigibody = selectedE.GetComponent<RigidbodyPixel>();
+                    draggingEntityDelta = (Vector2)selectedE.transform.position - worldPos + selectedERigibody.box.offset;
+                    isDraggingEntity = true;
+                }
+            }
+        }
+
+        if(selectedEntityTool == 2 && !pointerOverUI) {
+            if(Input.GetMouseButtonDown(0)) {
+                Entity deleteEntity = EntityManager.inst.GetEntityAtPoint(worldPos);
+                if(selectedE == deleteEntity) {
+                    selectedE = null;
+                }
+                if(deleteEntity != null) {
+                    EntityManager.inst.Kill(deleteEntity);
+                }
+            }
+        }
+
+        /*if(Input.GetMouseButtonDown(0)) {
+            if(selectedEntityTool == 2) {
+                Entity entity = 
+                if(entity != null) {
+                    EntityManager.inst.Kill(entity);
+                }
+            }
+            if(selectedEntityTool == 1) {
+                EntityManager.inst.Spawn(tilePos, new EntityString("default", "salmod"));
+            }
+        }*/
+    }
     #endregion
 
     #region Preview
@@ -360,9 +519,9 @@ public class TerrainEditorManager : MonoBehaviour {
 
         previewObject.SetActive(true);
         if(mdc != null) {
-            previewObject.transform.position = new Vector3(x + 0.5f, y + 0.5f, previewZ) * TerrainManager.inst.tileScale + (Vector3)mdc.mobileChunk.position;
+            previewObject.transform.position = new Vector3(x + 0.5f, y + 0.5f, previewZ) + mdc.mobileChunk.position;
         } else {
-            previewObject.transform.position = new Vector3(x + 0.5f, y + 0.5f, previewZ) * TerrainManager.inst.tileScale;
+            previewObject.transform.position = new Vector3(x + 0.5f, y + 0.5f, previewZ);
         }
         if(globalID != 0) {
             previewObject.GetComponent<SpriteRenderer>().sprite = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).previewSprite;
@@ -435,12 +594,12 @@ public class TerrainEditorManager : MonoBehaviour {
             Vector2 worldPos = camera.ScreenToWorldPoint(Input.mousePosition);
             selectedMC.boxCollider.size += Vector2.one * PhysicsPixel.inst.errorHandler * 4f;
             worldPos = new Vector2(
-                Mathf.Clamp(worldPos.x, chunkPos.x, chunkPos.x + selectedMC.mobileDataChunk.restrictedSize.x * TerrainManager.inst.tileScale),
-                Mathf.Clamp(worldPos.y, chunkPos.y, chunkPos.y + selectedMC.mobileDataChunk.restrictedSize.y * TerrainManager.inst.tileScale)
+                Mathf.Clamp(worldPos.x, chunkPos.x, chunkPos.x + selectedMC.mobileDataChunk.restrictedSize.x),
+                Mathf.Clamp(worldPos.y, chunkPos.y, chunkPos.y + selectedMC.mobileDataChunk.restrictedSize.y)
             );
             if(Input.GetKey(KeyCode.LeftShift)) {
                 worldPos -= chunkPos;
-                worldPos = (Vector2)Vector2Int.RoundToInt(worldPos / TerrainManager.inst.tileScale) * TerrainManager.inst.tileScale;
+                worldPos = Vector2Int.RoundToInt(worldPos);
                 worldPos += chunkPos;
             }
             Vector2 corner = (Vector2)selectedMC.transform.position + selectedMC.boxCollider.offset - selectedMC.boxCollider.size * 0.5f;

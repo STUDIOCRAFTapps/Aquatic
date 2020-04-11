@@ -7,6 +7,7 @@ using UnityEngine.EventSystems;
 public class TerrainEditorUI : MonoBehaviour {
 
     [Header("References")]
+    public Dropdown sidebarDropdown;
     public GameObject[] allSidebars;
 
     [Header("Toolbar")]
@@ -56,6 +57,10 @@ public class TerrainEditorUI : MonoBehaviour {
     public Image[] modeTogglesImages;
     public Image[] modeTogglesIcons;
 
+    [Header("Entity Menu")]
+    public Image[] entityMenuButtonImages;
+    public Image[] entityMenuButtonIcons;
+
     TerrainEditorManager tem;
     Vector2Int lastResolution;
     SlotDrag lastSelectedSlot;
@@ -84,30 +89,8 @@ public class TerrainEditorUI : MonoBehaviour {
 
         // Load items in the item menu
         tileAssetRect = new List<TileAssetUIElement>();
-        for(int i = 0; i < TerrainManager.inst.tiles.tileByGlobalID.Count; i++) {
-            // Spawn and configure tile asset displays
-            GameObject newTileAsset = Instantiate(tileAssetPrefab, itemMenuContent);
-            tileAssetRect.Add(newTileAsset.GetComponent<TileAssetUIElement>());
-            tileAssetRect[tileAssetRect.Count - 1].image.sprite = TerrainManager.inst.tiles.tileByGlobalID[i].uiSprite;
-            tileAssetRect[tileAssetRect.Count - 1].nameText.text = TerrainManager.inst.tiles.tileByGlobalID[i].fullName;
-            tileAssetRect[tileAssetRect.Count - 1].infoText.text = TerrainManager.inst.tiles.tileByGlobalID[i].GetType().Name;
-            int index = i;
-            tileAssetRect[tileAssetRect.Count - 1].dragButton.onClick.AddListener(() => {
-
-                // Spawn and configure slot drag
-                SlotDrag slotDrag = Instantiate(slotDragPrefab, terrainEditorRect).GetComponent<SlotDrag>();
-                slotDrag.teUI = this;
-                slotDrag.terrainEditorRect = terrainEditorRect;
-                slotDrag.transform.position = Input.mousePosition;
-                slotDrag.icon.sprite = TerrainManager.inst.tiles.tileByGlobalID[index].uiSprite;
-                int gid = index + 1;
-                slotDrag.BeginDrag();
-
-                slotDrag.button.onClick.AddListener(() => {
-                    SelectTile(gid, slotDrag);
-                });
-            });
-        }
+        CleanInventory();
+        FillTileInventory();
 
         UpdateResolution();
         SelectSidebar(0);
@@ -135,6 +118,69 @@ public class TerrainEditorUI : MonoBehaviour {
             slotIndicator.SetActive(true);
         } else {
             slotIndicator.SetActive(false);
+        }
+    }
+    #endregion
+
+    #region Inventory/Hotbar
+    void CleanInventory () {
+        foreach(TileAssetUIElement taUI in tileAssetRect) {
+            Destroy(taUI.gameObject);
+        }
+        tileAssetRect.Clear();
+    }
+
+    void FillTileInventory () {
+        for(int i = 0; i < TerrainManager.inst.tiles.tileByGlobalID.Count; i++) {
+            // Spawn and configure tile asset displays
+            GameObject newTileAsset = Instantiate(tileAssetPrefab, itemMenuContent);
+            tileAssetRect.Add(newTileAsset.GetComponent<TileAssetUIElement>());
+            tileAssetRect[tileAssetRect.Count - 1].image.sprite = TerrainManager.inst.tiles.tileByGlobalID[i].uiSprite;
+            tileAssetRect[tileAssetRect.Count - 1].nameText.text = TerrainManager.inst.tiles.tileByGlobalID[i].fullName;
+            tileAssetRect[tileAssetRect.Count - 1].infoText.text = TerrainManager.inst.tiles.tileByGlobalID[i].GetType().Name;
+            int index = i;
+            tileAssetRect[tileAssetRect.Count - 1].dragButton.onClick.AddListener(() => {
+
+                // Spawn and configure slot drag
+                SlotDrag slotDrag = Instantiate(slotDragPrefab, terrainEditorRect).GetComponent<SlotDrag>();
+                slotDrag.teUI = this;
+                slotDrag.terrainEditorRect = terrainEditorRect;
+                slotDrag.transform.position = Input.mousePosition;
+                slotDrag.icon.sprite = TerrainManager.inst.tiles.tileByGlobalID[index].uiSprite;
+                int gid = index + 1;
+                slotDrag.BeginDrag();
+
+                slotDrag.button.onClick.AddListener(() => {
+                    SelectTile(gid, slotDrag);
+                });
+            });
+        }
+    }
+
+    void FillEntityInventory () {
+        for(int i = 0; i < EntityManager.inst.entityCollectionGroup.entitiesByGlobalID.Count; i++) {
+            // Spawn and configure tile asset displays
+            GameObject newTileAsset = Instantiate(tileAssetPrefab, itemMenuContent);
+            tileAssetRect.Add(newTileAsset.GetComponent<TileAssetUIElement>());
+            tileAssetRect[tileAssetRect.Count - 1].image.sprite = EntityManager.inst.entityCollectionGroup.entitiesByGlobalID[i].uiSprite;
+            tileAssetRect[tileAssetRect.Count - 1].nameText.text = EntityManager.inst.entityCollectionGroup.entitiesByGlobalID[i].fullName;
+            tileAssetRect[tileAssetRect.Count - 1].infoText.text = EntityManager.inst.entityCollectionGroup.entitiesByGlobalID[i].GetType().Name;
+            int index = i;
+            tileAssetRect[tileAssetRect.Count - 1].dragButton.onClick.AddListener(() => {
+
+                // Spawn and configure slot drag
+                SlotDrag slotDrag = Instantiate(slotDragPrefab, terrainEditorRect).GetComponent<SlotDrag>();
+                slotDrag.teUI = this;
+                slotDrag.terrainEditorRect = terrainEditorRect;
+                slotDrag.transform.position = Input.mousePosition;
+                slotDrag.icon.sprite = EntityManager.inst.entityCollectionGroup.entitiesByGlobalID[index].uiSprite;
+                int gid = index + 1;
+                slotDrag.BeginDrag();
+
+                slotDrag.button.onClick.AddListener(() => {
+                    SelectEntity(gid, slotDrag);
+                });
+            });
         }
     }
     #endregion
@@ -176,6 +222,27 @@ public class TerrainEditorUI : MonoBehaviour {
         tem.selectedMaterialID = globalID;
 
         lastSelectedSlot = slotDrag;
+
+        if(tem.selectedSidebar != 0) {
+            sidebarDropdown.value = 0;
+        }
+    }
+
+    public void SelectEntity (int globalID, SlotDrag slotDrag) {
+        if(lastSelectedSlot != null) {
+            lastSelectedSlot.button.GetComponent<Image>().sprite = normalSlotDragSprite;
+        }
+        slotDrag.button.GetComponent<Image>().sprite = selectedSlotDragSprite;
+        tem.selectedEntityID = globalID;
+
+        lastSelectedSlot = slotDrag;
+
+        if(tem.selectedSidebar != 2) {
+            sidebarDropdown.value = 2;
+            if(tem.selectedEntityTool != 0) {
+                ToggleEntityMode(0);
+            }
+        }
     }
 
     public void SelectLayer (int layer) {
@@ -188,6 +255,14 @@ public class TerrainEditorUI : MonoBehaviour {
         }
         allSidebars[bar].SetActive(true);
         TerrainEditorManager.inst.SetSelectedSidebar(bar);
+        if(bar == 0) {
+            CleanInventory();
+            FillTileInventory();
+        }
+        if(bar == 2) {
+            CleanInventory();
+            FillEntityInventory();
+        }
     }
     #endregion
 
@@ -198,6 +273,7 @@ public class TerrainEditorUI : MonoBehaviour {
         itemMenuLayout.cellSize = new Vector2(Mathf.Floor((itemMenuContent.rect.width - widthCount) / widthCount), itemMenuLayout.cellSize.y);
     }
     #endregion
+
 
     #region Toolbar
     public void SelectTool (int id) {
@@ -319,6 +395,26 @@ public class TerrainEditorUI : MonoBehaviour {
 
             modeTogglesImages[modeID].sprite = selectedToolSprite;
             modeTogglesIcons[modeID].color = selectedToolColor;
+        }
+    }
+    #endregion
+
+    #region Entity Menu
+    public void ToggleEntityMode (int modeID) {
+        foreach(Image img in entityMenuButtonImages) {
+            img.sprite = normalToolSprite;
+        }
+        foreach(Image img in entityMenuButtonIcons) {
+            img.color = normalToolColor;
+        }
+
+        if(TerrainEditorManager.inst.selectedEntityTool == modeID + 1) {
+            TerrainEditorManager.inst.selectedEntityTool = 0;
+        } else {
+            TerrainEditorManager.inst.selectedEntityTool = modeID + 1;
+
+            entityMenuButtonImages[modeID].sprite = selectedToolSprite;
+            entityMenuButtonIcons[modeID].color = selectedToolColor;
         }
     }
     #endregion

@@ -19,10 +19,13 @@ public class RigidbodyPixel : MonoBehaviour {
     public bool interactsWithComplexCollider = false;
 
     [Header("Collider Type Parameters")]
+    public bool collidesOnlyWithTerrain = false;
     public bool isComplexCollider = false;
     public bool applyGenericGravityForceOnLoad = false;
     public bool eliminatesPenetration = false;
     public bool secondExecutionOrder = false;
+    public bool clipPermision = false;
+    public float clipAmout = 0.25f;
 
     // Privates
     private bool failedInitialization;
@@ -66,16 +69,30 @@ public class RigidbodyPixel : MonoBehaviour {
     [Header("Fluid Output")]
     public float submergedPercentage = 0f;
     public float volume = 0f;
+
+    Vector2 lastVel;
+    bool hasBeenInit;
     #endregion
 
 
     #region Monobehaviour
     private void Start () {
+        Init();
+    }
+
+    public void Init () {
+        if(hasBeenInit) {
+            return;
+        }
+        
+        hasBeenInit = true;
+
         // Adding rigibody to the global rigibody registery
         PhysicsPixel.inst.rbs.Add(this);
 
         // Getting all necessairy components
-        if(box == null) box = GetComponent<BoxCollider2D>();
+        if(box == null)
+            box = GetComponent<BoxCollider2D>();
         mobileChunk = GetComponent<MobileChunk>();
         forces = new List<ForcePixel>();
         GetComponents(forces);
@@ -84,9 +101,9 @@ public class RigidbodyPixel : MonoBehaviour {
             failedInitialization = true;
         }
         if(applyGenericGravityForceOnLoad) {
-            if(forces.Count > 0) {
+            if(forces.Count <= 0) {
                 gameObject.AddComponent<ForcePixel>();
-                GetComponents(forces);
+                gameObject.GetComponents(forces);
             }
 
             forces[0].force = PhysicsPixel.inst.genericGravityForce;
@@ -97,7 +114,7 @@ public class RigidbodyPixel : MonoBehaviour {
         if(!isComplexCollider) {
             aabb = GetBoundFromCollider();
         } else {
-            aabb = GetBoundFromCollider((Vector2)mobileChunk.mobileDataChunk.restrictedSize * TerrainManager.inst.tileScale);
+            aabb = GetBoundFromCollider((Vector2)mobileChunk.mobileDataChunk.restrictedSize);
         }
     }
 
@@ -153,10 +170,15 @@ public class RigidbodyPixel : MonoBehaviour {
         movementDelta = Vector2.zero;
 
         // Move the rigibody
+        lastVel = velocity;
         ApplyExternalCollisionInfo();
         ApplyVelocity();
         if(mobileChunk != null) {
             mobileChunk.UpdatePositionData(transform.position);
+        }
+
+        if(clipPermision) {
+            CheckForClipping();
         }
 
         // Cycle temp. variables
@@ -243,7 +265,7 @@ public class RigidbodyPixel : MonoBehaviour {
         if(!isComplexCollider) {
             aabb = GetBoundFromCollider();
         } else {
-            aabb = GetBoundFromCollider((Vector2)mobileChunk.mobileDataChunk.restrictedSize * TerrainManager.inst.tileScale);
+            aabb = GetBoundFromCollider((Vector2)mobileChunk.mobileDataChunk.restrictedSize);
         }
 
         if(totalVolume > 0f) {
@@ -323,6 +345,139 @@ public class RigidbodyPixel : MonoBehaviour {
     }
     #endregion
 
+    #region Cliping
+    void CheckForClipping () {
+        float e = PhysicsPixel.inst.errorHandler;
+        float e5 = 0.03125f;
+
+        #region Left
+        if(lastVel.x < 0f && isCollidingLeft) {
+            Vector2 point0 = new Vector2(
+                transform.position.x + box.offset.x - (box.size.x * 0.5f) - e5,
+                transform.position.y + box.offset.y - (box.size.y * 0.5f) + e
+            );
+            Vector2 point1 = new Vector2(
+                transform.position.x + box.offset.x - (box.size.x * 0.5f) - e5,
+                transform.position.y + box.offset.y - (box.size.y * 0.5f) + clipAmout
+            );
+            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds() {
+                min = point0,
+                max = point1
+            });
+            bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.up * PhysicsPixel.inst.errorHandler);
+
+            if(solidClip && !solidPoint) {
+                if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Down, clipAmout, out Vector2 point)) {
+                    float offset = clipAmout - (point1.y - point.y) + 0.03125f;
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds() {
+                        min = point0 + Vector2.up * offset,
+                        max = point1 + Vector2.up * (offset + box.size.y - e)
+                    });
+                    if(!noFreeSpace) {
+                        transform.position += Vector3.up * offset;
+                        velocity = lastVel;
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region Right
+        if(lastVel.x > 0f && isCollidingRight) {
+            Vector2 point0 = new Vector2(
+                transform.position.x + box.offset.x + (box.size.x * 0.5f) + e5,
+                transform.position.y + box.offset.y - (box.size.y * 0.5f) + e
+            );
+            Vector2 point1 = new Vector2(
+                transform.position.x + box.offset.x + (box.size.x * 0.5f) + e5,
+                transform.position.y + box.offset.y - (box.size.y * 0.5f) + clipAmout
+            );
+            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds() {
+                min = point0,
+                max = point1
+            });
+            bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.up * PhysicsPixel.inst.errorHandler);
+
+            if(solidClip && !solidPoint) {
+                if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Down, clipAmout, out Vector2 point)) {
+                    float offset = clipAmout - (point1.y - point.y) + 0.03125f;
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds() {
+                        min = point0 + Vector2.up * offset,
+                        max = point1 + Vector2.up * (offset + box.size.y - e)
+                    });
+                    if(!noFreeSpace) {
+                        transform.position += Vector3.up * offset;
+                        velocity = lastVel;
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region Top Right
+        if(lastVel.y > 5f && isCollidingUp) {
+            Vector2 point0 = new Vector2(
+                transform.position.x + box.offset.x + (box.size.x * 0.5f),
+                transform.position.y + box.offset.y + (box.size.y * 0.5f)
+            );
+            Vector2 point1 = new Vector2(
+                transform.position.x + box.offset.x + (box.size.x * 0.5f) - clipAmout,
+                transform.position.y + box.offset.y + (box.size.y * 0.5f) + e5
+            );
+            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds() {
+                min = new Vector2(point1.x, point0.y),
+                max = new Vector2(point0.x, point1.y)
+            });
+            bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.left * PhysicsPixel.inst.errorHandler);
+            if(solidClip && !solidPoint) {
+                if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Right, clipAmout, out Vector2 point)) {
+                    float offset = clipAmout - (point.x - point1.x);
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds() {
+                        min = point0 + Vector2.left * offset,
+                        max = point1 + Vector2.left * (offset + box.size.x - e)
+                    });
+                    if(!noFreeSpace) {
+                        transform.position += Vector3.left * offset;
+                        velocity = lastVel;
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region Top Left
+        if(lastVel.y > 5f && isCollidingUp) {
+            Vector2 point0 = new Vector2(
+                transform.position.x + box.offset.x - (box.size.x * 0.5f),
+                transform.position.y + box.offset.y + (box.size.y * 0.5f)
+            );
+            Vector2 point1 = new Vector2(
+                transform.position.x + box.offset.x - (box.size.x * 0.5f) + clipAmout,
+                transform.position.y + box.offset.y + (box.size.y * 0.5f) + e5
+            );
+            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds() {
+                min = new Vector2(point0.x, point0.y),
+                max = new Vector2(point1.x, point1.y)
+            });
+            bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.right * PhysicsPixel.inst.errorHandler);
+            if(solidClip && !solidPoint) {
+                if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Left, clipAmout, out Vector2 point)) {
+                    float offset = clipAmout - (point1.x - point.x);
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds() {
+                        min = point0 + Vector2.right * offset,
+                        max = point1 + Vector2.right * (offset + box.size.x - e)
+                    });
+                    if(!noFreeSpace) {
+                        transform.position += Vector3.right * offset;
+                        velocity = lastVel;
+                    }
+                }
+            }
+        }
+        #endregion
+    }
+    #endregion
+
 
     #region Parent Platform Utils
     public void SetParentPlatform (RigidbodyPixel pp, bool fullyConnected) {
@@ -374,10 +529,7 @@ public class RigidbodyPixel : MonoBehaviour {
     }
 
     public Bounds GetBoundFromCollider () {
-        return new Bounds() {
-            min = new Vector2(transform.position.x, transform.position.y) - box.size * 0.5f + box.offset,
-            max = new Vector2(transform.position.x, transform.position.y) + box.size * 0.5f + box.offset
-        };
+        return new Bounds((Vector2)transform.position + box.offset, box.size);
     }
 
     public Bounds GetBoundFromCollider (Vector3 trueSize) {

@@ -6,7 +6,7 @@ public class TerrainManager : MonoBehaviour {
 
     #region Header and Init
     public static TerrainManager inst;
-    public Dictionary<Vector2Int, DataChunk> chunks;
+    public Dictionary<long, DataChunk> chunks;
     public Queue<DataChunk> unusedChunks;
     public Queue<Vector2Int> chunkToReload;
     public Queue<int> mobileChunkToReload;
@@ -20,7 +20,6 @@ public class TerrainManager : MonoBehaviour {
     public TerrainLayerParameters[] layerParameters;
     public float pixelPerTile = 16f;
     public int chunkSize = 16;
-    public float tileScale = 1f;
     public Vector2Int loadRadius;
     public float unloadTimer = 5f;
     public float autoSaveTimeLimit = 10f;
@@ -32,6 +31,7 @@ public class TerrainManager : MonoBehaviour {
 
     [HideInInspector] public float worldToPixel;
     [HideInInspector] public float pixelToWorld;
+    [HideInInspector] public static float invChunkSize;
 
     private void Awake () {
         if(inst == null) {
@@ -40,14 +40,15 @@ public class TerrainManager : MonoBehaviour {
 
         currentMobileIndex = PlayerPrefs.GetInt("currentMobileIndex", 0);
 
-        chunks = new Dictionary<Vector2Int, DataChunk>();
+        chunks = new Dictionary<long, DataChunk>();
         unusedChunks = new Queue<DataChunk>();
         chunkToReload = new Queue<Vector2Int>();
         mobileChunkToReload = new Queue<int>();
         tiles.BuildDictionaries();
 
-        worldToPixel = (1f / tileScale) * pixelPerTile;
+        worldToPixel = pixelPerTile;
         pixelToWorld = 1f / worldToPixel;
+        invChunkSize = 1f / chunkSize;
     }
 
     private void LateUpdate () {
@@ -74,7 +75,7 @@ public class TerrainManager : MonoBehaviour {
     }
 
     void AutoSaves () {
-        foreach(KeyValuePair<Vector2Int, DataChunk> kvp in chunks) {
+        foreach(KeyValuePair<long, DataChunk> kvp in chunks) {
             if(Time.time - kvp.Value.timeOfLastAutosave > autoSaveTimeLimit) {
                 kvp.Value.timeOfLastAutosave = Time.time;
                 DataChunkSaving.inst.SaveChunk(kvp.Value);
@@ -86,15 +87,24 @@ public class TerrainManager : MonoBehaviour {
                 DataChunkSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
             }
         }
+        foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
+            if(Time.time - kvp.Value.entityData.timeOfLastAutosave > autoSaveTimeLimit) {
+                kvp.Value.entityData.timeOfLastAutosave = Time.time;
+                EntityManager.inst.SaveEntity(kvp.Value);
+            }
+        }
         EntityRegionManager.inst.CheckForAutosaves();
     }
 
     void CompleteSave () {
-        foreach(KeyValuePair<Vector2Int, DataChunk> kvp in chunks) {
+        foreach(KeyValuePair<long, DataChunk> kvp in chunks) {
             DataChunkSaving.inst.SaveChunk(kvp.Value);
         }
         foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
             DataChunkSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
+        }
+        foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
+            EntityManager.inst.SaveEntity(kvp.Value);
         }
         EntityRegionManager.inst.SaveAllRegions();
     }
@@ -106,8 +116,8 @@ public class TerrainManager : MonoBehaviour {
 
     #region Default Chunks
     public bool GetChunkAtPosition (Vector2Int position, out DataChunk dataChunk) {
-        if(chunks.ContainsKey(position)) {
-            dataChunk = chunks[position];
+        if(chunks.TryGetValue(Hash.hVec2Int(position), out DataChunk value)) {
+            dataChunk = value;
             return true;
         } else {
             dataChunk = null;
@@ -123,15 +133,14 @@ public class TerrainManager : MonoBehaviour {
             dataChunk = unusedChunks.Dequeue();
         }
         dataChunk.Init(chunkPosition);
-        chunks.Add(chunkPosition, dataChunk);
+        chunks.Add(Hash.hVec2Int(chunkPosition), dataChunk);
 
         return dataChunk;
     }
 
     public void SetDataChunkAsUnused (Vector2Int chunkPosition) {
-        if(chunks.ContainsKey(chunkPosition)) {
-            DataChunk dataChunk = chunks[chunkPosition];
-            chunks.Remove(chunkPosition);
+        if(chunks.TryGetValue(Hash.hVec2Int(chunkPosition), out DataChunk dataChunk)) {
+            chunks.Remove(Hash.hVec2Int(chunkPosition));
             unusedChunks.Enqueue(dataChunk);
         }
     }
@@ -139,8 +148,8 @@ public class TerrainManager : MonoBehaviour {
     public void RefreshSurroundingChunks (Vector2Int chunkPosition, int radius = 2) {
         for(int x = -(radius - 1); x < radius; x++) {
             for(int y = -(radius - 1); y < radius; y++) {
-                if(chunks.ContainsKey(chunkPosition + new Vector2Int(x, y))) {
-                    chunks[chunkPosition + new Vector2Int(x, y)].RefreshTiles();
+                if(chunks.TryGetValue(Hash.hVec2Int(chunkPosition + new Vector2Int(x, y)), out DataChunk value)) {
+                    value.RefreshTiles();
                 }
             }
         }
@@ -164,8 +173,8 @@ public class TerrainManager : MonoBehaviour {
                 continue;
             }
 
-            float worldSizeX = kvp.Value.mobileDataChunk.restrictedSize.x * tileScale;
-            float worldSizeY = kvp.Value.mobileDataChunk.restrictedSize.y * tileScale;
+            float worldSizeX = kvp.Value.mobileDataChunk.restrictedSize.x;
+            float worldSizeY = kvp.Value.mobileDataChunk.restrictedSize.y;
 
             bool isInRange =
                 position.x > kvp.Value.position.x &&
@@ -351,24 +360,24 @@ public class TerrainManager : MonoBehaviour {
         return Vector2Int.FloorToInt(new Vector2(position.x / ((float)chunkSize * chunksPerRegionSide), position.y / ((float)chunkSize * chunksPerRegionSide)));
     }
 
-    public Vector2Int GetChunkPositionAtTile (int x, int y) {
-        return Vector2Int.FloorToInt(new Vector2(x / (float)chunkSize, y / (float)chunkSize));
+    public static Vector2Int GetChunkPositionAtTile (int x, int y) {
+        return Vector2Int.FloorToInt(new Vector2(x * invChunkSize, y * invChunkSize));
     }
 
     public Vector2Int WorldToTile (Vector2 worldPos) {
-        return Vector2Int.FloorToInt(worldPos / tileScale);
+        return Vector2Int.FloorToInt(worldPos);
     }
 
     public Vector2 TileToWorld (Vector2Int tilePos) {
-        return (Vector2)tilePos * tileScale;
+        return (Vector2)tilePos;
     }
 
     public Vector2Int WorldToChunk (Vector2 worldPos) {
-        return GetChunkPositionAtTile(Vector2Int.FloorToInt(worldPos / tileScale));
+        return GetChunkPositionAtTile(Vector2Int.FloorToInt(worldPos));
     }
 
     public Vector2Int WorldToRegion (Vector2 worldPos) {
-        return GetRegionPositionAtTile(Vector2Int.FloorToInt(worldPos / tileScale));
+        return GetRegionPositionAtTile(Vector2Int.FloorToInt(worldPos));
     }
 
     public Vector2Int GetLocalPositionAtTile (int x, int y, Vector2Int cpos) {
@@ -378,6 +387,20 @@ public class TerrainManager : MonoBehaviour {
     public bool IsMobileChunkInLoadedChunks (MobileChunk mobileChunk) {
         Vector2Int min = WorldToChunk(mobileChunk.position);
         Vector2Int max = WorldToChunk(mobileChunk.position + (Vector3)mobileChunk.boxCollider.size);
+
+        for(int x = min.x; x <= max.x; x++) {
+            for(int y = min.y; y <= max.y; y++) {
+                if(!VisualChunkManager.inst.visualChunkPool.ContainsKey(new Vector2Int(x, y))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public bool IsEntityInLoadedChunks (Entity entity) {
+        Vector2Int min = WorldToChunk(entity.entityData.position + entity.asset.loadBoxOffset - (entity.asset.loadBoxSize * 0.5f));
+        Vector2Int max = WorldToChunk(entity.entityData.position + entity.asset.loadBoxOffset + (entity.asset.loadBoxSize * 0.5f));
 
         for(int x = min.x; x <= max.x; x++) {
             for(int y = min.y; y <= max.y; y++) {

@@ -79,7 +79,7 @@ public class ChunkLoader : MonoBehaviour {
             } else {
                 loadCounters[chunkPosition].loadCount++;
                 
-                if(!TerrainManager.inst.chunks.ContainsKey(chunkPosition)) {
+                if(!TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition))) {
                     doGenerate = true;
                 }
             }
@@ -132,8 +132,8 @@ public class ChunkLoader : MonoBehaviour {
                     loadCounters[chunkPosition].timer = new CancellableTimer();
                 }
                 loadCounters[chunkPosition].timer.Start(TerrainManager.inst.unloadTimer, () => {
-                    if(TerrainManager.inst.chunks.ContainsKey(chunkPosition)) {
-                        DataChunkSaving.inst.SaveChunk(TerrainManager.inst.chunks[chunkPosition]);
+                    if(TerrainManager.inst.chunks.TryGetValue(Hash.hVec2Int(chunkPosition), out DataChunk dataChunk)) {
+                        DataChunkSaving.inst.SaveChunk(dataChunk);
                         TerrainManager.inst.SetDataChunkAsUnused(chunkPosition);
                         VisualChunkManager.inst.UnloadChunkAt(chunkPosition);
 

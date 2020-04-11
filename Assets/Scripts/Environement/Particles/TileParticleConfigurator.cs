@@ -29,8 +29,8 @@ public class TileParticleConfigurator : MonoBehaviour {
         this.reference = reference;
         this.unitID = unitID;
 
-        transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, reference.zOffset) + ((mdc != null) ? mdc.mobileChunk.position : Vector3.zero);
         unit = reference.breakingUnits[unitID];
+        transform.position = new Vector3(pos.x + 0.5f + unit.offset.x, pos.y + 0.5f + unit.offset.y, reference.zOffset) + ((mdc != null) ? mdc.mobileChunk.position : Vector3.zero);
         Configure();
 
         Emit();

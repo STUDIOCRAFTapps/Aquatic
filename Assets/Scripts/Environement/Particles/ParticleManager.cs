@@ -10,23 +10,21 @@ public class ParticleManager : MonoBehaviour {
     public TileParticleConfigurator[] tileParticlePrefabs;
     public ParticleConfigurator[] entityParticlePrefabs;
 
+    private List<ParticleConfigurator> entityParticles;
     private Queue<TileParticleConfigurator>[] unusedTileParticles;
-    private Queue<ParticleConfigurator>[] unusedEntityParticles;
     private Dictionary<int, CustomTileParticle> gidToCustomTileParticle;
 
     private void Awake () {
         inst = this;
-
-
 
         unusedTileParticles = new Queue<TileParticleConfigurator>[tileParticlePrefabs.Length];
         for(int i = 0; i < tileParticlePrefabs.Length; i++) {
             unusedTileParticles[i] = new Queue<TileParticleConfigurator>();
         }
 
-        unusedEntityParticles = new Queue<ParticleConfigurator>[entityParticlePrefabs.Length];
+        entityParticles = new List<ParticleConfigurator>();
         for(int i = 0; i < entityParticlePrefabs.Length; i++) {
-            unusedEntityParticles[i] = new Queue<ParticleConfigurator>();
+            entityParticles.Add(Instantiate(entityParticlePrefabs[i], transform));
         }
 
 
@@ -98,22 +96,9 @@ public class ParticleManager : MonoBehaviour {
     }
     #endregion
 
-    #region StaticEntityParticlePool
+    #region EntityParticlePool
     private ParticleConfigurator GetUnusedStaticEntityParticle (int id) {
-        if(unusedEntityParticles[id].Count > 0) {
-            ParticleConfigurator particle = unusedEntityParticles[id].Dequeue();
-            particle.gameObject.SetActive(true);
-            return particle;
-        } else {
-            ParticleConfigurator particle = Instantiate(entityParticlePrefabs[id], transform);
-            particle.id = id;
-            return particle;
-        }
-    }
-
-    public void SetStaticEntityParticleAsUnused (int id, ParticleConfigurator staticEntityParticle) {
-        staticEntityParticle.gameObject.SetActive(false);
-        unusedEntityParticles[id].Enqueue(staticEntityParticle);
+        return entityParticles[id];
     }
     #endregion
 }

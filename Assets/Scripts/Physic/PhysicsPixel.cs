@@ -132,6 +132,7 @@ public class PhysicsPixel : MonoBehaviour {
         bool hasCollided = false;
         for(int b = 0; b < bta.collisionBoxes.Length; b++) {
             if(RayIntersectTileBounds(bta.collisionBoxes[b], tileX, tileY, ray, out float d)) {
+                hasCollided = true;
                 distance = Mathf.Min(distance, d);
             }
         }
@@ -190,7 +191,7 @@ public class PhysicsPixel : MonoBehaviour {
         }
 
         // Execute a 2D voxel traversal routine to find solid tile
-        int limtCounter = (int)(maxTileDistance * Mathf.Sqrt(3f)) * 3;
+        int limtCounter = (int)(maxTileDistance * Mathf.Sqrt(2f)) * 2;
         for(int i = limtCounter; i >= 0; i--) {
             Vector2Int tilePos = Vector2Int.FloorToInt(pos0);
 
@@ -294,6 +295,31 @@ public class PhysicsPixel : MonoBehaviour {
 
         return false;
     }
+
+    public bool IsPointSolid (Vector2 point) {
+        Vector2Int tile = Vector2Int.FloorToInt(point);
+
+        // Seek tiles
+        bool tileFound = TerrainManager.inst.GetGlobalIDAt(tile.x, tile.y, TerrainLayers.Ground, out int globalID, null);
+        if(!tileFound || globalID == 0) {
+            return false;
+        }
+
+        // Test asset
+        BaseTileAsset bta = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(TerrainManager.inst.GetGlobalIDAt(tile.x, tile.y, TerrainLayers.Ground, null));
+        if(!bta.hasCollision) {
+            return false;
+        }
+        if(bta.collisionBoxes.Length == 0) {
+            return false;
+        }
+        for(int i = 0; i < bta.collisionBoxes.Length; i++) {
+            if(bta.collisionBoxes[i].Contains(point - tile - (Vector2.one * 0.5f))) {
+                return true;
+            }
+        }
+        return false;
+    }
     #endregion
 
 
@@ -317,6 +343,9 @@ public class PhysicsPixel : MonoBehaviour {
     void CalculateManifolds (bool isFirstRoutine) {
         for(int i = 0; i < rbs.Count; i++) {
             for(int j = i + 1; j < rbs.Count; j++) {
+                if((rbs[i].collidesOnlyWithTerrain || rbs[j].collidesOnlyWithTerrain) && !(rbs[i].interactsWithComplexCollider || rbs[j].interactsWithComplexCollider)) {
+                    continue;
+                }
                 if(!rbs[i].gameObject.activeSelf || !rbs[j].gameObject.activeSelf) {
                     continue;
                 }
@@ -515,7 +544,7 @@ public class PhysicsPixel : MonoBehaviour {
             if(!m.A.isComplexCollider) {
                 m.A.aabb = m.A.GetBoundFromCollider();
             } else {
-                m.A.aabb = m.A.GetBoundFromCollider((Vector2)m.A.mobileChunk.mobileDataChunk.restrictedSize * TerrainManager.inst.tileScale);
+                m.A.aabb = m.A.GetBoundFromCollider((Vector2)m.A.mobileChunk.mobileDataChunk.restrictedSize);
             }
             
             m.anyBodyMoved = true;
@@ -524,7 +553,7 @@ public class PhysicsPixel : MonoBehaviour {
             if(!m.B.isComplexCollider) {
                 m.B.aabb = m.B.GetBoundFromCollider();
             } else {
-                m.B.aabb = m.B.GetBoundFromCollider((Vector2)m.B.mobileChunk.mobileDataChunk.restrictedSize * TerrainManager.inst.tileScale);
+                m.B.aabb = m.B.GetBoundFromCollider((Vector2)m.B.mobileChunk.mobileDataChunk.restrictedSize);
             }
 
             m.anyBodyMoved = true;
@@ -539,8 +568,8 @@ public class PhysicsPixel : MonoBehaviour {
         pl.isInsideComplexObject = cm;
 
         Bounds playerBounds = pl.aabb;
-        Vector2Int queryTileMin = Vector2Int.FloorToInt((playerBounds.min - cm.transform.position) / TerrainManager.inst.tileScale);
-        Vector2Int queryTileMax = Vector2Int.FloorToInt((playerBounds.max - cm.transform.position) / TerrainManager.inst.tileScale);
+        Vector2Int queryTileMin = Vector2Int.FloorToInt((playerBounds.min - cm.transform.position));
+        Vector2Int queryTileMax = Vector2Int.FloorToInt((playerBounds.max - cm.transform.position));
 
         sampledCollisions.Clear();
         SampleCollisionInBounds(queryTileMin, queryTileMax, ref sampledCollisions, playerBounds, cm.mobileChunk.mobileDataChunk);
@@ -888,6 +917,7 @@ public class PhysicsPixel : MonoBehaviour {
     public bool RayIntersectTileBounds (Bounds tileBounds, int tileX, int tileY, Ray2D collidingRay, out float distance) {
         Bounds tB = tileBounds;
         tB.center += new Vector3((tileX + 0.5f) * queryInterval.x, (tileY + 0.5f) * queryInterval.y);
+        tB.size = new Vector3(tB.size.x, tB.size.y, 1f);
         bool doIntersect = tB.IntersectRay(new Ray(collidingRay.origin, collidingRay.direction), out float d);
         distance = d;
         return doIntersect;
@@ -909,9 +939,9 @@ public class PhysicsPixel : MonoBehaviour {
 
         //Reduce the delta to the smallest (ignoring the sign) colliding "axis".
         if(deltaX < 0 && bounds.min.x >= collider.max.x) {
-            return Max(deltaX, collider.max.x - bounds.min.x + PhysicsPixel.inst.errorHandler);
+            return Max(deltaX, collider.max.x - bounds.min.x + errorHandler);
         } else if(deltaX > 0 && bounds.max.x <= collider.min.x) {
-            return Min(deltaX, collider.min.x - bounds.max.x - PhysicsPixel.inst.errorHandler);
+            return Min(deltaX, collider.min.x - bounds.max.x - errorHandler);
         }
 
         return deltaX;
@@ -925,9 +955,9 @@ public class PhysicsPixel : MonoBehaviour {
 
         //Reduce the delta to the smallest (ignoring the sign) colliding "axis".
         if(deltaY < 0 && bounds.min.y >= collider.max.y) {
-            return Max(deltaY, collider.max.y - bounds.min.y + PhysicsPixel.inst.errorHandler);
+            return Max(deltaY, collider.max.y - bounds.min.y + errorHandler);
         } else if(deltaY > 0 && bounds.max.y <= collider.min.y) {
-            return Min(deltaY, collider.min.y - bounds.max.y - PhysicsPixel.inst.errorHandler);
+            return Min(deltaY, collider.min.y - bounds.max.y - errorHandler);
         }
 
         return deltaY;
@@ -975,11 +1005,20 @@ public class PhysicsPixel : MonoBehaviour {
 
                     //Do water calculations
                     int gid = TerrainManager.inst.GetGlobalIDAt(tileX, tileY, TerrainLayers.WaterBackground);
+                    int topGid = TerrainManager.inst.GetGlobalIDAt(tileX, tileY + 1, TerrainLayers.WaterBackground);
                     if(gid == waterBackground.globalID) {
-                        Vector2 areaSize = GetIntersectingAreaSize(colliderBounds, new Bounds() {
-                            min = new Vector2(tileX, tileY),
-                            max = new Vector2(tileX + 1f, tileY + 1f),
-                        });
+                        Vector2 areaSize;
+                        if(topGid == waterBackground.globalID) {
+                            areaSize = GetIntersectingAreaSize(colliderBounds, new Bounds() {
+                                min = new Vector2(tileX, tileY),
+                                max = new Vector2(tileX + 1f, tileY + 1f),
+                            });
+                        } else {
+                            areaSize = GetIntersectingAreaSize(colliderBounds, new Bounds() {
+                                min = new Vector2(tileX, tileY),
+                                max = new Vector2(tileX + 1f, tileY + 0.75f),
+                            });
+                        }
 
                         substractVolume -= (areaSize.x * areaSize.y);
                     }

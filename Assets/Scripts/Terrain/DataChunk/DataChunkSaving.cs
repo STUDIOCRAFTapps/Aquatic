@@ -6,6 +6,7 @@ using System.Text;
 using UnityEngine;
 using System;
 using System.Linq;
+using Newtonsoft.Json;
 
 public class DataChunkSaving : MonoBehaviour {
 
@@ -29,14 +30,19 @@ public class DataChunkSaving : MonoBehaviour {
     public const string mobileChunkDataFolder = "mobile_chunk_data";
     public const string mobileChunkDataEnd = ".mdat";
 
+    public const string entityDataFolder = "entity_data";
+    public const string entityDataEnd = ".edat";
+
     // Privates
     char s; // Separator char
     string datapath;
     string chunkDatapath;
     string mobileChunkDatapath;
+    string entityDatapath;
     StringBuilder sb;
     Dictionary<char, byte> charToByte;
     List<string> layerNames;
+    JsonSerializerSettings jss;
 
     // Shared Ressources
     static byte[] buffer = new byte[bufferSize];
@@ -49,6 +55,10 @@ public class DataChunkSaving : MonoBehaviour {
         s = Path.DirectorySeparatorChar;
         datapath = Application.persistentDataPath;
         sb = new StringBuilder();
+        jss = new JsonSerializerSettings() {
+            TypeNameHandling = TypeNameHandling.Auto,
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+        };
 
         ComposeDataPaths();
         
@@ -73,16 +83,20 @@ public class DataChunkSaving : MonoBehaviour {
     }
 
     void ComposeDataPaths () {
-        mobileChunkDatapath = datapath + s + savesFolder + s + saveFolderName + s + mobileChunkDataFolder + s;
-
+        mobileChunkDatapath = datapath + s + savesFolder + s + saveFolderName + s + dimensions[dimension] + s + mobileChunkDataFolder + s;
         if(!Directory.Exists(mobileChunkDatapath)) {
+            Debug.Log(mobileChunkDatapath);
             Directory.CreateDirectory(mobileChunkDatapath);
         }
 
-        chunkDatapath = datapath + s + savesFolder + s + saveFolderName + s + chunkDataFolder + s + dimensions[dimension] + s;
-
+        chunkDatapath = datapath + s + savesFolder + s + saveFolderName + s + dimensions[dimension] + s + chunkDataFolder + s;
         if(!Directory.Exists(chunkDatapath)) {
             Directory.CreateDirectory(chunkDatapath);
+        }
+
+        entityDatapath = datapath + s + savesFolder + s + saveFolderName + s + dimensions[dimension] + s + entityDataFolder + s;
+        if(!Directory.Exists(entityDatapath)) {
+            Directory.CreateDirectory(entityDatapath);
         }
     }
 
@@ -105,90 +119,145 @@ public class DataChunkSaving : MonoBehaviour {
 
         return sb.ToString();
     }
+
+    public string GetEntityDirectory (int uid) {
+        sb.Clear();
+        sb.Append(entityDatapath);
+        sb.Append(uid);
+        sb.Append(entityDataEnd);
+
+        return sb.ToString();
+    }
     #endregion
 
     #region Surface Save Functions
     public void SaveChunk (DataChunk source) {
         //Serialize and save.
-        using(FileStream fs = new FileStream(GetChunkDirectory(source), FileMode.Create)) {
-            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress)) {
-                using(MemoryStream ms = new MemoryStream(buffer)) {
-                    using(BinaryWriter bw = new BinaryWriter(ms)) {
-                        SerializeToStream(bw, source);
-                        defs.Write(buffer, 0, (int)ms.Position);
-                    }
-                }
-            }
+        using(FileStream fs = new FileStream(GetChunkDirectory(source), FileMode.Create))
+        using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
+        using(MemoryStream ms = new MemoryStream(buffer))
+        using(BinaryWriter bw = new BinaryWriter(ms)) {
+            SerializeToStream(bw, source);
+            defs.Write(buffer, 0, (int)ms.Position);
         }
     }
 
     public void SaveChunk (MobileDataChunk source) {
         //Serialize and save.
-        using(FileStream fs = new FileStream(GetMobileChunkDirectory(source), FileMode.Create)) {
-            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress)) {
-                using(MemoryStream ms = new MemoryStream(buffer)) {
-                    using(BinaryWriter bw = new BinaryWriter(ms)) {
-                        SerializeToStream(bw, source);
-                        defs.Write(buffer, 0, (int)ms.Position);
-                    }
-                }
-            }
+        using(FileStream fs = new FileStream(GetMobileChunkDirectory(source), FileMode.Create))
+        using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
+        using(MemoryStream ms = new MemoryStream(buffer))
+        using(BinaryWriter bw = new BinaryWriter(ms)) {
+            SerializeToStream(bw, source);
+            defs.Write(buffer, 0, (int)ms.Position);
         }
     }
 
-    public bool LoadChunk (DataChunk destination) {
+    public void SaveEntity (Entity entity) {
+        //Serialize and save.
+        using(FileStream fs = new FileStream(GetEntityDirectory(entity.entityData.uid), FileMode.Create))
+        using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
+        using(StreamWriter sw = new StreamWriter(defs))
+        using(JsonWriter jw = new JsonTextWriter(sw)) {
+            JsonSerializer serializer = JsonSerializer.Create(jss);
+
+            serializer.Serialize(jw, new EntityDataWrapper(entity.entityData));
+        }
+    }
+
+    public bool LoadChunk (DataChunk dataChunk) {
+
         // The destination chunk should already have been cleaned and thus, 
         // its position should be correct and it can be passed to the GetChunkDirectory function.
-        string chunkPath = GetChunkDirectory(destination);
+        string chunkPath = GetChunkDirectory(dataChunk);
         if(!File.Exists(chunkPath)) {
             return false;
         }
+
         bool hasSucceded;
-        using(FileStream fs = new FileStream(chunkPath, FileMode.Open)) {
-            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress)) {
-                using(MemoryStream ms = new MemoryStream(buffer)) {
-                    using(BinaryReader br = new BinaryReader(ms)) {
-                        int rlength = defs.Read(buffer, 0, buffer.Length);
-                        hasSucceded = DeserializeFromStream(br, destination);
-                    }
-                }
+        try {
+            using(FileStream fs = new FileStream(chunkPath, FileMode.Open))
+            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress))
+            using(MemoryStream ms = new MemoryStream(buffer))
+            using(BinaryReader br = new BinaryReader(ms)) {
+                int rlength = defs.Read(buffer, 0, buffer.Length);
+                hasSucceded = DeserializeFromStream(br, dataChunk);
             }
+        } catch(Exception e) {
+            Debug.Log("Failed to load chunk: " + e.ToString());
+            hasSucceded = false;
         }
+
         if(!hasSucceded) {
-            Debug.LogError($"A chunk at {destination.chunkPosition} failed to be deserialized. Its file was deleted.");
+            Debug.LogError($"A chunk at {dataChunk.chunkPosition} failed to be deserialized. Its file was deleted.");
             File.Delete(chunkPath);
         }
         return hasSucceded;
     }
 
-    public bool LoadChunk (MobileDataChunk destination) {
+    public bool LoadChunk (MobileDataChunk dataChunk) {
         // The destination chunk should already have been cleaned and thus, 
         // its position should be correct and it can be passed to the GetChunkDirectory function.
-        string chunkPath = GetMobileChunkDirectory(destination);
+        string chunkPath = GetMobileChunkDirectory(dataChunk);
         if(!File.Exists(chunkPath)) {
             return false;
         }
         bool hasSucceded;
-        using(FileStream fs = new FileStream(chunkPath, FileMode.Open)) {
-            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress)) {
-                using(MemoryStream ms = new MemoryStream(buffer)) {
-                    using(BinaryReader br = new BinaryReader(ms)) {
-                        int rlength = defs.Read(buffer, 0, buffer.Length);
-                        hasSucceded = DeserializeFromStream(br, destination);
-                    }
-                }
-            }
+        using(FileStream fs = new FileStream(chunkPath, FileMode.Open))
+        using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress))
+        using(MemoryStream ms = new MemoryStream(buffer))
+        using(BinaryReader br = new BinaryReader(ms)) {
+            int rlength = defs.Read(buffer, 0, buffer.Length);
+            hasSucceded = DeserializeFromStream(br, dataChunk);
         }
+
         if(!hasSucceded) {
-            Debug.LogError($"A mobile chunk with uid {destination.mobileChunk.uid} failed to be deserialized. Its file was deleted.");
+            Debug.LogError($"A mobile chunk with uid {dataChunk.mobileChunk.uid} failed to be deserialized. Its file was deleted.");
             File.Delete(chunkPath);
+        }
+        return hasSucceded;
+    }
+
+    public bool LoadEntity (int uid, out EntityData entityData) {
+        // The destination chunk should already have been cleaned and thus, 
+        // its position should be correct and it can be passed to the GetChunkDirectory function.
+        string entityPath = GetEntityDirectory(uid);
+        if(!File.Exists(entityPath)) {
+            entityData = null;
+            return false;
+        }
+        bool hasSucceded;
+        using(FileStream fs = new FileStream(entityPath, FileMode.Open))
+        using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress))
+        using(StreamReader sr = new StreamReader(defs))
+        using(JsonReader jr = new JsonTextReader(sr)) {
+            JsonSerializer serializer = JsonSerializer.Create(jss);
+
+            entityData = serializer.Deserialize<EntityDataWrapper>(jr).entityData;
+            hasSucceded = true;
+        }
+
+        if(!hasSucceded) {
+            Debug.LogError($"An entity with uid {uid} failed to be deserialized. Its file was deleted.");
+            File.Delete(entityPath);
         }
         return hasSucceded;
     }
 
     public void DeleteMobileChunk (MobileDataChunk target) {
         string chunkPath = GetMobileChunkDirectory(target);
-        File.Delete(chunkPath);
+        if(File.Exists(chunkPath)) {
+            File.Delete(chunkPath);
+        }
+        
+    }
+
+    public void DeleteEntity (Entity entity) {
+        string entityPath = GetEntityDirectory(entity.entityData.uid);
+        if(File.Exists(entityPath)) {
+            File.Delete(entityPath);
+        }
+
     }
     #endregion
 

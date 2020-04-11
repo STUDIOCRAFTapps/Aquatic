@@ -96,6 +96,7 @@ public class VisualChunkManager : MonoBehaviour {
         VisualChunk vc = visualChunkPool[chunkPosition];
 
         vc.gameObject.SetActive(false);
+        PathgridManager.inst.SetNodeChunkAsUnused(chunkPosition);
         visualChunkPool.Remove(chunkPosition);
         unusedVisualChunkPool.Enqueue(vc);
     }
@@ -184,6 +185,14 @@ public class VisualChunkManager : MonoBehaviour {
     public void ToggleAllSelectionRects (bool doSetActive) {
         foreach(KeyValuePair<int, MobileChunk> kvp in mobileChunkPool) {
             kvp.Value.selectionRect.gameObject.SetActive(doSetActive);
+        }
+    }
+
+    public VisualChunk GetVisualChunkAt (Vector2Int chunkPos) {
+        if(visualChunkPool.ContainsKey(chunkPos)) {
+            return visualChunkPool[chunkPos];
+        } else {
+            return null;
         }
     }
     #endregion

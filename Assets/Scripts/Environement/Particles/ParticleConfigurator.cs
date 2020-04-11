@@ -23,7 +23,7 @@ public class ParticleConfigurator : MonoBehaviour {
     }
 
     public void OnParticleSystemStopped () {
-        // Call 9Particle Manager to tell him it's all done now
-        ParticleManager.inst.SetStaticEntityParticleAsUnused(id, this);
+        /*// Call particle Manager to tell him it's all done now
+        ParticleManager.inst.SetStaticEntityParticleAsUnused(id, this);*/
     }
 }

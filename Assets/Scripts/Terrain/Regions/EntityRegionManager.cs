@@ -29,7 +29,9 @@ public class EntityRegionManager : MonoBehaviour {
     // Data
     Dictionary<Vector2Int, EntityRegion> entityRegions;
     Queue<EntityRegion> unusedEntityRegions;
+
     public List<MobileChunk> outOfBoundsMobileChunks;
+    public List<Entity> outOfBoundsEntities;
 
     // Shared ressource
     static byte[] buffer = new byte[bufferSize];
@@ -54,10 +56,11 @@ public class EntityRegionManager : MonoBehaviour {
         entityRegions = new Dictionary<Vector2Int, EntityRegion>();
         unusedEntityRegions = new Queue<EntityRegion>();
         outOfBoundsMobileChunks = new List<MobileChunk>();
+        outOfBoundsEntities = new List<Entity>();
     }
 
     private void Update () {
-        outOfBoundsCounter += Time.deltaTime;
+        outOfBoundsCounter += Time.unscaledDeltaTime;
 
         if(outOfBoundsCounter >= TerrainManager.inst.outOfBoundsRefreshInterval) {
             outOfBoundsCounter = 0f;
@@ -78,7 +81,7 @@ public class EntityRegionManager : MonoBehaviour {
 
     #region Data Paths
     void ComposeDataPaths () {
-        regionsDatapath = datapath + s + DataChunkSaving.savesFolder + s + DataChunkSaving.inst.saveFolderName + s + regionFolder + s;
+        regionsDatapath = datapath + s + DataChunkSaving.savesFolder + s + DataChunkSaving.inst.saveFolderName + s + DataChunkSaving.dimensions[DataChunkSaving.inst.dimension] + s + regionFolder + s;
 
         if(!Directory.Exists(regionsDatapath)) {
             Directory.CreateDirectory(regionsDatapath);
@@ -119,7 +122,7 @@ public class EntityRegionManager : MonoBehaviour {
         entityRegions.Remove(entityRegion.regionPosition);
         unusedEntityRegions.Enqueue(entityRegion);
 
-        entityRegion.UnloadAllMobileChunks();
+        entityRegion.UnloadAllMobileChunksAndEntities();
     }
     #endregion
 
@@ -129,6 +132,12 @@ public class EntityRegionManager : MonoBehaviour {
             if(TerrainManager.inst.IsMobileChunkInLoadedChunks(outOfBoundsMobileChunks[i])) {
                 outOfBoundsMobileChunks[i].gameObject.SetActive(true);
                 outOfBoundsMobileChunks.RemoveAt(i);
+            }
+        }
+        for(int i = outOfBoundsEntities.Count - 1; i >= 0; i--) {
+            if(TerrainManager.inst.IsEntityInLoadedChunks(outOfBoundsEntities[i])) {
+                outOfBoundsEntities[i].gameObject.SetActive(true);
+                outOfBoundsEntities.RemoveAt(i);
             }
         }
     }
@@ -168,23 +177,27 @@ public class EntityRegionManager : MonoBehaviour {
     }
     #endregion
 
-    #region Saving & Loading
+    #region Saving & Loading Files
     public bool LoadRegionFile (EntityRegion entityRegion) {
         string regionPath = GetRegionDirectory(entityRegion);
         if(!File.Exists(regionPath)) {
             return false;
         }
+
         bool hasSucceded;
-        using(FileStream fs = new FileStream(regionPath, FileMode.Open)) {
-            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress)) {
-                using(MemoryStream ms = new MemoryStream(buffer)) {
-                    using(BinaryReader br = new BinaryReader(ms)) {
-                        int rlength = defs.Read(buffer, 0, buffer.Length);
-                        hasSucceded = DeserializeStreamToRegion(br, entityRegion);
-                    }
-                }
+        try {
+            using(FileStream fs = new FileStream(regionPath, FileMode.Open))
+            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress))
+            using(MemoryStream ms = new MemoryStream(buffer))
+            using(BinaryReader br = new BinaryReader(ms)) {
+                int rlength = defs.Read(buffer, 0, buffer.Length);
+                hasSucceded = DeserializeStreamToRegion(br, entityRegion);
             }
+        } catch(System.Exception e) {
+            Debug.Log("Failed to load chunk: " + e.ToString());
+            hasSucceded = false;
         }
+
         if(!hasSucceded) {
             Debug.LogError($"A region at {entityRegion.regionPosition} failed to be deserialized. Its file was deleted.");
             File.Delete(regionPath);
@@ -209,13 +222,19 @@ public class EntityRegionManager : MonoBehaviour {
     bool DeserializeStreamToRegion (BinaryReader ms, EntityRegion entityRegion) {
         for(int x = 0; x < TerrainManager.inst.chunksPerRegionSide; x++) {
             for(int y = 0; y < TerrainManager.inst.chunksPerRegionSide; y++) {
-                int entitiesInRegion = ms.ReadByte();
-                if(entitiesInRegion < 0) {
+                int mobileChunkInRegion = ms.ReadUInt16();
+                int entitiesInRegion = ms.ReadUInt16();
+                if(mobileChunkInRegion < 0 && entitiesInRegion < 0) {
                     return false;
                 }
-                
-                for(int i = 0; i < entitiesInRegion; i++) {
+
+                int i = 0;
+                for(; i < mobileChunkInRegion; i++) {
                     entityRegion.subRegions[x][y].mobileChunkUIDs.Add(ms.ReadInt32());
+                }
+                i = 0;
+                for(; i < entitiesInRegion; i++) {
+                    entityRegion.subRegions[x][y].entitiesUIDs.Add(ms.ReadInt32());
                 }
             }
         }
@@ -226,11 +245,14 @@ public class EntityRegionManager : MonoBehaviour {
     void SerializeRegionToStream (BinaryWriter ms, EntityRegion entityRegion) {
         for(int x = 0; x < TerrainManager.inst.chunksPerRegionSide; x++) {
             for(int y = 0; y < TerrainManager.inst.chunksPerRegionSide; y++) {
-                ms.Write((byte)entityRegion.subRegions[x][y].mobileChunkUIDs.Count);
+                ms.Write((ushort)(entityRegion.subRegions[x][y].mobileChunkUIDs.Count));
+                ms.Write((ushort)(entityRegion.subRegions[x][y].entitiesUIDs.Count));
 
-                // Tomato sauce for my spagggget
                 for(int i = 0; i < entityRegion.subRegions[x][y].mobileChunkUIDs.Count; i++) {
                     ms.Write(entityRegion.subRegions[x][y].mobileChunkUIDs[i]);
+                }
+                for(int i = 0; i < entityRegion.subRegions[x][y].entitiesUIDs.Count; i++) {
+                    ms.Write(entityRegion.subRegions[x][y].entitiesUIDs[i]);
                 }
             }
         }
@@ -256,6 +278,24 @@ public class EntityRegionManager : MonoBehaviour {
         entityRegions[regionPos].GetSubRegion(chunkPos).mobileChunkUIDs.Add(mobileChunk.uid);
     }
 
+    public void AddEntity (Entity entity) {
+        Vector2Int regionPos = TerrainManager.inst.WorldToRegion(entity.entityData.position);
+        Vector2Int chunkPos = TerrainManager.inst.WorldToChunk(entity.entityData.position);
+
+        if(!entityRegions.ContainsKey(regionPos)) {
+            Debug.Log("Trying to add a entity to a none-loaded region.");
+            return;
+        }
+
+        if(entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Contains(entity.entityData.uid)) {
+            Debug.Log("Trying to add a entity in a region where it already exist.");
+            return;
+        }
+
+        //Debug.Log("Adding Entity: " + entity.entityData.uid);
+        entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Add(entity.entityData.uid);
+    }
+
     public void RemoveMobileChunk (MobileChunk mobileChunk) {
         Vector2Int regionPos = TerrainManager.inst.WorldToRegion(mobileChunk.position);
         Vector2Int chunkPos = TerrainManager.inst.WorldToChunk(mobileChunk.position);
@@ -269,8 +309,25 @@ public class EntityRegionManager : MonoBehaviour {
             Debug.Log("Trying to remove a mobile chunk in a region where it isn't even present.");
             return;
         }
-
+        
         entityRegions[regionPos].GetSubRegion(chunkPos).mobileChunkUIDs.Remove(mobileChunk.uid);
+    }
+
+    public void RemoveEntity (Entity entity) {
+        Vector2Int regionPos = TerrainManager.inst.WorldToRegion(entity.entityData.position);
+        Vector2Int chunkPos = TerrainManager.inst.WorldToChunk(entity.entityData.position);
+
+        if(!entityRegions.ContainsKey(regionPos)) {
+            Debug.Log("Trying to remove a entity to a none-loaded region.");
+            return;
+        }
+
+        if(!entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Contains(entity.entityData.uid)) {
+            Debug.Log("Trying to remove a entity in a region where it isn't even present.");
+            return;
+        }
+        
+        entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Remove(entity.entityData.uid);
     }
 
     public bool MoveMobileChunk (MobileChunk mobileChunk, Vector3 previousPosition) {
@@ -305,6 +362,43 @@ public class EntityRegionManager : MonoBehaviour {
             Debug.Log("Trying to add a mobile chunk in a region where it already is.");
         } else {
             entityRegions[regionPos].GetSubRegion(chunkPos).mobileChunkUIDs.Add(mobileChunk.uid);
+        }
+
+        return true;
+    }
+
+    public bool MoveEntity (Entity entity, Vector3 previousPosition) {
+
+        Vector2Int regionPos = TerrainManager.inst.WorldToRegion(previousPosition);
+        Vector2Int chunkPos = TerrainManager.inst.WorldToChunk(previousPosition);
+
+        if(!entityRegions.ContainsKey(regionPos)) {
+            Debug.Log("Trying to remove a entity to a none-loaded region.");
+            return false;
+        }
+
+        if(!entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Contains(entity.entityData.uid)) {
+            Debug.Log("Trying to remove a entity in a region where it isn't even present.");
+        } else {
+            entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Remove(entity.entityData.uid);
+        }
+
+        regionPos = TerrainManager.inst.WorldToRegion(entity.entityData.position);
+        chunkPos = TerrainManager.inst.WorldToChunk(entity.entityData.position);
+
+        if(!entityRegions.ContainsKey(regionPos)) {
+            Debug.Log("Trying to add a entity to a none-loaded region.");
+
+            regionPos = TerrainManager.inst.WorldToRegion(previousPosition);
+            chunkPos = TerrainManager.inst.WorldToChunk(previousPosition);
+            entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Add(entity.entityData.uid);
+            return false;
+        }
+
+        if(entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Contains(entity.entityData.uid)) {
+            Debug.Log("Trying to add a entity in a region where it already is.");
+        } else {
+            entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Add(entity.entityData.uid);
         }
 
         return true;
@@ -363,7 +457,7 @@ public class EntityRegion {
     }
     #endregion
 
-    #region Entity Events
+    #region Load/Unload Events
     public void LoadAllMobileChunks () {
         for(int x = 0; x < TerrainManager.inst.chunksPerRegionSide; x++) {
             for(int y = 0; y < TerrainManager.inst.chunksPerRegionSide; y++) {
@@ -375,16 +469,29 @@ public class EntityRegion {
                     }
                     TerrainManager.inst.LoadMobileChunkFromUID(uid);
                 }
+                for(int i = subRegions[x][y].entitiesUIDs.Count - 1; i >= 0; i--) {
+                    int uid = subRegions[x][y].entitiesUIDs[i];
+                    subRegions[x][y].entitiesUIDs.RemoveAt(i);
+                    if(EntityManager.inst.entitiesByUID.ContainsKey(uid)) {
+                        continue;
+                    }
+                    EntityManager.inst.LoadFromUID(uid); // Should readd it to the subRegion
+                }
             }
         }
     }
 
-    public void UnloadAllMobileChunks () {
+    public void UnloadAllMobileChunksAndEntities () {
         for(int x = 0; x < TerrainManager.inst.chunksPerRegionSide; x++) {
             for(int y = 0; y < TerrainManager.inst.chunksPerRegionSide; y++) {
                 for(int i = 0; i < subRegions[x][y].mobileChunkUIDs.Count; i++) {
                     if(VisualChunkManager.inst.mobileChunkPool.ContainsKey(subRegions[x][y].mobileChunkUIDs[i])) {
                         VisualChunkManager.inst.UnloadMobileChunk(VisualChunkManager.inst.mobileChunkPool[subRegions[x][y].mobileChunkUIDs[i]]);
+                    }
+                }
+                for(int i = 0; i < subRegions[x][y].entitiesUIDs.Count; i++) {
+                    if(EntityManager.inst.entitiesByUID.ContainsKey(subRegions[x][y].entitiesUIDs[i])) {
+                        EntityManager.inst.UnloadEntity(EntityManager.inst.entitiesByUID[subRegions[x][y].entitiesUIDs[i]]);
                     }
                 }
             }
@@ -411,12 +518,15 @@ public class EntityRegion {
 public class SubEntityRegion {
     public Vector2Int chunkPosition;
     public List<int> mobileChunkUIDs;
+    public List<int> entitiesUIDs;
 
     public SubEntityRegion () {
         mobileChunkUIDs = new List<int>();
+        entitiesUIDs = new List<int>();
     }
 
     public void Clear () {
         mobileChunkUIDs.Clear();
+        entitiesUIDs.Clear();
     }
 }

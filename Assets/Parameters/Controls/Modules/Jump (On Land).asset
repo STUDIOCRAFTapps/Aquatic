@@ -17,6 +17,6 @@ MonoBehaviour:
   maxUngroundedJumpTime: 0.12
   minFluidJumpTime: 0.5
   outOfFluidJumpForce: 20
-  outOfFluidGroundJumpForce: 0
+  outOfFluidGroundJumpForce: 24
   jumpCancelForce: 2
   jumpCancelEnabled: 1

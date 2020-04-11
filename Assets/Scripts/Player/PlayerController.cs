@@ -108,7 +108,8 @@ public class PlayerController : MonoBehaviour {
     }
     #endregion
 
-    #region Visual
+    #region Visual WIP
+    float waterWaveCooldown = 0;
     public void Animate () {
         int accDirX = 0;
         if(Input.GetKey(KeyCode.A))
@@ -135,8 +136,25 @@ public class PlayerController : MonoBehaviour {
         if(rbody.submergedPercentage <= 0f && status.lastSubmergedPercentage > 0f) {
             ParticleManager.inst.PlayEntityParticle(transform.position + Vector3.down, 4);
         }
+        if(rbody.submergedPercentage > 0.6f && rbody.submergedPercentage < 0.95f && rbody.velocity.x < -5f && waterWaveCooldown > 0.2f) {
+            ParticleManager.inst.PlayEntityParticle(transform.position + Mathf.Max(rbody.submergedPercentage * rbody.box.size.y - 0.25f, 0f) * Vector3.up, 5);
+        }
+        if(rbody.submergedPercentage > 0.6f && rbody.submergedPercentage < 0.95f && rbody.velocity.x > 5f && waterWaveCooldown > 0.2f) {
+            ParticleManager.inst.PlayEntityParticle(transform.position + Mathf.Max(rbody.submergedPercentage * rbody.box.size.y - 0.25f, 0f) * Vector3.up, 6);
+        }
+        if(waterWaveCooldown > 0.2f) {
+            waterWaveCooldown = 0f;
+        }
+        waterWaveCooldown += Time.deltaTime;
+
 
         status.lastSubmergedPercentage = rbody.submergedPercentage;
+    }
+    #endregion
+
+    #region Public Function
+    public Vector2 GetHeadPosition () {
+        return (Vector2)transform.position + rbody.box.size.y * Vector2.up;
     }
     #endregion
 

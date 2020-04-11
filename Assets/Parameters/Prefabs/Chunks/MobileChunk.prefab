@@ -138,7 +138,6 @@ GameObject:
   - component: {fileID: 7321218800937272636}
   - component: {fileID: 6349742527855253144}
   - component: {fileID: 6349742527855253145}
-  - component: {fileID: 6349742527855253223}
   - component: {fileID: 6626243163619635597}
   m_Layer: 0
   m_Name: MobileChunk
@@ -200,12 +199,15 @@ MonoBehaviour:
   defaultFloorFriction: 0
   defaultWallFriction: 0
   canBeParentPlatform: 1
-  eliminatesPenetration: 0
-  isComplexCollider: 1
-  interactsWithComplexCollider: 0
   reorderChild: 0
-  aligmentObject: {fileID: 6161401451517095989}
+  interactsWithComplexCollider: 0
+  isComplexCollider: 1
   applyGenericGravityForceOnLoad: 1
+  eliminatesPenetration: 0
+  secondExecutionOrder: 0
+  clipPermision: 0
+  clipAmout: 0.25
+  box: {fileID: 0}
   velocity: {x: 0, y: 0}
   aabb:
     m_Center: {x: 0, y: 0, z: 0}
@@ -213,18 +215,23 @@ MonoBehaviour:
   inverseMass: 0
   movementDelta: {x: 0, y: 0}
   mobileChunk: {fileID: 0}
-  isCollidingDown: 0
-  isCollidingLeft: 0
-  isCollidingUp: 0
-  isCollidingRight: 0
-  isInsideComplexObject: {fileID: 0}
-  submergedVolume: 0
-  volume: 0
+  aligmentObject: {fileID: 6161401451517095989}
+  disableForAFrame: 0
   hadCollisionDown: 0
   hadCollisionLeft: 0
   hadCollisionUp: 0
   hadCollisionRight: 0
-  disableForAFrame: 0
+  isCollidingDown: 0
+  isCollidingLeft: 0
+  isCollidingUp: 0
+  isCollidingRight: 0
+  isCollidingWallDown: 0
+  isCollidingWallLeft: 0
+  isCollidingWallUp: 0
+  isCollidingWallRight: 0
+  isInsideComplexObject: {fileID: 0}
+  submergedPercentage: 0
+  volume: 0
 --- !u!61 &6349742527855253145
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -251,20 +258,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
---- !u!114 &6349742527855253223
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6349742527855253222}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dbfd89637f503c14aa62859619eab96c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  force: {x: 0, y: 0}
-  constantFriction: 0
 --- !u!114 &6626243163619635597
 MonoBehaviour:
   m_ObjectHideFlags: 0

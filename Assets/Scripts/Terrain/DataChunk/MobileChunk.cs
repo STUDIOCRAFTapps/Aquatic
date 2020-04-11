@@ -36,13 +36,13 @@ public class MobileChunk : MonoBehaviour {
     public void SetRestrictedSize (Vector2Int restrictedSize) {
         boxCollider.offset = (Vector2)restrictedSize * 0.5f;
         boxCollider.size = restrictedSize;
-        selectionRect.size = (Vector2)restrictedSize * TerrainManager.inst.tileScale;
+        selectionRect.size = restrictedSize;
 
         mobileDataChunk.Init(restrictedSize);
     }
 
     public void RefreshSelectionRect () {
-        selectionRect.size = (Vector2)mobileDataChunk.restrictedSize * TerrainManager.inst.tileScale;
+        selectionRect.size = mobileDataChunk.restrictedSize;
 
     }
 
@@ -71,11 +71,11 @@ public class MobileChunk : MonoBehaviour {
         if(TerrainManager.inst.WorldToChunk(position + Vector3.one * 0.001f) != TerrainManager.inst.WorldToChunk(previousPosition + Vector3.one * 0.001f)) {
             if(!EntityRegionManager.inst.MoveMobileChunk(this, previousPosition)) {
 
-                Debug.Log($"A mobile chunk with the UID {uid} vanished out of bounds. An attempt was saved it in unloaded region.");
+                Debug.Log($"A mobile chunk with the UID {uid} vanished out of bounds. An attempt was saved it in an unloaded region.");
                 Debug.Log($"{TerrainManager.inst.WorldToChunk(position)}, prev : {TerrainManager.inst.WorldToChunk(position)}");
                 EntityRegionManager.inst.LoadRegionAtChunk(TerrainManager.inst.WorldToChunk(previousPosition));
                 EntityRegionManager.inst.MoveMobileChunk(this, previousPosition);
-                EntityRegionManager.inst.UnloadRegionAtChunk(TerrainManager.inst.WorldToChunk(position));
+                EntityRegionManager.inst.UnloadRegionAtChunk(TerrainManager.inst.WorldToChunk(previousPosition));
                 return;
             }
         }
