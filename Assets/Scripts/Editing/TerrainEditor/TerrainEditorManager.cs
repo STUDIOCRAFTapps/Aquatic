@@ -46,7 +46,7 @@ public class TerrainEditorManager : MonoBehaviour {
 
     public int selectedEntityID = 1;
     public int selectedEntityTool = 0;
-    Entity selectedE;
+    [HideInInspector] public Entity selectedE;
     RigidbodyPixel selectedERigibody;
     public bool isDraggingEntity = false;
     public Vector2 draggingEntityDelta;
@@ -117,8 +117,7 @@ public class TerrainEditorManager : MonoBehaviour {
             pathFE = worldPos;
         }
         if(Input.GetKey(KeyCode.Alpha3)) {
-            PathRequestManager.inst.RequestPath(new PathRequest(pathFS, pathFE, OnPathReceived));
-            PathRequestManager.inst.RequestPath(new PathRequest(pathFS, pathFE, OnPathReceived));
+            PathRequestManager.inst.RequestPath(new PathRequest(pathFS, pathFE, (System.Action<List<Vector2>, bool>)OnPathReceived), Vector2Int.one);
         }
 
         DrawPath();

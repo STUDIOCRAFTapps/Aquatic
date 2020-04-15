@@ -255,6 +255,20 @@ public class TerrainManager : MonoBehaviour {
         return 0;
     }
 
+    public bool GetGlobalIDBitmaskAt (int x, int y, TerrainLayers layer, out int globalID, out int bitmask) {
+        Vector2Int cpos = GetChunkPositionAtTile(x, y);
+
+        if(GetChunkAtPosition(cpos, out DataChunk dataChunk)) {
+            globalID = dataChunk.GetGlobalID(x - cpos.x * chunkSize, y - cpos.y * chunkSize, layer);
+            bitmask = dataChunk.GetBitmask(x - cpos.x * chunkSize, y - cpos.y * chunkSize, layer);
+            return true;
+        }
+
+        globalID = 0;
+        bitmask = 0;
+        return false;
+    }
+
     public bool SetGlobalIDAt (int x, int y, TerrainLayers layer, int globalID, MobileDataChunk mdc = null) {
         if(mdc != null) {
             int oldGID = mdc.GetGlobalID(x, y, layer);
@@ -373,7 +387,7 @@ public class TerrainManager : MonoBehaviour {
     }
 
     public Vector2Int WorldToChunk (Vector2 worldPos) {
-        return GetChunkPositionAtTile(Vector2Int.FloorToInt(worldPos));
+        return GetChunkPositionAtTile(Mathf.FloorToInt(worldPos.x), Mathf.FloorToInt(worldPos.y));
     }
 
     public Vector2Int WorldToRegion (Vector2 worldPos) {
@@ -390,7 +404,7 @@ public class TerrainManager : MonoBehaviour {
 
         for(int x = min.x; x <= max.x; x++) {
             for(int y = min.y; y <= max.y; y++) {
-                if(!VisualChunkManager.inst.visualChunkPool.ContainsKey(new Vector2Int(x, y))) {
+                if(!VisualChunkManager.inst.visualChunkPool.ContainsKey(Hash.hVec2Int(x, y))) {
                     return false;
                 }
             }
@@ -404,7 +418,7 @@ public class TerrainManager : MonoBehaviour {
 
         for(int x = min.x; x <= max.x; x++) {
             for(int y = min.y; y <= max.y; y++) {
-                if(!VisualChunkManager.inst.visualChunkPool.ContainsKey(new Vector2Int(x, y))) {
+                if(!VisualChunkManager.inst.visualChunkPool.ContainsKey(Hash.hVec2Int(x, y))) {
                     return false;
                 }
             }

@@ -90,6 +90,8 @@ public class PlayerController : MonoBehaviour {
         if(!isChunkAbsent) {
             CheckModifier();
             currentState?.UpdatePlayerStateGroup(info);
+        } else {
+            rbody.disableForAFrame = true;
         }
 
         /*CheckIfGrounded();
@@ -155,6 +157,10 @@ public class PlayerController : MonoBehaviour {
     #region Public Function
     public Vector2 GetHeadPosition () {
         return (Vector2)transform.position + rbody.box.size.y * Vector2.up;
+    }
+
+    public Vector2 GetCenterPosition () {
+        return (Vector2)transform.position + rbody.box.size.y * Vector2.up * 0.5f;
     }
     #endregion
 

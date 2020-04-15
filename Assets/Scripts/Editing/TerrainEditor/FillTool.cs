@@ -10,7 +10,7 @@ public class FillTool : BaseToolAsset {
     
     public override void OnPressed (ToolUseInfo info) {
         if(completeChunkFill) {
-            Vector2Int chunkPos = TerrainManager.inst.GetChunkPositionAtTile(info.currentPos);
+            Vector2Int chunkPos = TerrainManager.GetChunkPositionAtTile(info.currentPos.x, info.currentPos.y);
 
             for(int x = 0; x < TerrainManager.inst.chunkSize; x++) {
                 for(int y = 0; y < TerrainManager.inst.chunkSize; y++) {
@@ -28,7 +28,7 @@ public class FillTool : BaseToolAsset {
             if(!TerrainManager.inst.GetGlobalIDAt(info.currentPos.x, info.currentPos.y, info.layer, out int targetID, info.mdc)) {
                 return;
             }
-            Vector2Int cpos = TerrainManager.inst.GetChunkPositionAtTile(info.currentPos);
+            Vector2Int cpos = TerrainManager.GetChunkPositionAtTile(info.currentPos.x, info.currentPos.y);
             if(info.mdc != null) {
                 cs = info.mdc.restrictedSize;
                 cpos = Vector2Int.zero;

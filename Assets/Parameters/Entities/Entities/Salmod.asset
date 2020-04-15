@@ -17,10 +17,10 @@ MonoBehaviour:
   fullName: Salmod
   id: salmod
   prefab: {fileID: 3428889606896973310, guid: 452e7a1a40e129d4a99b0e75ecf9310b, type: 3}
-  loadBoxOffset: {x: 0, y: 0}
-  loadBoxSize: {x: 0, y: 0}
+  loadBoxOffset: {x: -0.125, y: -0.125}
+  loadBoxSize: {x: 1.875, y: 1.25}
   offset: {x: -0.125, y: -0.125}
   size: {x: 1.875, y: 1.25}
   mass: 11
   maxHealth: 20
-  maxTargetingDistance: 10
+  maxTargetingDistance: 20

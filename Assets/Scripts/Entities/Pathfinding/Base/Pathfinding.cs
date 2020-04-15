@@ -5,33 +5,63 @@ using System.Diagnostics;
 using System;
 using Debug = UnityEngine.Debug;
 
+
+// This class isn't a monobehaviour, meaning you'll have to store an instance of this class somewhere,
+// I recommend storing it in the PathRequestManager class
 public class Pathfinder {
 
     int maxNodeCount;
+    int maxSeekDistance;
     Queue<NodeDataStructure> nodeDataStructureQueue;
-
-    public Pathfinder (int maxNodeCount) {
+    
+    public Pathfinder (int maxNodeCount, int maxSeekDistance) {
         nodeDataStructureQueue = new Queue<NodeDataStructure>();
         this.maxNodeCount = maxNodeCount;
+        this.maxSeekDistance = maxSeekDistance;
     }
 
-    #region Pathfinding
-    public void FindPath (PathRequest request, Action<PathResult> callback) {
+    #region Requests
+    /// <summary>
+    /// Will request a path and ask all the points in the path as a result
+    /// </summary>
+    public void FindPath (PathRequest request, Action<PathResult> callback, Vector2Int seekingSize) {
+        I_FindPath(request, callback, true, seekingSize);
+    }
 
+    /// <summary>
+    /// Will request a path and ask for only the next point to follow to reach the endpoint.
+    /// It is recomanded to use this function instead of "FindPath" since this one does not allocate
+    /// a single byte.
+    /// </summary>
+    public void FindNextPoint (PathRequest request, Action<NextPointResult> callback, Vector2Int seekingSize) {
+        I_FindPath(request, callback, false, seekingSize);
+    }
+    #endregion
+
+    #region Pathfinding
+    void I_FindPath (PathRequest request, object callback, bool getCompletePath, Vector2Int size) {
+
+        bool doSizeCheck = size != Vector2Int.one;
+
+        // Creates a stopwatch to check the performance of the pathfinding algorithm.
         Stopwatch sw = new Stopwatch();
         sw.Start();
 
-        List<Vector2> waypoints = new List<Vector2>();
         bool pathSuccess = false;
         
+        // Stores reference for the starting and ending nodes
         ReadOnlyNode roStartNode = PathgridManager.inst.GetReadOnlyNodeFromTilePoint(Mathf.FloorToInt(request.pathStart.x), Mathf.FloorToInt(request.pathStart.y));
         ReadOnlyNode roEndNode = PathgridManager.inst.GetReadOnlyNodeFromTilePoint(Mathf.FloorToInt(request.pathEnd.x), Mathf.FloorToInt(request.pathEnd.y));
         Node startNode;
         Node targetNode;
 
-        if(roStartNode.walkable && roEndNode.walkable) {
-            NodeDataStructure nds = GetNewNodeDataStructure();
+        // Gets a new node data structure from the queue. This class store all the utilities a class need
+        // for the algorithm to run independetly on a thread. It includes the heaps, the hash sets and
+        // other reused object, such as the neighbour list
+        NodeDataStructure nds = GetNewNodeDataStructure();
 
+        #region A* Algorithm
+        if(roStartNode.walkable && roEndNode.walkable) {
             startNode = nds.GetNodeFromTilePoint(Vector2Int.FloorToInt(request.pathStart));
             targetNode = nds.GetNodeFromTilePoint(Vector2Int.FloorToInt(request.pathEnd));
 
@@ -50,13 +80,24 @@ public class Pathfinder {
                 }
 
                 nds.GetNeighbourTiles(currentNode);
-                foreach(Node neighbour in nds.neighbours) {
+                for(int n = 0; n < nds.neighbours.Count; n++) {
+                    Node neighbour = nds.neighbours[n];
+                    // If it doesn't even exist, check the next neighbour
                     if(neighbour == null) {
-                        limit = 0;
-                        break;
+                        continue;
                     }
+                    // If you can't walk to it or you've already walked at it, that's a big no no
                     if(!neighbour.readOnly.walkable || nds.nodeHashSet.Contains(neighbour)) {
                         continue;
+                    }
+                    // If neighbour is a corner and at least one of the side tile aren't walkable, you can't go diagonally.
+                    if(neighbour.isNeighbourCorner && !(nds.neighbours[Modulo(n - 1, 8)].readOnly.walkable && nds.neighbours[Modulo(n + 1, 8)].readOnly.walkable)) { //Is broken with size checks now
+                        continue;
+                    }
+                    if(doSizeCheck) {
+                        if(!nds.AreAllTilesWalkable(neighbour.readOnly.gridX, neighbour.readOnly.gridY, size)) {
+                            continue;
+                        }
                     }
 
                     int newMovementCostToNeighbour = currentNode.gCost + GetDistance(currentNode.readOnly, neighbour.readOnly) + neighbour.readOnly.penalty;
@@ -64,6 +105,10 @@ public class Pathfinder {
                         neighbour.gCost = newMovementCostToNeighbour;
                         neighbour.hCost = GetDistance(neighbour.readOnly, targetNode.readOnly);
                         neighbour.parent = currentNode;
+
+                        if(neighbour.hCost > maxSeekDistance) {
+                            continue;
+                        }
 
                         if(!nds.nodeHeap.Contains(neighbour)) {
                             nds.nodeHeap.Add(neighbour);
@@ -78,40 +123,56 @@ public class Pathfinder {
                     break;
                 }
             }
-            nodeDataStructureQueue.Enqueue(nds);
         } else {
             startNode = new Node() {readOnly = roStartNode};
             targetNode = new Node() {readOnly = roEndNode};
         }
-        if(pathSuccess) {
-            RetracePath(ref waypoints, startNode, targetNode);
-            pathSuccess = waypoints.Count > 0;
-        }
-        callback(new PathResult(waypoints, pathSuccess, request.callbacks));
+        #endregion
 
+        // Retraces the path, filling the proper variable with the choosen output data type (Next point or path)
+        List<Vector2> waypoints = null;
+        Vector2 onlyPoint = Vector2.zero;
+        if(pathSuccess) {
+            if(getCompletePath) {
+                waypoints = new List<Vector2>();
+                RetracePath(ref nds, ref waypoints, startNode, targetNode, size);
+                pathSuccess = waypoints.Count > 0;
+            } else {
+                onlyPoint = RetracePathOnePoint(ref nds, startNode, targetNode, size);
+            }
+        }
+
+        // Dispose the nodeDataStructure for future uses
+        lock(nodeDataStructureQueue) {
+            nodeDataStructureQueue.Enqueue(nds);
+        }
+
+        // Executes the proper callback
+        if(getCompletePath) {
+            ((Action<PathResult>)callback)(new PathResult(waypoints, pathSuccess, (Action<List<Vector2>, bool>)request.callbacks));
+        } else {
+            ((Action<NextPointResult>)callback)(new NextPointResult(onlyPoint, pathSuccess, (Action<Vector2, bool>)request.callbacks));
+        }
     }
 
-    static void RetracePath (ref List<Vector2> waypoints, Node startNode, Node endNode) {
-        List<Node> path = new List<Node>();
+    static void RetracePath (ref NodeDataStructure nds, ref List<Vector2> waypoints, Node startNode, Node endNode, Vector2 size) {
         Node currentNode = endNode;
 
         while(currentNode != startNode) {
-            path.Add(currentNode);
+            waypoints.Insert(0, currentNode.readOnly.worldPosition + (size * 0.5f));
             currentNode = currentNode.parent;
         }
-        for(int i = path.Count - 1; i >= 0; i--) {
-            waypoints.Add(path[i].readOnly.worldPosition + (Vector3)(Vector2.one * 0.5f));
-        }
-
     }
 
-    static int GetDistance (ReadOnlyNode nodeA, ReadOnlyNode nodeB) {
-        int dstX = Mathf.Abs(nodeA.gridX - nodeB.gridX);
-        int dstY = Mathf.Abs(nodeA.gridY - nodeB.gridY);
+    static Vector2 RetracePathOnePoint (ref NodeDataStructure nds, Node startNode, Node endNode, Vector2 size) {
+        Node currentNode = endNode;
+        Node previousNode = currentNode;
 
-        if(dstX > dstY)
-            return 14 * dstY + 10 * (dstX - dstY);
-        return 14 * dstX + 10 * (dstY - dstX);
+        while(currentNode != startNode) {
+            previousNode = currentNode;
+            currentNode = currentNode.parent;
+        }
+        return previousNode.readOnly.worldPosition + (size * 0.5f);
     }
     #endregion
 
@@ -125,6 +186,22 @@ public class Pathfinder {
             }
         }
         return new NodeDataStructure(maxNodeCount);
+    }
+    #endregion
+
+    #region Utils
+    static int GetDistance (ReadOnlyNode nodeA, ReadOnlyNode nodeB) {
+        int dstX = Mathf.Abs(nodeA.gridX - nodeB.gridX);
+        int dstY = Mathf.Abs(nodeA.gridY - nodeB.gridY);
+
+        if(dstX > dstY)
+            return 14 * dstY + 10 * (dstX - dstY);
+        return 14 * dstX + 10 * (dstY - dstX);
+    }
+
+    static int Modulo (int x, int m) {
+        int r = x % m;
+        return r < 0 ? r + m : r;
     }
     #endregion
 }
@@ -182,15 +259,28 @@ public class NodeDataStructure {
         }
     }
 
+    public bool AreAllTilesWalkable (int posX, int posY, Vector2Int size) {
+        for(int x = posX; x < posX + size.x; x++) {
+            for(int y = posY; y < posY + size.y; y++) {
+                if(!(x == posX && y == posY)) {
+                    if(!PathgridManager.inst.GetReadOnlyNodeFromTilePoint(x, y).walkable)
+                        return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    static private readonly int[] nX = new int[] { -1, 0, 1, 1, 1, 0, -1, -1 };
+    static private readonly int[] nY = new int[] { 1, 1, 1, 0, -1, -1, -1, 0 };
+    static private readonly bool[] nC = new bool[] { true, false, true, false, true, false, true, false};
+
+    // Orders neighbours clockwise
     public void GetNeighbourTiles (Node node) {
         neighbours.Clear();
-        for(int x = -1; x <= 1; x++) {
-            for(int y = -1; y <= 1; y++) {
-                if(x == 0 && y == 0)
-                    continue;
-
-                neighbours.Add(GetNodeFromTilePoint(new Vector2Int(node.readOnly.gridX + x, node.readOnly.gridY + y)));
-            }
+        for(int n = 0; n < 8; n++) {
+            neighbours.Add(GetNodeFromTilePoint(new Vector2Int(node.readOnly.gridX + nX[n], node.readOnly.gridY + nY[n])));
+            neighbours[neighbours.Count - 1].isNeighbourCorner = nC[n];
         }
     }
 }

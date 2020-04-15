@@ -160,9 +160,6 @@ MonoBehaviour:
   clipAmout: 0.25
   box: {fileID: 0}
   velocity: {x: 0, y: 0}
-  aabb:
-    m_Center: {x: 0, y: 0, z: 0}
-    m_Extent: {x: 0, y: 0, z: 0}
   inverseMass: 0
   movementDelta: {x: 0, y: 0}
   mobileChunk: {fileID: 0}

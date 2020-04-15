@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
@@ -57,10 +58,20 @@ public class Fish : LivingEntity {
 
         Vector2 dir = (pc.GetHeadPosition() - (Vector2)transform.position).normalized;
         if(PhysicsPixel.inst.RaycastTerrain(new Ray2D(transform.position, dir), dist, out Vector2 hitPoint)) {
-            return;
-        }
+            Vector2Int rsize = Vector2Int.CeilToInt(rigidbody.box.size);
+            Vector2 size = rigidbody.box.size;
 
-        targetDirection = (pc.GetHeadPosition() - (Vector2)transform.position).normalized;
+            PathRequestManager.inst.RequestNextPoint(
+                new PathRequest(
+                    (Vector2)transform.position - (size * 0.5f) + rigidbody.box.offset + (Vector2.one * 0.5f),
+                    pc.GetCenterPosition(),
+                    (Action<Vector2, bool>)OnNexPointReceived
+                ),
+                rsize
+            );
+        } else {
+            targetDirection = dir;
+        }
 
         // Check the distance to see if it's close enough
         // Raycast to check if the player is visible
@@ -68,6 +79,21 @@ public class Fish : LivingEntity {
         // If not pathfind toward it
 
         base.OnLongUpdate();
+    }
+    
+    public void OnNexPointReceived (Vector2 nextPoint, bool pathSuccessful) {
+        if(!pathSuccessful) {
+            return;
+        }
+        Debug.DrawLine(nextPoint, (Vector2)transform.position, Color.yellow);
+        targetDirection = (nextPoint - (Vector2)transform.position).normalized;
+        if(rigidbody.isCollidingDown) {
+            if(targetDirection.x > 0f && targetDirection.x < 0.9f) {
+                targetDirection = Vector2.right;
+            } else if(targetDirection.x < 0f && targetDirection.x > -0.9f) {
+                targetDirection = Vector2.left;
+            }
+        }
     }
 
     public override Type GetDataType () {

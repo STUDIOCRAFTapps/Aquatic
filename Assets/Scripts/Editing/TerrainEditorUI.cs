@@ -255,6 +255,7 @@ public class TerrainEditorUI : MonoBehaviour {
         }
         allSidebars[bar].SetActive(true);
         TerrainEditorManager.inst.SetSelectedSidebar(bar);
+        tem.selectedE = null;
         if(bar == 0) {
             CleanInventory();
             FillTileInventory();
@@ -412,6 +413,7 @@ public class TerrainEditorUI : MonoBehaviour {
             TerrainEditorManager.inst.selectedEntityTool = 0;
         } else {
             TerrainEditorManager.inst.selectedEntityTool = modeID + 1;
+            TerrainEditorManager.inst.selectedE = null;
 
             entityMenuButtonImages[modeID].sprite = selectedToolSprite;
             entityMenuButtonIcons[modeID].color = selectedToolColor;

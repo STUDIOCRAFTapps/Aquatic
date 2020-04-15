@@ -132,6 +132,7 @@ GameObject:
   - component: {fileID: 2099517932}
   - component: {fileID: 2099517931}
   - component: {fileID: 2099517933}
+  - component: {fileID: 2099517934}
   m_Layer: 0
   m_Name: World
   m_TagString: Untagged
@@ -146,7 +147,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2099517930}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b5e6f116a37895943a96848afddf947f, type: 3}
   m_Name: 
@@ -175,7 +176,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2099517930}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d19b558ce4ae7a64ba134216eac91ab1, type: 3}
   m_Name: 
@@ -201,7 +202,6 @@ MonoBehaviour:
     sortingOrder: 0
   pixelPerTile: 16
   chunkSize: 16
-  tileScale: 1
   loadRadius: {x: 0, y: 0}
   unloadTimer: 5
   autoSaveTimeLimit: 10
@@ -211,3 +211,16 @@ MonoBehaviour:
   currentMobileIndex: 0
   worldToPixel: 0
   pixelToWorld: 0
+--- !u!114 &2099517934
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2099517930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0de116382bce5af428fb1ee1a44fa036, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  iterations: 10000

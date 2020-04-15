@@ -11,8 +11,6 @@ public class VisualChunk : MonoBehaviour {
     DataChunk dataChunk;
     MobileDataChunk mdc;
 
-    List<Bounds>[][] collisionBounds;
-
     public void Initiate (Vector2Int chunkPosition, bool changePosition) {
         // Create layer object once
         int chunkSize = TerrainManager.inst.chunkSize;
@@ -37,16 +35,6 @@ public class VisualChunk : MonoBehaviour {
             transform.localScale = new Vector3(1, 1, 1f);
 
             meshData.Initiate();
-        }
-
-        if(collisionBounds == null) {
-            collisionBounds = new List<Bounds>[chunkSize][];
-            for(int x = 0; x < chunkSize; x++) {
-                collisionBounds[x] = new List<Bounds>[chunkSize];
-                for(int y = 0; y < chunkSize; y++) {
-                    collisionBounds[x][y] = new List<Bounds>(2);
-                }
-            }
         }
 
         if(changePosition) {
@@ -77,10 +65,9 @@ public class VisualChunk : MonoBehaviour {
                     if((TerrainLayers)l == TerrainLayers.Ground && nc != null) {
                         Vector2Int tilePos = new Vector2Int(worldX, worldY);
                         bool isSolid = gid != 0 && tileAsset.hasCollision;
-                        nc.nodeGrid[x][y].SetData(!isSolid, (Vector2)tilePos, tilePos.x, tilePos.y, 0);
+                        nc.nodeGrid[x][y].SetData(!isSolid, tilePos, tilePos.x, tilePos.y, 0);
                     }
-
-                    collisionBounds[x][y].Clear();
+                    
                     if(gid == 0) {
                         continue;
                     }
@@ -88,15 +75,7 @@ public class VisualChunk : MonoBehaviour {
                         AddTileToMeshData(x, y, (TerrainLayers)l, tileAsset);
                         AddOverlayTileToMeshData(x, y, (TerrainLayers)l, tileAsset);
                     }
-                    if(tileAsset.hasCollision) {
-                        for(int i = 0; i < tileAsset.collisionBoxes.Length; i++) {
-                            collisionBounds[x][y].Add(
-                                new Bounds(
-                                    (Vector2)tileAsset.collisionBoxes[i].center + Vector2.one * 0.5f + new Vector2(worldX, worldY),
-                                    tileAsset.collisionBoxes[i].size)
-                                );
-                        }
-                    }
+
                 }
             }
             meshData.Apply(layers[l].meshFilter.mesh);

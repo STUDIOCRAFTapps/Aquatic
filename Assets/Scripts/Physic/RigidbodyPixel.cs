@@ -26,10 +26,11 @@ public class RigidbodyPixel : MonoBehaviour {
     public bool secondExecutionOrder = false;
     public bool clipPermision = false;
     public float clipAmout = 0.25f;
+    public bool weakPushCandidate = true;
 
     // Privates
     private bool failedInitialization;
-    private List<Bounds> sampledCollisions;
+    private List<Bounds2D> sampledCollisions;
     private RigidbodyPixel parentPlatform;
     private bool isParentPlaformConn = false;
     private RigidbodyPixel previousParentPlatform;
@@ -42,7 +43,7 @@ public class RigidbodyPixel : MonoBehaviour {
     // Hidden Variables
     [HideInInspector] public BoxCollider2D box;
     [HideInInspector] public Vector2 velocity;
-    [HideInInspector] public Bounds aabb;
+    [HideInInspector] public Bounds2D aabb;
     [HideInInspector] public float inverseMass = 0f;
     [HideInInspector] public Vector2 movementDelta;
     [HideInInspector] public MobileChunk mobileChunk;
@@ -110,7 +111,7 @@ public class RigidbodyPixel : MonoBehaviour {
         }
 
         // Prepare sampled collisions chached array
-        sampledCollisions = new List<Bounds>();
+        sampledCollisions = new List<Bounds2D>();
         if(!isComplexCollider) {
             aabb = GetBoundFromCollider();
         } else {
@@ -254,8 +255,8 @@ public class RigidbodyPixel : MonoBehaviour {
     }
 
     private void MoveByDeltaInteral (Vector2 delta, bool limitVelocity) {
-        Bounds bounds = GetBoundFromCollider();
-        Bounds queryBounds = PhysicsPixel.inst.CalculateQueryBounds(bounds, delta);
+        Bounds2D bounds = GetBoundFromCollider();
+        Bounds2D queryBounds = PhysicsPixel.inst.CalculateQueryBounds(bounds, delta);
 
         totalVolume = box.size.x * box.size.y;
         volume = totalVolume;
@@ -277,13 +278,13 @@ public class RigidbodyPixel : MonoBehaviour {
     #endregion
 
     #region Query and Delta Manipulations
-    private void QueryMinimizeApplyDelta (Bounds queryBounds, Bounds bounds, Vector2 delta, bool limitVelocity) {
+    private void QueryMinimizeApplyDelta (Bounds2D queryBounds, Bounds2D bounds, Vector2 delta, bool limitVelocity) {
         Vector2 newDelta = delta;
-        Bounds cBounds = bounds;
+        Bounds2D cBounds = bounds;
 
         // Figure out which tiles the query will seek
-        Vector2Int queryTileMin = Vector2Int.FloorToInt((queryBounds.min - PhysicsPixel.inst.queryExtension) * PhysicsPixel.inst.inverseQueryInterval.x);
-        Vector2Int queryTileMax = Vector2Int.FloorToInt((queryBounds.max + PhysicsPixel.inst.queryExtension) * PhysicsPixel.inst.inverseQueryInterval.y);
+        Vector2Int queryTileMin = Vector2Int.FloorToInt((queryBounds.min - (Vector2)PhysicsPixel.inst.queryExtension));
+        Vector2Int queryTileMax = Vector2Int.FloorToInt((queryBounds.max + (Vector2)PhysicsPixel.inst.queryExtension));
 
         // Sample the concerned tile size
         sampledCollisions.Clear();
@@ -293,9 +294,9 @@ public class RigidbodyPixel : MonoBehaviour {
         if(sampledCollisions.Count > 0) {
             #region Reduce Delta Y
             // Figuring out the Y axis first, reduce the delta and apply it
-            for(int i = 0; i < sampledCollisions.Count; i++) {
+            foreach(Bounds2D b in sampledCollisions) {
                 // Reduce the delta
-                newDelta.y = PhysicsPixel.inst.MinimizeDeltaY(newDelta.y, sampledCollisions[i], cBounds);
+                newDelta.y = PhysicsPixel.inst.MinimizeDeltaY(newDelta.y, b, cBounds);
             }
             transform.position += newDelta.y * Vector3.up;
 
@@ -305,9 +306,9 @@ public class RigidbodyPixel : MonoBehaviour {
 
             #region Reduce Delta X
             // Figuring out the X axis after, reduce the delta and apply it
-            for(int i = 0; i < sampledCollisions.Count; i++) {
+            foreach(Bounds2D b in sampledCollisions) {
                 // Reduce the delta
-                newDelta.x = PhysicsPixel.inst.MinimizeDeltaX(newDelta.x, sampledCollisions[i], cBounds);
+                newDelta.x = PhysicsPixel.inst.MinimizeDeltaX(newDelta.x, b, cBounds);
             }
             transform.position += newDelta.x * Vector3.right;
             #endregion
@@ -360,19 +361,13 @@ public class RigidbodyPixel : MonoBehaviour {
                 transform.position.x + box.offset.x - (box.size.x * 0.5f) - e5,
                 transform.position.y + box.offset.y - (box.size.y * 0.5f) + clipAmout
             );
-            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds() {
-                min = point0,
-                max = point1
-            });
+            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0, point1));
             bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.up * PhysicsPixel.inst.errorHandler);
 
             if(solidClip && !solidPoint) {
                 if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Down, clipAmout, out Vector2 point)) {
                     float offset = clipAmout - (point1.y - point.y) + 0.03125f;
-                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds() {
-                        min = point0 + Vector2.up * offset,
-                        max = point1 + Vector2.up * (offset + box.size.y - e)
-                    });
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.up * offset, point1 + Vector2.up * (offset + box.size.y - e)));
                     if(!noFreeSpace) {
                         transform.position += Vector3.up * offset;
                         velocity = lastVel;
@@ -392,19 +387,13 @@ public class RigidbodyPixel : MonoBehaviour {
                 transform.position.x + box.offset.x + (box.size.x * 0.5f) + e5,
                 transform.position.y + box.offset.y - (box.size.y * 0.5f) + clipAmout
             );
-            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds() {
-                min = point0,
-                max = point1
-            });
+            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0, point1));
             bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.up * PhysicsPixel.inst.errorHandler);
 
             if(solidClip && !solidPoint) {
                 if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Down, clipAmout, out Vector2 point)) {
                     float offset = clipAmout - (point1.y - point.y) + 0.03125f;
-                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds() {
-                        min = point0 + Vector2.up * offset,
-                        max = point1 + Vector2.up * (offset + box.size.y - e)
-                    });
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.up * offset, point1 + Vector2.up * (offset + box.size.y - e)));
                     if(!noFreeSpace) {
                         transform.position += Vector3.up * offset;
                         velocity = lastVel;
@@ -424,18 +413,12 @@ public class RigidbodyPixel : MonoBehaviour {
                 transform.position.x + box.offset.x + (box.size.x * 0.5f) - clipAmout,
                 transform.position.y + box.offset.y + (box.size.y * 0.5f) + e5
             );
-            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds() {
-                min = new Vector2(point1.x, point0.y),
-                max = new Vector2(point0.x, point1.y)
-            });
+            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0, point1));
             bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.left * PhysicsPixel.inst.errorHandler);
             if(solidClip && !solidPoint) {
                 if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Right, clipAmout, out Vector2 point)) {
                     float offset = clipAmout - (point.x - point1.x);
-                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds() {
-                        min = point0 + Vector2.left * offset,
-                        max = point1 + Vector2.left * (offset + box.size.x - e)
-                    });
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.left * offset, point1 + Vector2.left * (offset + box.size.x - e)));
                     if(!noFreeSpace) {
                         transform.position += Vector3.left * offset;
                         velocity = lastVel;
@@ -455,18 +438,12 @@ public class RigidbodyPixel : MonoBehaviour {
                 transform.position.x + box.offset.x - (box.size.x * 0.5f) + clipAmout,
                 transform.position.y + box.offset.y + (box.size.y * 0.5f) + e5
             );
-            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds() {
-                min = new Vector2(point0.x, point0.y),
-                max = new Vector2(point1.x, point1.y)
-            });
+            bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0, point1));
             bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.right * PhysicsPixel.inst.errorHandler);
             if(solidClip && !solidPoint) {
                 if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Left, clipAmout, out Vector2 point)) {
                     float offset = clipAmout - (point1.x - point.x);
-                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds() {
-                        min = point0 + Vector2.right * offset,
-                        max = point1 + Vector2.right * (offset + box.size.x - e)
-                    });
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.right * offset, point1 + Vector2.right * (offset + box.size.x - e)));
                     if(!noFreeSpace) {
                         transform.position += Vector3.right * offset;
                         velocity = lastVel;
@@ -528,22 +505,18 @@ public class RigidbodyPixel : MonoBehaviour {
         return a > b ? a : b;
     }
 
-    public Bounds GetBoundFromCollider () {
-        return new Bounds((Vector2)transform.position + box.offset, box.size);
+    public Bounds2D GetBoundFromCollider () {
+        return new Bounds2D((Vector2)transform.position - box.size * 0.5f + box.offset, (Vector2)transform.position + box.size * 0.5f + box.offset);
     }
 
-    public Bounds GetBoundFromCollider (Vector3 trueSize) {
-        return new Bounds() {
-            min = transform.position,
-            max = transform.position + trueSize
-        };
+    public Bounds2D GetBoundFromCollider (Vector2 trueSize) {
+        return new Bounds2D(transform.position, (Vector2)transform.position + trueSize);
     }
 
-    public Bounds GetBoundFromColliderDelta (Vector2 previsionDelta) {
-        return new Bounds() {
-            min = new Vector2(transform.position.x + previsionDelta.x, transform.position.y + previsionDelta.y) - box.size * 0.5f + box.offset,
-            max = new Vector2(transform.position.x + previsionDelta.x, transform.position.y + previsionDelta.y) + box.size * 0.5f + box.offset
-        };
+    public Bounds2D GetBoundFromColliderDelta (Vector2 previsionDelta) {
+        return new Bounds2D(
+            new Vector2(transform.position.x + previsionDelta.x, transform.position.y + previsionDelta.y) - box.size * 0.5f + box.offset,
+            new Vector2(transform.position.x + previsionDelta.x, transform.position.y + previsionDelta.y) + box.size * 0.5f + box.offset);
     }
     #endregion
 }

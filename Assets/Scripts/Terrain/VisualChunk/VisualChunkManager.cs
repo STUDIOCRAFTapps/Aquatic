@@ -14,7 +14,7 @@ public class VisualChunkManager : MonoBehaviour {
     public Material baseMaterial;
     
     Queue<VisualChunk> unusedVisualChunkPool;
-    public Dictionary<Vector2Int, VisualChunk> visualChunkPool;
+    public Dictionary<long, VisualChunk> visualChunkPool;
     Queue<MobileChunk> unusedMobileChunkPool;
     public Dictionary<int, MobileChunk> mobileChunkPool;
 
@@ -27,7 +27,7 @@ public class VisualChunkManager : MonoBehaviour {
         
         unusedVisualChunkPool = new Queue<VisualChunk>();
         unusedMobileChunkPool = new Queue<MobileChunk>();
-        visualChunkPool = new Dictionary<Vector2Int, VisualChunk>();
+        visualChunkPool = new Dictionary<long, VisualChunk>();
         mobileChunkPool = new Dictionary<int, MobileChunk>();
 
         globalMaterial = new Material(baseMaterial);
@@ -93,11 +93,11 @@ public class VisualChunkManager : MonoBehaviour {
     }
 
     public void UnloadChunkAt (Vector2Int chunkPosition) {
-        VisualChunk vc = visualChunkPool[chunkPosition];
+        VisualChunk vc = visualChunkPool[Hash.hVec2Int(chunkPosition)];
 
         vc.gameObject.SetActive(false);
         PathgridManager.inst.SetNodeChunkAsUnused(chunkPosition);
-        visualChunkPool.Remove(chunkPosition);
+        visualChunkPool.Remove(Hash.hVec2Int(chunkPosition));
         unusedVisualChunkPool.Enqueue(vc);
     }
 
@@ -147,15 +147,15 @@ public class VisualChunkManager : MonoBehaviour {
     VisualChunk GetNewVisualChunk (Vector2Int chunkPosition) {
         VisualChunk unusedChunk;
 
-        if(visualChunkPool.ContainsKey(chunkPosition)) {
-            unusedChunk = visualChunkPool[chunkPosition];
+        if(visualChunkPool.TryGetValue(Hash.hVec2Int(chunkPosition), out VisualChunk visualChunk)) {
+            unusedChunk = visualChunk;
         } else if(unusedVisualChunkPool.Count > 0) {
             unusedChunk = unusedVisualChunkPool.Dequeue();
             unusedChunk.gameObject.SetActive(true);
-            visualChunkPool.Add(chunkPosition, unusedChunk);
+            visualChunkPool.Add(Hash.hVec2Int(chunkPosition), unusedChunk);
         } else {
             unusedChunk = Instantiate(chunkPrefab, TerrainManager.inst.terrainRoot).GetComponent<VisualChunk>();
-            visualChunkPool.Add(chunkPosition, unusedChunk);
+            visualChunkPool.Add(Hash.hVec2Int(chunkPosition), unusedChunk);
         }
         
         unusedChunk.Initiate(chunkPosition, true);
@@ -189,8 +189,8 @@ public class VisualChunkManager : MonoBehaviour {
     }
 
     public VisualChunk GetVisualChunkAt (Vector2Int chunkPos) {
-        if(visualChunkPool.ContainsKey(chunkPos)) {
-            return visualChunkPool[chunkPos];
+        if(visualChunkPool.TryGetValue(Hash.hVec2Int(chunkPos), out VisualChunk visualChunk)) {
+            return visualChunk;
         } else {
             return null;
         }

@@ -3,7 +3,7 @@ using System.Collections;
 
 public class ReadOnlyNode {
     public bool walkable;
-    public Vector3 worldPosition;
+    public Vector2 worldPosition;
     public int gridX;
     public int gridY;
     public int penalty;
@@ -11,7 +11,7 @@ public class ReadOnlyNode {
     public ReadOnlyNode () {
     }
 
-    public void SetData (bool walkable, Vector3 worldPosition, int gridX, int gridY, int penalty) {
+    public void SetData (bool walkable, Vector2 worldPosition, int gridX, int gridY, int penalty) {
         this.walkable = walkable;
         this.worldPosition = worldPosition;
         this.gridX = gridX;
@@ -26,7 +26,8 @@ public class Node : IHeapItem<Node> {
     public int gCost;
 	public int hCost;
 	public Node parent;
-	int heapIndex;
+    public bool isNeighbourCorner;
+    int heapIndex;
 
     public Node () {
     }

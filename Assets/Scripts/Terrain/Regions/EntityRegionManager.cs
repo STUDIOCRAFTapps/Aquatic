@@ -429,7 +429,7 @@ public class EntityRegion {
                     x + regionPosition.x * TerrainManager.inst.chunksPerRegionSide,
                     y + regionPosition.y * TerrainManager.inst.chunksPerRegionSide);
                 
-                if(VisualChunkManager.inst.visualChunkPool.ContainsKey(chunkPosition)) {
+                if(VisualChunkManager.inst.visualChunkPool.ContainsKey(Hash.hVec2Int(chunkPosition))) {
                     return true;
                 }
             }

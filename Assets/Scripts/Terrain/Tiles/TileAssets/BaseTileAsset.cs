@@ -28,7 +28,7 @@ public class BaseTileAsset : ScriptableObject {
 
     [Header("Collision")]
     public bool hasCollision = true;
-    public Bounds[] collisionBoxes = new Bounds[] { new Bounds(Vector2.zero, Vector2.one) };
+    public Bounds2D[] collisionBoxes = new Bounds2D[] { new Bounds2D(Vector2.zero, Vector2.one)};
     public float mass = 2f;
 
     /// <summary>
