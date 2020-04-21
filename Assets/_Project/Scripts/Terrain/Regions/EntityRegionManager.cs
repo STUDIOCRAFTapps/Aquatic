@@ -11,19 +11,8 @@ public class EntityRegionManager : MonoBehaviour {
     // Public Variables
     public static EntityRegionManager inst;
 
-    // Const
-    const int bufferSize = 8192;
-    public const string regionFolder = "entity_regions";
-    public const string regionFileSeparator = "_";
-    public const string regionFileEnd = ".erg";
-    const string authorizedCharsString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:";
-
     // Privates
-    char s; // Separator char
-    string datapath;
-    string regionsDatapath;
     StringBuilder sb;
-    Dictionary<char, byte> charToByte;
     float outOfBoundsCounter = 0f;
 
     // Data
@@ -33,24 +22,9 @@ public class EntityRegionManager : MonoBehaviour {
     public List<MobileChunk> outOfBoundsMobileChunks;
     public List<Entity> outOfBoundsEntities;
 
-    // Shared ressource
-    static byte[] buffer = new byte[bufferSize];
-
     private void Awake () {
         if(inst == null) {
             inst = this;
-        }
-
-        s = Path.DirectorySeparatorChar;
-        datapath = Application.persistentDataPath;
-        sb = new StringBuilder();
-
-        ComposeDataPaths();
-
-        charToByte = new Dictionary<char, byte>();
-        char[] authorizedChars = authorizedCharsString.ToCharArray();
-        for(byte i = 0; i < authorizedChars.Length; i++) {
-            charToByte.Add(authorizedChars[i], i);
         }
 
         entityRegions = new Dictionary<Vector2Int, EntityRegion>();
@@ -76,27 +50,6 @@ public class EntityRegionManager : MonoBehaviour {
 
             PhysicsPixel.DrawBounds(b, Color.magenta);
         }
-    }
-    #endregion
-
-    #region Data Paths
-    void ComposeDataPaths () {
-        regionsDatapath = datapath + s + WorldSaving.savesFolder + s + WorldSaving.inst.saveFolderName + s + WorldSaving.dimentions[WorldSaving.inst.dimension] + s + regionFolder + s;
-
-        if(!Directory.Exists(regionsDatapath)) {
-            Directory.CreateDirectory(regionsDatapath);
-        }
-    }
-
-    public string GetRegionDirectory (EntityRegion entityRegion) {
-        sb.Clear();
-        sb.Append(regionsDatapath);
-        sb.Append(entityRegion.regionPosition.x);
-        sb.Append(regionFileSeparator);
-        sb.Append(entityRegion.regionPosition.y);
-        sb.Append(regionFileEnd);
-
-        return sb.ToString();
     }
     #endregion
 
@@ -146,7 +99,7 @@ public class EntityRegionManager : MonoBehaviour {
         foreach(KeyValuePair<Vector2Int, EntityRegion> kvp in entityRegions) {
             if(Time.time - kvp.Value.timeOfLastAutosave > TerrainManager.inst.regionAutoSaveTimeLimit) {
                 kvp.Value.timeOfLastAutosave = Time.time;
-                SaveRegionFile(kvp.Value);
+                WorldSaving.inst.SaveRegionFile(kvp.Value);
             }
         }
     }
@@ -154,7 +107,7 @@ public class EntityRegionManager : MonoBehaviour {
     public void SaveAllRegions () {
         foreach(KeyValuePair<Vector2Int, EntityRegion> kvp in entityRegions) {
             kvp.Value.timeOfLastAutosave = Time.time;
-            SaveRegionFile(kvp.Value);
+            WorldSaving.inst.SaveRegionFile(kvp.Value);
         }
     }
 
@@ -172,88 +125,6 @@ public class EntityRegionManager : MonoBehaviour {
         if(entityRegions.ContainsKey(regionPosition)) {
             if(!entityRegions[regionPosition].IsAnySubRegionLoaded()) {
                 SetRegionAsUnused(entityRegions[regionPosition]);
-            }
-        }
-    }
-    #endregion
-
-    #region Saving & Loading Files
-    public bool LoadRegionFile (EntityRegion entityRegion) {
-        string regionPath = GetRegionDirectory(entityRegion);
-        if(!File.Exists(regionPath)) {
-            return false;
-        }
-
-        bool hasSucceded;
-        try {
-            using(FileStream fs = new FileStream(regionPath, FileMode.Open))
-            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress))
-            using(MemoryStream ms = new MemoryStream(buffer))
-            using(BinaryReader br = new BinaryReader(ms)) {
-                int rlength = defs.Read(buffer, 0, buffer.Length);
-                hasSucceded = DeserializeStreamToRegion(br, entityRegion);
-            }
-        } catch(System.Exception e) {
-            Debug.Log("Failed to load chunk: " + e.ToString());
-            hasSucceded = false;
-        }
-
-        if(!hasSucceded) {
-            Debug.LogError($"A region at {entityRegion.regionPosition} failed to be deserialized. Its file was deleted.");
-            File.Delete(regionPath);
-        }
-        return hasSucceded;
-    }
-
-    public void SaveRegionFile (EntityRegion entityRegion) {
-        using(FileStream fs = new FileStream(GetRegionDirectory(entityRegion), FileMode.Create)) {
-            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress)) {
-                using(MemoryStream ms = new MemoryStream(buffer)) {
-                    using(BinaryWriter bw = new BinaryWriter(ms)) {
-                        SerializeRegionToStream(bw, entityRegion);
-                        defs.Write(buffer, 0, (int)ms.Position);
-                    }
-                }
-            }
-        }
-    }
-
-    static byte[] byteToIntBuffer = new byte[4];
-    bool DeserializeStreamToRegion (BinaryReader ms, EntityRegion entityRegion) {
-        for(int x = 0; x < TerrainManager.inst.chunksPerRegionSide; x++) {
-            for(int y = 0; y < TerrainManager.inst.chunksPerRegionSide; y++) {
-                int mobileChunkInRegion = ms.ReadUInt16();
-                int entitiesInRegion = ms.ReadUInt16();
-                if(mobileChunkInRegion < 0 && entitiesInRegion < 0) {
-                    return false;
-                }
-
-                int i = 0;
-                for(; i < mobileChunkInRegion; i++) {
-                    entityRegion.subRegions[x][y].mobileChunkUIDs.Add(ms.ReadInt32());
-                }
-                i = 0;
-                for(; i < entitiesInRegion; i++) {
-                    entityRegion.subRegions[x][y].entitiesUIDs.Add(ms.ReadInt32());
-                }
-            }
-        }
-
-        return true;
-    }
-
-    void SerializeRegionToStream (BinaryWriter ms, EntityRegion entityRegion) {
-        for(int x = 0; x < TerrainManager.inst.chunksPerRegionSide; x++) {
-            for(int y = 0; y < TerrainManager.inst.chunksPerRegionSide; y++) {
-                ms.Write((ushort)(entityRegion.subRegions[x][y].mobileChunkUIDs.Count));
-                ms.Write((ushort)(entityRegion.subRegions[x][y].entitiesUIDs.Count));
-
-                for(int i = 0; i < entityRegion.subRegions[x][y].mobileChunkUIDs.Count; i++) {
-                    ms.Write(entityRegion.subRegions[x][y].mobileChunkUIDs[i]);
-                }
-                for(int i = 0; i < entityRegion.subRegions[x][y].entitiesUIDs.Count; i++) {
-                    ms.Write(entityRegion.subRegions[x][y].entitiesUIDs[i]);
-                }
             }
         }
     }
@@ -449,11 +320,11 @@ public class EntityRegion {
     #region Files & Serialization
     public void LoadRegion (Vector2Int regionPosition) {
         this.regionPosition = regionPosition;
-        EntityRegionManager.inst.LoadRegionFile(this);
+        WorldSaving.inst.LoadRegionFile(this);
     }
 
     public void SaveRegion () {
-        EntityRegionManager.inst.SaveRegionFile(this);
+        WorldSaving.inst.SaveRegionFile(this);
     }
     #endregion
 
