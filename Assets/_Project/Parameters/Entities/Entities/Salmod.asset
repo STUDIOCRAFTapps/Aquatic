@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ee38311c1e823346b2f28a6d1d59a72, type: 3}
+  m_Name: Salmod
+  m_EditorClassIdentifier: 
+  uiSprite: {fileID: 5126182459140666263, guid: 45bb4322ae071e1458c19af4b59ae9ce,
+    type: 3}
+  fullName: Salmod
+  id: salmod
+  prefab: {fileID: 3428889606896973310, guid: 452e7a1a40e129d4a99b0e75ecf9310b, type: 3}
+  loadBoxOffset: {x: -0.125, y: -0.125}
+  loadBoxSize: {x: 1.875, y: 1.25}
+  offset: {x: -0.125, y: -0.125}
+  size: {x: 1.875, y: 1.25}
+  mass: 9
+  maxHealth: 20
+  animationGroup: {fileID: 552821699678306382, guid: 4addb3fc5c42fd64abb25b05d0f7e9f9,
+    type: 3}
+  maxTargetingDistance: 15
+  minAttakInterval: 1
+  speed: 60
