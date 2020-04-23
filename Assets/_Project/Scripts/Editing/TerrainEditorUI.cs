@@ -10,6 +10,11 @@ public class TerrainEditorUI : MonoBehaviour {
     public Dropdown sidebarDropdown;
     public GameObject[] allSidebars;
 
+    [Header("Play/Edit")]
+    public Image playEditImage;
+    public Sprite playSprite;
+    public Sprite editSprite;
+
     [Header("Toolbar")]
     public GameObject toolSlotPrefab;
     public Sprite selectedToolSprite;
@@ -186,6 +191,16 @@ public class TerrainEditorUI : MonoBehaviour {
     #endregion
 
     #region Event
+    public void TogglePlayEdit () {
+        if(GameManager.inst.engineMode == EngineModes.Play) {
+            playEditImage.sprite = playSprite;
+            GameManager.inst.engineMode = EngineModes.Edit;
+        } else if(GameManager.inst.engineMode == EngineModes.Edit) {
+            playEditImage.sprite = editSprite;
+            GameManager.inst.engineMode = EngineModes.Play;
+        }
+    }
+
     public void ToggleItemMenu () {
         itemMenu.SetActive(!itemMenu.activeSelf);
         if(!itemMenu.activeSelf) {

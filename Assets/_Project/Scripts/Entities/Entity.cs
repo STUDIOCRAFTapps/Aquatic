@@ -87,10 +87,16 @@ public class Entity : MonoBehaviour {
 
     #region Monobehaviour
     private void Update () {
+        if(GameManager.inst.engineMode != EngineModes.Play) {
+            return;
+        }
         OnUpdate();
     }
 
     private void FixedUpdate () {
+        if(GameManager.inst.engineMode != EngineModes.Play) {
+            return;
+        }
         OnFixedUpdate();
     }
     #endregion

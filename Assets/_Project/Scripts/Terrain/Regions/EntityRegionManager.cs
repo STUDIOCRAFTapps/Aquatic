@@ -7,7 +7,7 @@ using System.Text;
 
 public class EntityRegionManager : MonoBehaviour {
 
-    #region Header and Initiation
+    #region Header and Monobehaviour
     // Public Variables
     public static EntityRegionManager inst;
 

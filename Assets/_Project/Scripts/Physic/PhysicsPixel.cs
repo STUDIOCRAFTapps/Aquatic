@@ -49,9 +49,13 @@ public class PhysicsPixel : MonoBehaviour {
     }
 
     private void FixedUpdate () {
+        if(GameManager.inst.engineMode != EngineModes.Play) {
+            return;
+        }
+
         // Applies force from components attached on RigibodyPixels
         ApplyForceComponents();
-        
+
         SolveAllManifolds(true);
 
         GetAllWeakInteraction();

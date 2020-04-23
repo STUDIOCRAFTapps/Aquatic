@@ -66,7 +66,7 @@ public class ChunkLoader : MonoBehaviour {
     #endregion
 
     void LoadChunkAt (Vector2Int chunkPosition) {
-        bool doGenerate = false;
+        bool doLoadFromFileOrGenerate = false;
         if(loadCounters.ContainsKey(chunkPosition)) {
             if(loadCounters[chunkPosition].loadCount == 0) {
                 if(loadCounters[chunkPosition].timer.isRunning) {
@@ -74,27 +74,32 @@ public class ChunkLoader : MonoBehaviour {
                     loadCounters[chunkPosition].timer = new CancellableTimer();
                     loadCounters[chunkPosition].loadCount++;
                 } else {
-                    doGenerate = true;
+                    doLoadFromFileOrGenerate = true;
                 }
             } else {
                 loadCounters[chunkPosition].loadCount++;
                 
                 if(!TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition))) {
-                    doGenerate = true;
+                    doLoadFromFileOrGenerate = true;
                 }
             }
         } else {
-            doGenerate = true;
+            doLoadFromFileOrGenerate = true;
         }
 
-        if(doGenerate) {
+        if(doLoadFromFileOrGenerate) {
             if(!loadCounters.ContainsKey(chunkPosition)) {
                 loadCounters.Add(chunkPosition, new ChunkLoadCounter());
             }
             loadCounters[chunkPosition].loadCount++;
-            
+
+            DataLoadMode dlt = DataLoadMode.Default;
+            if(GameManager.inst.engineMode == EngineModes.Play) {
+                dlt = DataLoadMode.TryReadonly;
+            }
+
             DataChunk dataChunk = TerrainManager.inst.GetNewDataChunk(chunkPosition);
-            if(!WorldSaving.inst.LoadChunk(dataChunk)) {
+            if(!WorldSaving.inst.LoadChunk(dataChunk, dlt)) {
                 for(int x = 0; x < TerrainManager.inst.chunkSize; x++) {
                     for(int y = 0; y < TerrainManager.inst.chunkSize; y++) {
                         dataChunk.SetGlobalID(x, y, TerrainLayers.Ground, Mathf.RoundToInt(Mathf.Clamp01(

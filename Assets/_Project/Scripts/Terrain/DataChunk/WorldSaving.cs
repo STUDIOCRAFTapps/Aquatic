@@ -8,6 +8,12 @@ using System;
 using System.Linq;
 using Newtonsoft.Json;
 
+public enum DataLoadMode {
+    TryReadonly,
+    Default,
+    Readonly
+}
+
 public class WorldSaving : MonoBehaviour {
 
     #region Header and Initiation
@@ -22,7 +28,7 @@ public class WorldSaving : MonoBehaviour {
     public const string savesFolder = "saves";
     public const string editFolder = "edit";
     public const string playFolder = "play";
-    public static readonly string[] dimentions = {"overworld"};
+    public static readonly string[] dimentions = { "overworld" };
 
     public const string chunkDataFolder = "chunk_data";
     public const string regionFolder = "entity_regions";
@@ -43,6 +49,7 @@ public class WorldSaving : MonoBehaviour {
     char s; // Separator char
     string datapath;
     string chunkDatapath;
+    string chunkReadonlyDatapath;
     string mobileChunkDatapath;
     string entityDatapath;
     string regionsDatapath;
@@ -69,7 +76,7 @@ public class WorldSaving : MonoBehaviour {
         };
 
         ComposeDataPaths();
-        
+
         charToByte = new Dictionary<char, byte>();
         char[] authorizedChars = authorizedCharsString.ToCharArray();
         for(byte i = 0; i < authorizedChars.Length; i++) {
@@ -95,7 +102,7 @@ public class WorldSaving : MonoBehaviour {
     }
     #endregion
 
-    
+
     #region Datapaths
     public void SetDimension (int dimension) {
         this.dimension = dimension;
@@ -103,15 +110,16 @@ public class WorldSaving : MonoBehaviour {
     }
 
     void ComposeDataPaths () {
+        // Engine Mode Folder
         string engmf = (GameManager.inst.engineMode == EngineModes.Edit) ? editFolder : playFolder;
 
         mobileChunkDatapath = datapath + s + savesFolder + s + saveFolderName + s + engmf + s + dimentions[dimension] + s + mobileChunkDataFolder + s;
         if(!Directory.Exists(mobileChunkDatapath)) {
-            Debug.Log(mobileChunkDatapath);
             Directory.CreateDirectory(mobileChunkDatapath);
         }
 
         chunkDatapath = datapath + s + savesFolder + s + saveFolderName + s + engmf + s + dimentions[dimension] + s + chunkDataFolder + s;
+        chunkReadonlyDatapath = datapath + s + savesFolder + s + saveFolderName + s + editFolder + s + dimentions[dimension] + s + chunkDataFolder + s;
         if(!Directory.Exists(chunkDatapath)) {
             Directory.CreateDirectory(chunkDatapath);
         }
@@ -127,9 +135,9 @@ public class WorldSaving : MonoBehaviour {
         }
     }
 
-    public string GetChunkDirectory (DataChunk dataChunk) {
+    public string GetChunkDirectory (DataChunk dataChunk, bool useReadonlyPath) {
         sb.Clear();
-        sb.Append(chunkDatapath);
+        sb.Append(useReadonlyPath ? chunkReadonlyDatapath : chunkDatapath);
         sb.Append(dataChunk.chunkPosition.x);
         sb.Append(chunkFileSeparator);
         sb.Append(dataChunk.chunkPosition.y);
@@ -172,7 +180,7 @@ public class WorldSaving : MonoBehaviour {
     #region Save
     public void SaveChunk (DataChunk source) {
         //Serialize and save.
-        using(FileStream fs = new FileStream(GetChunkDirectory(source), FileMode.Create))
+        using(FileStream fs = new FileStream(GetChunkDirectory(source, false), FileMode.Create))
         using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
         using(MemoryStream ms = new MemoryStream(buffer))
         using(BinaryWriter bw = new BinaryWriter(ms)) {
@@ -219,12 +227,19 @@ public class WorldSaving : MonoBehaviour {
     #endregion
 
     #region Load
-    public bool LoadChunk (DataChunk dataChunk) {
+    public bool LoadChunk (DataChunk dataChunk, DataLoadMode loadMode) {
         // The destination chunk should already have been cleaned and thus, 
         // its position should be correct and it can be passed to the GetChunkDirectory function.
-        string chunkPath = GetChunkDirectory(dataChunk);
+        string chunkPath = string.Empty;
+        if(loadMode == DataLoadMode.Default || loadMode == DataLoadMode.TryReadonly)
+            chunkPath = GetChunkDirectory(dataChunk, false);
+        if(loadMode == DataLoadMode.Readonly)
+            chunkPath = GetChunkDirectory(dataChunk, true);
+
         if(!File.Exists(chunkPath)) {
-            return false;
+            if(loadMode == DataLoadMode.TryReadonly) {
+                return LoadChunk(dataChunk, DataLoadMode.Readonly);
+            }
         }
 
         bool hasSucceded;
@@ -245,7 +260,12 @@ public class WorldSaving : MonoBehaviour {
             Debug.LogError($"A chunk at {dataChunk.chunkPosition} failed to be deserialized. Its file was deleted.");
             File.Delete(chunkPath);
         }
-        return hasSucceded;
+
+        if(!hasSucceded && loadMode == DataLoadMode.TryReadonly) {
+            return LoadChunk(dataChunk, DataLoadMode.Readonly);
+        } else {
+            return hasSucceded;
+        }
     }
 
     public bool LoadChunk (MobileDataChunk dataChunk) {
@@ -327,7 +347,7 @@ public class WorldSaving : MonoBehaviour {
 
     #region Delete
     public void DeleteChunk (DataChunk target) {
-        string chunkPath = GetChunkDirectory(target);
+        string chunkPath = GetChunkDirectory(target, false);
         if(File.Exists(chunkPath)) {
             File.Delete(chunkPath);
         }
@@ -348,6 +368,24 @@ public class WorldSaving : MonoBehaviour {
             File.Delete(entityPath);
         }
 
+    }
+    #endregion
+
+    #region Delete Directory
+    public void ClearPlayFolders () {
+        ClearFolder(datapath + s + savesFolder + s + saveFolderName + s + playFolder);
+    }
+
+    public static void ClearFolder (string directory) {
+        DirectoryInfo dir = new DirectoryInfo(directory);
+
+        foreach(FileInfo fi in dir.GetFiles()) {
+            fi.Delete();
+        }
+        foreach(DirectoryInfo di in dir.GetDirectories()) {
+            ClearFolder(di.FullName);
+            di.Delete();
+        }
     }
     #endregion
     #endregion

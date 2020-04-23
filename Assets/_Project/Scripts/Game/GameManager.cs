@@ -6,7 +6,7 @@ public class GameManager : MonoBehaviour {
     public static GameManager inst;
 
     public PlayerController[] allPlayers;
-    private EngineModes _engineMode;
+    private EngineModes _engineMode = EngineModes.Edit;
     private GameModes _gameMode;
 
     public delegate void EngineModeChangeHandler();
@@ -16,6 +16,9 @@ public class GameManager : MonoBehaviour {
         get => _engineMode;
         set {
             _engineMode = value;
+            if(_engineMode == EngineModes.Play) {
+                WorldSaving.inst.ClearPlayFolders();
+            }
             OnChangeEngineMode();
         }
     }
@@ -29,8 +32,6 @@ public class GameManager : MonoBehaviour {
     private void Awake () {
         inst = this;
     }
-
-
 
     public PlayerController GetNearestPlayer (Vector2 position) {
         int nearestPlayerIndex = -1;
