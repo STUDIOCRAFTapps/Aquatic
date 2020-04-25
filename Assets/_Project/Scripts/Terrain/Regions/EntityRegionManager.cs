@@ -320,7 +320,9 @@ public class EntityRegion {
     #region Files & Serialization
     public void LoadRegion (Vector2Int regionPosition) {
         this.regionPosition = regionPosition;
-        WorldSaving.inst.LoadRegionFile(this);
+        if(!WorldSaving.inst.LoadRegionFile(this, GameManager.inst.currentDataLoadMode)) {
+            //Debug.LogError("Region failed to load. What are we gonna do?");
+        }
     }
 
     public void SaveRegion () {

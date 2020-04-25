@@ -46,7 +46,7 @@ public class Entity : MonoBehaviour {
 
     }
 
-    // Every frame, used mostly for rendering and smooth operations (Make sure to call base)
+    // Every frame, used mostly for rendering and smooth operations (Make sure to call base). This will still be called in editor mode.
     public virtual void OnUpdate () {
         entityData.previousPosition = entityData.position;
         entityData.position = transform.position;
@@ -87,9 +87,6 @@ public class Entity : MonoBehaviour {
 
     #region Monobehaviour
     private void Update () {
-        if(GameManager.inst.engineMode != EngineModes.Play) {
-            return;
-        }
         OnUpdate();
     }
 

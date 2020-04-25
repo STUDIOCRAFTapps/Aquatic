@@ -15,11 +15,19 @@ public class GameManager : MonoBehaviour {
     public EngineModes engineMode {
         get => _engineMode;
         set {
+            ChunkLoader.inst.UnloadAll(value == EngineModes.Edit);
+            if(value == EngineModes.Edit) {
+                TerrainManager.inst.CompleteEntitySave();
+            }
             _engineMode = value;
             if(_engineMode == EngineModes.Play) {
                 WorldSaving.inst.ClearPlayFolders();
             }
-            OnChangeEngineMode();
+
+            WorldSaving.inst.OnReloadEngine();
+            ChunkLoader.inst.ReloadAll();
+
+            OnChangeEngineMode?.Invoke();
         }
     }
 
@@ -28,6 +36,15 @@ public class GameManager : MonoBehaviour {
         set => _gameMode = value;
     }
 
+    public DataLoadMode currentDataLoadMode {
+        private set => currentDataLoadMode = value;
+        get {
+            if(engineMode == EngineModes.Play) {
+                return DataLoadMode.TryReadonly;
+            }
+            return DataLoadMode.Default;
+        }
+    }
 
     private void Awake () {
         inst = this;

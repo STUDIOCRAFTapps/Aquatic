@@ -96,7 +96,7 @@ public class TerrainManager : MonoBehaviour {
         EntityRegionManager.inst.CheckForAutosaves();
     }
 
-    void CompleteSave () {
+    public void CompleteSave () {
         foreach(KeyValuePair<long, DataChunk> kvp in chunks) {
             WorldSaving.inst.SaveChunk(kvp.Value);
         }
@@ -107,6 +107,15 @@ public class TerrainManager : MonoBehaviour {
             EntityManager.inst.SaveEntity(kvp.Value);
         }
         EntityRegionManager.inst.SaveAllRegions();
+    }
+
+    public void CompleteEntitySave () {
+        foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
+            EntityManager.inst.SaveEntity(kvp.Value);
+        }
+        foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
+            WorldSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
+        }
     }
 
     private void OnApplicationQuit () {
@@ -204,7 +213,7 @@ public class TerrainManager : MonoBehaviour {
 
     public void LoadMobileChunkFromUID (int uid) {
         MobileChunk mobileChunk = VisualChunkManager.inst.GetNewMobileChunk(uid);
-        if(WorldSaving.inst.LoadChunk(mobileChunk.mobileDataChunk)) {
+        if(WorldSaving.inst.LoadMobileChunkFile(mobileChunk.mobileDataChunk, GameManager.inst.currentDataLoadMode)) {
             EntityRegionManager.inst.AddMobileChunk(mobileChunk);
             VisualChunkManager.inst.BuildMobileChunk(mobileChunk);
             mobileChunk.mobileDataChunk.RefreshTiles();

@@ -58,7 +58,7 @@ public class ChunkLoader : MonoBehaviour {
             LoadChunkAt(new Vector2Int(x, y));
         });
         ExecuteInOldBoundOnly(newBounds, previousLoadBounds, (x, y) => {
-            UnloadChunkAt(new Vector2Int(x, y));
+            UnloadChunkAt(new Vector2Int(x, y), false);
         });
 
         previousLoadBounds = newBounds;
@@ -66,6 +66,7 @@ public class ChunkLoader : MonoBehaviour {
     #endregion
 
     void LoadChunkAt (Vector2Int chunkPosition) {
+
         bool doLoadFromFileOrGenerate = false;
         if(loadCounters.ContainsKey(chunkPosition)) {
             if(loadCounters[chunkPosition].loadCount == 0) {
@@ -93,13 +94,8 @@ public class ChunkLoader : MonoBehaviour {
             }
             loadCounters[chunkPosition].loadCount++;
 
-            DataLoadMode dlt = DataLoadMode.Default;
-            if(GameManager.inst.engineMode == EngineModes.Play) {
-                dlt = DataLoadMode.TryReadonly;
-            }
-
             DataChunk dataChunk = TerrainManager.inst.GetNewDataChunk(chunkPosition);
-            if(!WorldSaving.inst.LoadChunk(dataChunk, dlt)) {
+            if(!WorldSaving.inst.LoadChunkFile(dataChunk, GameManager.inst.currentDataLoadMode)) {
                 for(int x = 0; x < TerrainManager.inst.chunkSize; x++) {
                     for(int y = 0; y < TerrainManager.inst.chunkSize; y++) {
                         dataChunk.SetGlobalID(x, y, TerrainLayers.Ground, Mathf.RoundToInt(Mathf.Clamp01(
@@ -127,7 +123,20 @@ public class ChunkLoader : MonoBehaviour {
         EntityRegionManager.inst.LoadRegionAtChunk(chunkPosition);
     }
 
-    void UnloadChunkAt (Vector2Int chunkPosition) {
+    void UnloadChunkAt (Vector2Int chunkPosition, bool imidiatly, bool doSave = true) {
+        if(imidiatly) {
+            if(TerrainManager.inst.chunks.TryGetValue(Hash.hVec2Int(chunkPosition), out DataChunk dataChunk)) {
+                if(doSave) {
+                    WorldSaving.inst.SaveChunk(dataChunk);
+                }
+                TerrainManager.inst.SetDataChunkAsUnused(chunkPosition);
+                VisualChunkManager.inst.UnloadChunkAt(chunkPosition);
+
+                EntityRegionManager.inst.UnloadRegionAtChunk(chunkPosition);
+            }
+            return;
+        }
+
         if(loadCounters.ContainsKey(chunkPosition)) {
             int loadCount = loadCounters[chunkPosition].loadCount;
 
@@ -138,7 +147,9 @@ public class ChunkLoader : MonoBehaviour {
                 }
                 loadCounters[chunkPosition].timer.Start(TerrainManager.inst.unloadTimer, () => {
                     if(TerrainManager.inst.chunks.TryGetValue(Hash.hVec2Int(chunkPosition), out DataChunk dataChunk)) {
-                        WorldSaving.inst.SaveChunk(dataChunk);
+                        if(doSave) {
+                            WorldSaving.inst.SaveChunk(dataChunk);
+                        }
                         TerrainManager.inst.SetDataChunkAsUnused(chunkPosition);
                         VisualChunkManager.inst.UnloadChunkAt(chunkPosition);
 
@@ -149,6 +160,35 @@ public class ChunkLoader : MonoBehaviour {
                 loadCounters[chunkPosition].loadCount--;
             }
         }
+    }
+
+    public void UnloadAll (bool doSave = true) {
+        foreach(KeyValuePair<Vector2Int, ChunkLoadCounter> kvp in loadCounters) {
+            if(kvp.Value.loadCount > 0) {
+                UnloadChunkAt(kvp.Key, true, doSave);
+            } else {
+                kvp.Value.timer.Cancel();
+                UnloadChunkAt(kvp.Key, true, doSave);
+            }
+        }
+        loadCounters.Clear();
+    }
+
+    public void ReloadAll () {
+        Vector2Int currentChunkPos = TerrainManager.inst.WorldToChunk(player.position);
+        previousChunkPos = currentChunkPos;
+        ChunkLoadBounds newBounds = new ChunkLoadBounds(
+            new Vector2Int(
+                currentChunkPos.x - TerrainManager.inst.loadRadius.x,
+                currentChunkPos.y - TerrainManager.inst.loadRadius.y),
+            new Vector2Int(
+                currentChunkPos.x + TerrainManager.inst.loadRadius.x,
+                currentChunkPos.y + TerrainManager.inst.loadRadius.y)
+        );
+
+        ExecuteInBound(newBounds, (x, y) => {
+            LoadChunkAt(new Vector2Int(x, y));
+        });
     }
 
     #region Bounds Execution Utils

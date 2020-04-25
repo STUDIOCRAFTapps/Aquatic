@@ -114,7 +114,7 @@ public class EntityManager : MonoBehaviour {
     }
 
     public void LoadFromUID (int uid) {
-        if(!WorldSaving.inst.LoadEntity(uid, out EntityData entityData)) {
+        if(!WorldSaving.inst.LoadEntityFile(uid, out EntityData entityData, GameManager.inst.currentDataLoadMode)) {
             return;
         }
 
