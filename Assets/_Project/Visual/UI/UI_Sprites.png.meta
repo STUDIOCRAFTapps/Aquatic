@@ -281,6 +281,69 @@ TextureImporter:
   - first:
       213: 3580463434179486111
     second: Play_Button
+  - first:
+      213: 5058687368900005674
+    second: Slices_BlueHole
+  - first:
+      213: -2264512647906126266
+    second: Aikan_1
+  - first:
+      213: 4117803434802322436
+    second: Aikan_2
+  - first:
+      213: 7173235945457966158
+    second: Aikan_0
+  - first:
+      213: -6965482511367525751
+    second: Aikan_1
+  - first:
+      213: -6562037367175478152
+    second: Aikan_3
+  - first:
+      213: -6965482511367525751
+    second: Aikan_4
+  - first:
+      213: -4031211383463023731
+    second: Edit_Button
+  - first:
+      213: -6562037367175478152
+    second: Aikan_3
+  - first:
+      213: 537450399511855671
+    second: Aikan_3
+  - first:
+      213: 5459358264740417118
+    second: AIkan_6
+  - first:
+      213: 4328801999977714770
+    second: AIkan_7
+  - first:
+      213: -6715298672372989379
+    second: AIkan_5
+  - first:
+      213: 537450399511855671
+    second: More
+  - first:
+      213: 5459358264740417118
+    second: AIkan_6
+  - first:
+      213: 4328801999977714770
+    second: AIkan_5
+  - first:
+      213: 4328801999977714770
+    second: AIkan_5
+  - first:
+      213: -6715298672372989379
+    second: AIkan_5
+  - first:
+      213: -7435891123501607155
+    second: AIkan_8
+  - first:
+      213: -993118287144288015
+    second: Create_Button
+  - first:
+      213: 7600349725847135301
+    second: Slices_PinkHole
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -352,6 +415,30 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
     buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: iPhone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -2277,16 +2364,16 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Edit_Button
+      name: Slices_BlueHole
       rect:
         serializedVersion: 2
-        x: 64
-        y: 38
-        width: 42
-        height: 10
+        x: 176
+        y: 208
+        width: 16
+        height: 16
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      border: {x: 2, y: 2, z: 2, w: 2}
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -2306,7 +2393,7 @@ TextureImporter:
         width: 42
         height: 10
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -2314,6 +2401,279 @@ TextureImporter:
       bones: []
       spriteID: f912b85f58c50b130800000000000000
       internalID: 3580463434179486111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aikan_1
+      rect:
+        serializedVersion: 2
+        x: 184
+        y: 167
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6461d20aeb5d290e0800000000000000
+      internalID: -2264512647906126266
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aikan_2
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 167
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 40c964a2860652930800000000000000
+      internalID: 4117803434802322436
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aikan_0
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 167
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e4cd51346147c8360800000000000000
+      internalID: 7173235945457966158
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aikan_4
+      rect:
+        serializedVersion: 2
+        x: 184
+        y: 151
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 98a2eb48f82a55f90800000000000000
+      internalID: -6965482511367525751
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Aikan_3
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 151
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8748aae18c5fee4a0800000000000000
+      internalID: -6562037367175478152
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Edit_Button
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 38
+        width: 42
+        height: 10
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d8bec22ea924e08c0800000000000000
+      internalID: -4031211383463023731
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: More
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 157
+        width: 13
+        height: 3
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 732cb437a48657700800000000000000
+      internalID: 537450399511855671
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AIkan_6
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 135
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e5e0277ba6983cb40800000000000000
+      internalID: 5459358264740417118
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AIkan_5
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 151
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2541ca7eb7ef21c30800000000000000
+      internalID: 4328801999977714770
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AIkan_7
+      rect:
+        serializedVersion: 2
+        x: 184
+        y: 135
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d324e88cf677ec2a0800000000000000
+      internalID: -6715298672372989379
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AIkan_8
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 135
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d07d4339b686ec890800000000000000
+      internalID: -7435891123501607155
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Create_Button
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 192
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1f002dafd2cb732f0800000000000000
+      internalID: -993118287144288015
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slices_PinkHole
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 208
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 2, y: 2, z: 2, w: 2}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5442bd9aecdd97960800000000000000
+      internalID: 7600349725847135301
       vertices: []
       indices: 
       edges: []

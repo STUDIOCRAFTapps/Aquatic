@@ -17426,7 +17426,7 @@ MonoBehaviour:
   playEditImage: {fileID: 422717737}
   playSprite: {fileID: 3580463434179486111, guid: 5ba03ec631516b44996ef53fb339e1dd,
     type: 3}
-  editSprite: {fileID: 2829466157029526643, guid: 5ba03ec631516b44996ef53fb339e1dd,
+  editSprite: {fileID: -4031211383463023731, guid: 5ba03ec631516b44996ef53fb339e1dd,
     type: 3}
   toolSlotPrefab: {fileID: 7681602606760935439, guid: 20eefdc015521cf468e355a37b8e371d,
     type: 3}

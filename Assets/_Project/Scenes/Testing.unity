@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 2099517931}
   - component: {fileID: 2099517933}
   - component: {fileID: 2099517934}
+  - component: {fileID: 2099517935}
   m_Layer: 0
   m_Name: World
   m_TagString: Untagged
@@ -218,9 +219,52 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2099517930}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0de116382bce5af428fb1ee1a44fa036, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   iterations: 10000
+--- !u!114 &2099517935
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2099517930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad889f724e8dd9746acab45517b40740, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gradient:
+    serializedVersion: 2
+    key0: {r: 0.15966535, g: 0.735849, b: 0.5315934, a: 1}
+    key1: {r: 0.26024497, g: 0.06407974, b: 0.3773585, a: 1}
+    key2: {r: 0.5566038, g: 0.12077251, b: 0.20656623, a: 0}
+    key3: {r: 0.4433962, g: 0.10457459, b: 0.2763715, a: 0}
+    key4: {r: 0.21306509, g: 0.056069765, b: 0.3962264, a: 0}
+    key5: {r: 0.21306509, g: 0.056069765, b: 0.3962264, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 30557
+    ctime3: 45356
+    ctime4: 65535
+    ctime5: 65535
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2
+  text: The game will start when all player are ready.
+  outputText: 

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 9d339bacda4cf3e4894dfd7a7adb9e02
+guid: 6e059ba04b4280d4bb03d23611838c0b
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -8,11 +8,9 @@ TrueTypeFontImporter:
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
-  fontName: Nebulosa3x8
+  fontName: AquaUnicode3x8
   fontNames:
-  - 'Aqua
-
-    3x8'
+  - AquaUnicode3x5
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
