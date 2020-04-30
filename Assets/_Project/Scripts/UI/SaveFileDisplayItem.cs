@@ -4,6 +4,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Text;
+using UnityEngine.SceneManagement;
 
 public class SaveFileDisplayItem : MonoBehaviour {
     public TextMeshProUGUI title;
@@ -30,9 +31,11 @@ public class SaveFileDisplayItem : MonoBehaviour {
         sb.Append("Chapter ");
         sb.Append(saveFileData.currentChaptre + 1);
         sb.Append('\n');
+        sb.Append('\n');
         sb.Append("Cannot retrieve health information yet.");
         sb.Append('\n');
         sb.Append("Cannot retrieve location information yet.");
+        sb.Append('\n');
         sb.Append('\n');
         sb.Append("Shells Collected: <color=#50EDF4>");
         sb.Append(saveFileData.shellsCollected);
@@ -47,5 +50,10 @@ public class SaveFileDisplayItem : MonoBehaviour {
         sb.Append("</color>");
 
         info.SetText(sb);
+    }
+
+    public void PlaySaveFileData () {
+        WorldSaving.inst.PrepareNewSave(saveFileData.folderName);
+        SceneManager.LoadScene("Main", LoadSceneMode.Single);
     }
 }

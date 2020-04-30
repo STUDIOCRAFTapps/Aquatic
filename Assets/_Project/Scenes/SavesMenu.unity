@@ -670,7 +670,7 @@ Canvas:
   m_RenderMode: 0
   m_Camera: {fileID: 0}
   m_PlaneDistance: 100
-  m_PixelPerfect: 0
+  m_PixelPerfect: 1
   m_ReceivesEvents: 1
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
@@ -941,7 +941,7 @@ MonoBehaviour:
   - {fileID: 5459358264740417118, guid: 5ba03ec631516b44996ef53fb339e1dd, type: 3}
   - {fileID: 4328801999977714770, guid: 5ba03ec631516b44996ef53fb339e1dd, type: 3}
   - {fileID: -7435891123501607155, guid: 5ba03ec631516b44996ef53fb339e1dd, type: 3}
-  worldNameInputField: {fileID: 0}
+  worldNameInputField: {fileID: 1400014392082192890}
   aikansSelection:
   - {fileID: 1043409725}
   - {fileID: 2055286560}
@@ -2205,7 +2205,6 @@ GameObject:
   - component: {fileID: 1400014392170871197}
   - component: {fileID: 1400014392170871196}
   - component: {fileID: 1400014392170871199}
-  - component: {fileID: 1400014392170871198}
   - component: {fileID: 1400014392170871194}
   m_Layer: 5
   m_Name: CreateButton
@@ -2292,34 +2291,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1400014392170871168}
   m_CullTransparentMesh: 0
---- !u!114 &1400014392170871198
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1400014392170871168}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Delegates:
-  - eventID: 2
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 1400014392170871199}
-          m_MethodName: OnSubmit
-          m_Mode: 0
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
 --- !u!114 &1400014392170871199
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2364,7 +2335,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1400014392170871196}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 862457540}
+        m_MethodName: CreateWorld
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1400014392695606904
 MonoBehaviour:
   m_ObjectHideFlags: 0

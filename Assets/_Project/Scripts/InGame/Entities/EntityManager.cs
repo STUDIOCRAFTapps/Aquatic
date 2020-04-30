@@ -30,6 +30,9 @@ public class EntityManager : MonoBehaviour {
     }
 
     public void Update () {
+        if(GameManager.inst.engineMode != EngineModes.Play) {
+            return;
+        }
         foreach(Entity entity in allLoadedEntities) {
             if(Time.unscaledTime - entity.timeOfLastLongUpdate >= longUpdateFrequency) {
                 entity.timeOfLastLongUpdate = Time.unscaledTime;

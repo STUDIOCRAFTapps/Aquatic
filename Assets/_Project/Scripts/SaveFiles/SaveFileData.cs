@@ -4,7 +4,7 @@ using UnityEngine;
 
 [System.Serializable]
 public class SaveFileData {
-    public string fileName;
+    public string folderName;
     public string fullName;
     public int aikonId;
 

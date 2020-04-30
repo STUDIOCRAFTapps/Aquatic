@@ -1,0 +1,275 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+#region Player Status
+[System.Serializable]
+public class PlayerStatus {
+    public Vector3 playerPos;
+    public Vector2 prevVel;
+
+    public bool isGrounded;
+    public float lastGroundedTime;
+
+    public Vector2 combinedDirection;
+    public Vector2 lastCombinedDirection;
+    public float propulsionValue;
+    public bool wasLastDirNull;
+
+    public bool onGoingJump;
+    public bool wasOnGoingJump;
+    public bool canceledJump;
+    public bool isInAirBecauseOfJump;
+    public float lastJumpTime;
+    
+    public float arealPropulsionMomentum;
+
+    public float lastSubmergedPercentage;
+    public float fluidTime;
+
+    public void RemoveTimeRelativity (float currentTime) {
+        lastJumpTime -= currentTime;
+        lastGroundedTime -= currentTime;
+    }
+}
+
+public class PlayerInfo {
+    public RigidbodyPixel rbody;
+    public PlayerStatus status;
+}
+#endregion
+
+public class PlayerController : MonoBehaviour {
+
+    #region References
+    [Header("References")]
+    public RigidbodyPixel rbody;
+    public Collider2D collBox;
+    public SpriteRenderer spriteRenderer;
+    public PlayerAnimator playerAnimator;
+
+    [Header("New State System")]
+    public PlayerStateGroup[] playerStates;
+    [HideInInspector] public PlayerStateGroup currentState;
+
+    [Header("Permanent Parameters")]
+    public GlobalPlayerSettings playerSettings;
+
+    [Header("Obselete Environnement System")]
+    public ControllerParameters controlParam;
+    public PhysicsParameters physicsParam;
+    public PhysicsEnvironnementModifiers[] modifiers;
+    private PhysicsEnvironnementModifiers cmod;
+
+    [System.NonSerialized] public PlayerStatus status;
+    [System.NonSerialized] public PlayerInfo info;
+
+    #endregion
+
+    #region MonoBehaviour
+    private void Awake () {
+        status = new PlayerStatus();
+        info = new PlayerInfo {
+            rbody = rbody,
+            status = status
+        };
+        currentState = playerStates[0];
+
+        GameManager.inst.allPlayers.Add(this);
+    }
+
+    private void OnDisabled () {
+        Debug.Log("Player destroyed");
+        GameManager.inst.allPlayers.Remove(this);
+    }
+
+    private void FixedUpdate () {
+        status.playerPos = transform.position;
+
+        bool isChunkAbsent = true; 
+        Vector2Int chunkPos = TerrainManager.inst.WorldToChunk(transform.position);
+        if(ChunkLoader.inst.loadCounters.ContainsKey(chunkPos)) {
+            if(ChunkLoader.inst.loadCounters[chunkPos].loadCount > 0) {
+                isChunkAbsent = false;
+            }
+        }
+
+        if(!isChunkAbsent) {
+            CheckModifier();
+            currentState?.UpdatePlayerStateGroup(info);
+        } else {
+            rbody.disableForAFrame = true;
+        }
+
+        /*CheckIfGrounded();
+        CheckFluidTime();
+
+        ApplyFriction();
+        ApplyMovement();
+        JumpCheck();
+        StairJumpCheck();
+        ArealPropulsion();
+        ApplyGravity();*/
+    }
+
+    private void Update () {
+        Animate();
+    }
+    #endregion
+
+    #region Visual WIP
+    float waterWaveCooldown = 0;
+    public void Animate () {
+        int accDirX = 0;
+        if(Input.GetKey(KeyCode.A))
+            accDirX--;
+        if(Input.GetKey(KeyCode.D))
+            accDirX++;
+
+        if(accDirX != 0)
+            spriteRenderer.flipX = accDirX > 0;
+
+        if(!status.isGrounded) {
+            playerAnimator.ChangeState("jump");
+        } else {
+            if(accDirX == 0) {
+                playerAnimator.ChangeState("idle");
+            } else {
+                playerAnimator.ChangeState("run");
+            }
+        }
+
+        if(rbody.submergedPercentage > 0f && status.lastSubmergedPercentage <= 0f) {
+            ParticleManager.inst.PlayEntityParticle(transform.position, 4);
+        }
+        if(rbody.submergedPercentage <= 0f && status.lastSubmergedPercentage > 0f) {
+            ParticleManager.inst.PlayEntityParticle(transform.position + Vector3.down, 4);
+        }
+        if(rbody.submergedPercentage > 0.6f && rbody.submergedPercentage < 0.95f && rbody.velocity.x < -5f && waterWaveCooldown > 0.2f) {
+            ParticleManager.inst.PlayEntityParticle(transform.position + Mathf.Max(rbody.submergedPercentage * rbody.box.size.y - 0.25f, 0f) * Vector3.up, 5);
+        }
+        if(rbody.submergedPercentage > 0.6f && rbody.submergedPercentage < 0.95f && rbody.velocity.x > 5f && waterWaveCooldown > 0.2f) {
+            ParticleManager.inst.PlayEntityParticle(transform.position + Mathf.Max(rbody.submergedPercentage * rbody.box.size.y - 0.25f, 0f) * Vector3.up, 6);
+        }
+        if(waterWaveCooldown > 0.2f) {
+            waterWaveCooldown = 0f;
+        }
+        waterWaveCooldown += Time.deltaTime;
+
+
+        status.lastSubmergedPercentage = rbody.submergedPercentage;
+    }
+    #endregion
+
+    #region Public Function
+    public Vector2 GetHeadPosition () {
+        return (Vector2)transform.position + rbody.box.size.y * Vector2.up;
+    }
+
+    public Vector2 GetCenterPosition () {
+        return (Vector2)transform.position + rbody.box.size.y * Vector2.up * 0.5f;
+    }
+    #endregion
+
+    //WIP SYSTEM
+    #region Modifier State Switch
+    public void SetCurrentModifiers (int stateID) {
+        if(currentState != playerStates[stateID]) {
+            status.wasLastDirNull = true;
+            status.combinedDirection = Vector2.up;
+            status.propulsionValue = 0f;
+
+            currentState = playerStates[stateID];
+        }
+    }
+
+    void CheckModifier () {
+        if(rbody.submergedPercentage > 0.3f) {
+            SetCurrentModifiers(1);
+        } else {
+            SetCurrentModifiers(0);
+        }
+    }
+    #endregion
+}
+
+[System.Serializable]
+public class GlobalPlayerSettings {
+    public float groundHeightCheck = 0.01f;
+    public float groundWidthCheckOffset = 0.01f;
+    public int groundLayerMask = 18;
+}
+
+#region Parameters
+[System.Serializable]
+public class ControllerParameters {
+    public float initialJumpForce = 6f;
+    public float outOfFluidJumpForce = 6f;
+    public float cancelJumpForce = 2f;
+    public float maxUngroundedJumpTime = 0.075f;
+    public float jumpCooldown = 0.1f;
+
+    public float walkAcceleration = 1.1f;
+    public float walkMaxSpeed = 2.2f;
+    public float runAcceleration = 1.1f;
+    public float runMaxSpeed = 2.2f;
+
+    public float arealAcceleration = 10f;
+    public float arealMaxSpeed = 8f;
+
+    public float tileJumpForce = 1.3f;
+    public float tileJumpCheckDistance = 0.16f;
+
+    public float minFluidJumpTime = 2f;
+}
+
+[System.Serializable]
+public class PhysicsParameters {
+    public float reducedGravityAcceleration = 15f;
+    public float augmentedGravityAcceleration = 45f;
+
+    public float groundFriction;
+    public float arealFriction;
+}
+
+[System.Serializable]
+public class PhysicsEnvironnementModifiers {
+    public float reducedGravityFactor = 1f;
+    public float augmentedGravityFactor = 1f;
+    public float groundFrictionFactor = 1;
+    public float arealFrictionFactor = 1;
+
+    public bool allowWallSlide = true;
+    public bool enableJumpCancel = true;
+
+    public float groundAccelerationFactor = 1f;
+    public float groundMaxSpeedFactor = 1f;
+
+    public float arealAccelerationFactor = 1f;
+    public float arealMaxSpeedFactor = 1f;
+
+    public bool arealPropulsionEnabled = false;
+    public float arealPropulsionAcceleration = 1f;
+    public float arealPropulsionMaxSpeed = 1f;
+    public float arealPropulsionFriction = 1f;
+
+    public bool fourDirectionControls = false;
+    public bool jumpCancelsDownMotion = true;
+    public bool useJumpAsUpwards = true;
+    public float jumpFactor = 1f;
+
+    public bool useDirectionSmoothing = false;
+    public float directionSmoothingSpeed = 3f;
+    public float directionSmoothingFactor = 0.1f;
+    public float targetToVelRatio = 0.3f;
+    public float directionSmoothVelInfluence = 1f;
+    public float fluidVelRatio = 0f;
+
+    public bool enablePropulsionModule = false;
+    public float propulsionModuleAcc = 1f;
+    public float propulsionModuleFriction = 0f;
+
+    public bool tileJumpEnabled = true;
+}
+#endregion
+

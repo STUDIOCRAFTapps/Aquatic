@@ -7,6 +7,7 @@ using UnityEngine;
 using System;
 using System.Linq;
 using Newtonsoft.Json;
+using UnityEngine.SceneManagement;
 
 public enum DataLoadMode {
     TryReadonly,
@@ -17,11 +18,25 @@ public enum DataLoadMode {
 public class WorldSaving : MonoBehaviour {
 
     #region Header and Initiation
+    private static WorldSaving _instance;
+
+    public static WorldSaving inst {
+        get {
+            if(_instance == null) {
+                _instance = new GameObject("WorldSaving").AddComponent<WorldSaving>();
+                DontDestroyOnLoad(_instance);
+                _instance.Init();
+            }
+
+            return _instance;
+        }
+    }
+
     [Header("Variables")]
-    public string saveName = "New Save";
-    public string saveFolderName = "new_save";
-    public int dimension { get; private set; }
-    public static WorldSaving inst;
+    private string saveFolderName = "new_save";
+    public int dimension {
+        get; private set;
+    }
 
     // Const
     public const int bufferSize = 8192;
@@ -65,11 +80,7 @@ public class WorldSaving : MonoBehaviour {
     // Shared Ressources
     static byte[] buffer = new byte[bufferSize];
 
-    private void Awake () {
-        if(inst == null) {
-            inst = this;
-        }
-
+    void Init () {
         s = Path.DirectorySeparatorChar;
         datapath = Application.persistentDataPath;
         sb = new StringBuilder();
@@ -78,8 +89,6 @@ public class WorldSaving : MonoBehaviour {
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore
         };
 
-        ComposeDataPaths();
-
         charToByte = new Dictionary<char, byte>();
         char[] authorizedChars = authorizedCharsString.ToCharArray();
         for(byte i = 0; i < authorizedChars.Length; i++) {
@@ -87,6 +96,11 @@ public class WorldSaving : MonoBehaviour {
         }
 
         layerNames = Enum.GetNames(typeof(TerrainLayers)).ToList();
+    }
+
+    public void PrepareNewSave (string folderName) {
+        saveFolderName = folderName;
+        ComposeDataPaths();
     }
 
     public void OnReloadEngine () {

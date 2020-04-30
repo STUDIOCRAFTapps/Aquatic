@@ -3,19 +3,35 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour {
-    public static GameManager inst;
+    private static GameManager _instance;
 
-    public PlayerController[] allPlayers;
+    public static GameManager inst {
+        get {
+            if(_instance == null) {
+                _instance = new GameObject("GameManager").AddComponent<GameManager>();
+                DontDestroyOnLoad(_instance);
+                _instance.Init();
+            }
+
+            return _instance;
+        }
+    }
+
+    public List<PlayerController> allPlayers;
     private EngineModes _engineMode = EngineModes.Edit;
     private GameModes _gameMode;
 
     public delegate void EngineModeChangeHandler();
     public event EngineModeChangeHandler OnChangeEngineMode;
 
+    private void Init () {
+        allPlayers = new List<PlayerController>();
+    }
+
     public EngineModes engineMode {
         get => _engineMode;
         set {
-            ChunkLoader.inst.UnloadAll(value == EngineModes.Edit);
+            ChunkLoader.inst.UnloadAll(_engineMode == EngineModes.Edit);
             if(value == EngineModes.Edit) {
                 TerrainManager.inst.CompleteEntitySave();
             }
@@ -46,14 +62,10 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    private void Awake () {
-        inst = this;
-    }
-
     public PlayerController GetNearestPlayer (Vector2 position) {
         int nearestPlayerIndex = -1;
         float smallestDistance = float.PositiveInfinity;
-        for(int i = 0; i < allPlayers.Length; i++) {
+        for(int i = 0; i < allPlayers.Count; i++) {
             float dist = ((Vector2)allPlayers[i].transform.position - position).sqrMagnitude;
             if(dist < smallestDistance) {
                 smallestDistance = dist;

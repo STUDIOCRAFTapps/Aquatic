@@ -16,6 +16,10 @@ public class GravityModule : BasePlayerModule {
     }
 
     public override void UpdateAction (PlayerInfo info) {
+        if(GameManager.inst.engineMode == EngineModes.Edit) {
+            return;
+        }
+
         if(twoForceGravity) {
             if((info.status.onGoingJump && info.rbody.velocity.y > 0) || (submergionReduceGravity && info.rbody.submergedPercentage > 0.3f)) {
                 info.status.canceledJump = false;
