@@ -64,6 +64,7 @@ public class PlayerController : MonoBehaviour {
     [System.NonSerialized] public PlayerStatus status;
     [System.NonSerialized] public PlayerInfo info;
 
+    public float timeOfLastAutosave;
     #endregion
 
     #region MonoBehaviour
@@ -74,13 +75,14 @@ public class PlayerController : MonoBehaviour {
             status = status
         };
         currentState = playerStates[0];
-
-        GameManager.inst.allPlayers.Add(this);
     }
 
-    private void OnDisabled () {
-        Debug.Log("Player destroyed");
-        GameManager.inst.allPlayers.Remove(this);
+    private void OnEnable () {
+        if(WorldSaving.inst.LoadPlayerFile(0, out PlayerStatus newStatus)) {
+            LoadStatus(newStatus);
+        }
+
+        GameManager.inst.allPlayers.Add(this);
     }
 
     private void FixedUpdate () {
@@ -114,6 +116,15 @@ public class PlayerController : MonoBehaviour {
 
     private void Update () {
         Animate();
+    }
+    #endregion
+
+    #region Status Loader
+    public void LoadStatus (PlayerStatus newStatus) {
+        info.status = newStatus;
+
+        transform.position = info.status.playerPos;
+        rbody.velocity = info.status.prevVel;
     }
     #endregion
 

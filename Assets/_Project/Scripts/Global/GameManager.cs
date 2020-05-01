@@ -1,9 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour {
     private static GameManager _instance;
+
+    public const float autoSaveTimeLimit = 10f;
 
     public static GameManager inst {
         get {
@@ -24,16 +27,33 @@ public class GameManager : MonoBehaviour {
     public delegate void EngineModeChangeHandler();
     public event EngineModeChangeHandler OnChangeEngineMode;
 
+    public delegate void OnCloseWorldHandler();
+    public event OnCloseWorldHandler OnCloseWorld;
+
     private void Init () {
         allPlayers = new List<PlayerController>();
+        Application.quitting += () => OnCloseWorld?.Invoke();
+        SceneManager.sceneUnloaded += (s) => {
+            if(s.name == "Main") {
+                OnCloseWorld?.Invoke();
+            }
+        };
+        OnCloseWorld += () => {
+            CompleteSave();
+            allPlayers.Clear();
+        };
     }
 
+    #region Events
+    #endregion
+
+    #region Getters Setters
     public EngineModes engineMode {
         get => _engineMode;
         set {
             ChunkLoader.inst.UnloadAll(_engineMode == EngineModes.Edit);
             if(value == EngineModes.Edit) {
-                TerrainManager.inst.CompleteEntitySave();
+                CompleteEntitySave();
             }
             _engineMode = value;
             if(_engineMode == EngineModes.Play) {
@@ -61,6 +81,7 @@ public class GameManager : MonoBehaviour {
             return DataLoadMode.Default;
         }
     }
+#endregion
 
     public PlayerController GetNearestPlayer (Vector2 position) {
         int nearestPlayerIndex = -1;
@@ -78,6 +99,61 @@ public class GameManager : MonoBehaviour {
         }
         return allPlayers[nearestPlayerIndex];
     }
+
+    #region Saving
+    public void AutoSaves () {
+        foreach(KeyValuePair<long, DataChunk> kvp in TerrainManager.inst.chunks) {
+            if(Time.time - kvp.Value.timeOfLastAutosave > autoSaveTimeLimit) {
+                kvp.Value.timeOfLastAutosave = Time.time;
+                WorldSaving.inst.SaveChunk(kvp.Value);
+            }
+        }
+        foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
+            if(Time.time - kvp.Value.timeOfLastAutosave > autoSaveTimeLimit) {
+                kvp.Value.timeOfLastAutosave = Time.time;
+                WorldSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
+            }
+        }
+        foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
+            if(Time.time - kvp.Value.entityData.timeOfLastAutosave > autoSaveTimeLimit) {
+                kvp.Value.entityData.timeOfLastAutosave = Time.time;
+                EntityManager.inst.SaveEntity(kvp.Value);
+            }
+        }
+        foreach(PlayerController pc in allPlayers) {
+            if(Time.time - pc.timeOfLastAutosave > autoSaveTimeLimit) {
+                pc.timeOfLastAutosave = Time.time;
+                WorldSaving.inst.SavePlayer(pc.status, 0);
+            }
+        }
+        EntityRegionManager.inst.CheckForAutosaves();
+    }
+
+    public void CompleteSave () {
+        foreach(KeyValuePair<long, DataChunk> kvp in TerrainManager.inst.chunks) {
+            WorldSaving.inst.SaveChunk(kvp.Value);
+        }
+        foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
+            WorldSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
+        }
+        foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
+            EntityManager.inst.SaveEntity(kvp.Value);
+        }
+        foreach(PlayerController pc in allPlayers) {
+            WorldSaving.inst.SavePlayer(pc.status, 0);
+        }
+        EntityRegionManager.inst.SaveAllRegions();
+    }
+
+    public void CompleteEntitySave () {
+        foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
+            EntityManager.inst.SaveEntity(kvp.Value);
+        }
+        foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
+            WorldSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
+        }
+    }
+    #endregion
 }
 
 public enum EngineModes {

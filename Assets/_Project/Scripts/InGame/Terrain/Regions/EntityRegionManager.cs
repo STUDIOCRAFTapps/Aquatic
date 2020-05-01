@@ -97,7 +97,7 @@ public class EntityRegionManager : MonoBehaviour {
 
     public void CheckForAutosaves () {
         foreach(KeyValuePair<Vector2Int, EntityRegion> kvp in entityRegions) {
-            if(Time.time - kvp.Value.timeOfLastAutosave > TerrainManager.inst.regionAutoSaveTimeLimit) {
+            if(Time.time - kvp.Value.timeOfLastAutosave > GameManager.autoSaveTimeLimit) {
                 kvp.Value.timeOfLastAutosave = Time.time;
                 WorldSaving.inst.SaveRegionFile(kvp.Value);
             }

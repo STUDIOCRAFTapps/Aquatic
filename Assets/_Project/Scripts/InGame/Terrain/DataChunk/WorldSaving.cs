@@ -49,6 +49,7 @@ public class WorldSaving : MonoBehaviour {
     public const string regionFolder = "entity_regions";
     public const string mobileChunkDataFolder = "mobile_chunk_data";
     public const string entityDataFolder = "entity_data";
+    public const string playerDataFolder = "player_data";
 
     public const string chunkFileEnd = ".cdat";
     public const string regionFileEnd = ".erg";
@@ -71,6 +72,7 @@ public class WorldSaving : MonoBehaviour {
     string entityReadonlyDatapath;
     string regionsDatapath;
     string regionsReadonlyDatapath;
+    string playerDatapath;
 
     StringBuilder sb;
     Dictionary<char, byte> charToByte;
@@ -147,6 +149,11 @@ public class WorldSaving : MonoBehaviour {
         if(!Directory.Exists(regionsDatapath)) {
             Directory.CreateDirectory(regionsDatapath);
         }
+
+        playerDatapath = datapath + s + savesFolder + s + saveFolderName + s + playerDataFolder + s;
+        if(!Directory.Exists(playerDatapath)) {
+            Directory.CreateDirectory(playerDatapath);
+        }
     }
 
     public string GetChunkDirectory (DataChunk dataChunk, bool useReadonlyPath) {
@@ -188,6 +195,15 @@ public class WorldSaving : MonoBehaviour {
 
         return sb.ToString();
     }
+
+    public string GetPlayerDirectory (int uid) {
+        sb.Clear();
+        sb.Append(playerDatapath);
+        sb.Append(uid);
+        sb.Append(entityDataEnd);
+
+        return sb.ToString();
+    }
     #endregion
 
     #region Front-End Functions
@@ -226,16 +242,24 @@ public class WorldSaving : MonoBehaviour {
         }
     }
 
+    public void SavePlayer (PlayerStatus status, int uid) {
+        //Serialize and save.
+        using(FileStream fs = new FileStream(GetPlayerDirectory(uid), FileMode.Create))
+        using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
+        using(StreamWriter sw = new StreamWriter(defs))
+        using(JsonWriter jw = new JsonTextWriter(sw)) {
+            JsonSerializer serializer = JsonSerializer.Create(jss);
+            serializer.Serialize(jw, status);
+        }
+    }
+
     public void SaveRegionFile (EntityRegion entityRegion) {
-        using(FileStream fs = new FileStream(GetRegionDirectory(entityRegion, false), FileMode.Create)) {
-            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress)) {
-                using(MemoryStream ms = new MemoryStream(buffer)) {
-                    using(BinaryWriter bw = new BinaryWriter(ms)) {
-                        SerializeRegionToStream(bw, entityRegion);
-                        defs.Write(buffer, 0, (int)ms.Position);
-                    }
-                }
-            }
+        using(FileStream fs = new FileStream(GetRegionDirectory(entityRegion, false), FileMode.Create))
+        using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
+        using(MemoryStream ms = new MemoryStream(buffer))
+        using(BinaryWriter bw = new BinaryWriter(ms)) {
+            SerializeRegionToStream(bw, entityRegion);
+            defs.Write(buffer, 0, (int)ms.Position);
         }
     }
     #endregion
@@ -403,6 +427,34 @@ public class WorldSaving : MonoBehaviour {
         } else {
             return hasSucceded;
         }
+    }
+
+    public bool LoadPlayerFile (int uid, out PlayerStatus playerData) {
+        // The destination chunk should already have been cleaned and thus, 
+        // its position should be correct and it can be passed to the GetChunkDirectory function.
+        string entityPath = GetPlayerDirectory(uid);
+
+        bool hasSucceded;
+        if(!File.Exists(entityPath)) {
+            playerData = null;
+            return false;
+        } else {
+            using(FileStream fs = new FileStream(entityPath, FileMode.Open))
+            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress))
+            using(StreamReader sr = new StreamReader(defs))
+            using(JsonReader jr = new JsonTextReader(sr)) {
+                JsonSerializer serializer = JsonSerializer.Create(jss);
+
+                playerData = serializer.Deserialize<PlayerStatus>(jr);
+                hasSucceded = true;
+            }
+        }
+
+        if(!hasSucceded) {
+            Debug.LogError($"A player with uid {uid} failed to be deserialized. Its file was deleted.");
+            File.Delete(entityPath);
+        }
+        return hasSucceded;
     }
     #endregion
 

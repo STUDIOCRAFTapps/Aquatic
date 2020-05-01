@@ -22,8 +22,6 @@ public class TerrainManager : MonoBehaviour {
     public int chunkSize = 16;
     public Vector2Int loadRadius;
     public float unloadTimer = 5f;
-    public float autoSaveTimeLimit = 10f;
-    public float regionAutoSaveTimeLimit = 10f;
     public int chunksPerRegionSide = 4;
     public float outOfBoundsRefreshInterval = 0.2f;
 
@@ -66,60 +64,12 @@ public class TerrainManager : MonoBehaviour {
         }
 
         if(Input.GetKeyDown(KeyCode.L)) {
-            CompleteSave();
+            GameManager.inst.CompleteSave();
         }
     }
 
     private void FixedUpdate () {
-        AutoSaves();
-    }
-
-    void AutoSaves () {
-        foreach(KeyValuePair<long, DataChunk> kvp in chunks) {
-            if(Time.time - kvp.Value.timeOfLastAutosave > autoSaveTimeLimit) {
-                kvp.Value.timeOfLastAutosave = Time.time;
-                WorldSaving.inst.SaveChunk(kvp.Value);
-            }
-        }
-        foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
-            if(Time.time - kvp.Value.timeOfLastAutosave > autoSaveTimeLimit) {
-                kvp.Value.timeOfLastAutosave = Time.time;
-                WorldSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
-            }
-        }
-        foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
-            if(Time.time - kvp.Value.entityData.timeOfLastAutosave > autoSaveTimeLimit) {
-                kvp.Value.entityData.timeOfLastAutosave = Time.time;
-                EntityManager.inst.SaveEntity(kvp.Value);
-            }
-        }
-        EntityRegionManager.inst.CheckForAutosaves();
-    }
-
-    public void CompleteSave () {
-        foreach(KeyValuePair<long, DataChunk> kvp in chunks) {
-            WorldSaving.inst.SaveChunk(kvp.Value);
-        }
-        foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
-            WorldSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
-        }
-        foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
-            EntityManager.inst.SaveEntity(kvp.Value);
-        }
-        EntityRegionManager.inst.SaveAllRegions();
-    }
-
-    public void CompleteEntitySave () {
-        foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
-            EntityManager.inst.SaveEntity(kvp.Value);
-        }
-        foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
-            WorldSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
-        }
-    }
-
-    private void OnApplicationQuit () {
-        CompleteSave();
+        GameManager.inst.AutoSaves();
     }
     #endregion
 
