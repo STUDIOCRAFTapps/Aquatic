@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 089f37c470d5a2b48b35a7cd3d940446, type: 3}
+  m_Name: GoldenShell
+  m_EditorClassIdentifier: 
+  fullName: Golden Shell
+  uiSprite: {fileID: 127463385691877680, guid: 5c3afd1605e45ea428f8c188aff3d990, type: 3}
+  previewSprite: {fileID: 127463385691877680, guid: 5c3afd1605e45ea428f8c188aff3d990,
+    type: 3}
+  id: golden_shell
+  defaultPlacingLayer: 0
+  allowsConnection: 0
+  connectsByDefault: 1
+  hasTextures: 1
+  textures:
+  - {fileID: 8354194568300867098, guid: 5c9ce22c1c789eb4ca4d4ba7826d256f, type: 3}
+  - {fileID: -7444943373940720863, guid: 5c9ce22c1c789eb4ca4d4ba7826d256f, type: 3}
+  - {fileID: 127463385691877680, guid: 5c9ce22c1c789eb4ca4d4ba7826d256f, type: 3}
+  - {fileID: -4876181092739181981, guid: 5c9ce22c1c789eb4ca4d4ba7826d256f, type: 3}
+  - {fileID: -2630516512962114947, guid: 5c9ce22c1c789eb4ca4d4ba7826d256f, type: 3}
+  verts:
+  - {x: 0, y: 0, z: 0}
+  - {x: 1, y: 0, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 1, y: 1, z: 0}
+  uvs:
+  - {x: 0, y: 0}
+  - {x: 0.5, y: 0}
+  - {x: 0, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  hasCollision: 0
+  mass: 0
+  frameSpeed: 4

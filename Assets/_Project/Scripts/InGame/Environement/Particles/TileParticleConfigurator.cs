@@ -22,7 +22,7 @@ public class TileParticleConfigurator : MonoBehaviour {
         unit = reference.placingUnits[unitID];
         Configure();
 
-        Emit();
+        Emit(true);
     }
 
     public void PlayBreak (CustomTileParticle reference, int unitID, Vector2Int pos, MobileDataChunk mdc = null) {
@@ -33,7 +33,7 @@ public class TileParticleConfigurator : MonoBehaviour {
         transform.position = new Vector3(pos.x + 0.5f + unit.offset.x, pos.y + 0.5f + unit.offset.y, reference.zOffset) + ((mdc != null) ? mdc.mobileChunk.position : Vector3.zero);
         Configure();
 
-        Emit();
+        Emit(false);
     }
 
     public void OnParticleSystemStopped () {
@@ -78,8 +78,15 @@ public class TileParticleConfigurator : MonoBehaviour {
         }
     }
 
-    private void Emit () {
-        switch(reference.placingUnits[unitID].model) {
+    private void Emit (bool isPlace = true) {
+        CustomTileParticleUnit unit;
+        if(isPlace) {
+            unit = reference.placingUnits[unitID];
+        } else {
+            unit = reference.breakingUnits[unitID];
+        }
+
+        switch(unit.model) {
             case CustomParticleModelType.ApparitionDust:
             target.Emit(1);
             break;
@@ -87,12 +94,15 @@ public class TileParticleConfigurator : MonoBehaviour {
             target.Emit(1);
             break;
             case CustomParticleModelType.BreakParticles:
-            target.Emit(reference.placingUnits[unitID].particleCount);
+            target.Emit(unit.particleCount);
             break;
             case CustomParticleModelType.SuctionRingParticles:
-            target.Emit(reference.placingUnits[unitID].particleCount);
+            target.Emit(unit.particleCount);
             break;
             case CustomParticleModelType.WaterSplash:
+            target.Emit(1);
+            break;
+            case CustomParticleModelType.Collect:
             target.Emit(1);
             break;
         }

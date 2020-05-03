@@ -1,0 +1,57 @@
+fileFormatVersion: 2
+guid: cf2ed890cf9e755418cbed990a2087bb
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 25a63327f814cd04cbdbd7e8ae6dfcf9, type: 3}
+  textureSettings:
+    textureType: 8
+    pixelsPerUnit: 16
+    transparentMask: 0
+    transparentColor: {r: 1, g: 0, b: 1, a: 1}
+    meshType: 0
+    extrudeEdges: 1
+    spritePivot: {x: 0.5, y: 0.5}
+    generatePhysics: 0
+    wrapMode: 1
+    filterMode: 0
+    tileSize: {x: 32, y: 32}
+    tilePadding: {x: 0, y: 0}
+    tileOffset: {x: 0, y: 0}
+  animationSettings:
+  - animationName: Chase
+    about: "Animation Type:\tForward\r\nAnimation:\tFrom: 0; To: 5"
+    animationType: 0
+    returnToOnEnd: 
+    callbacks: []
+  - animationName: Chomp
+    about: "Animation Type:\tForward\r\nAnimation:\tFrom: 6; To: 10"
+    animationType: 0
+    returnToOnEnd: 
+    callbacks: []
+  - animationName: Chill
+    about: "Animation Type:\tForward\r\nAnimation:\tFrom: 11; To: 16"
+    animationType: 0
+    returnToOnEnd: 
+    callbacks: []
+  - animationName: Check
+    about: "Animation Type:\tForward\r\nAnimation:\tFrom: 17; To: 22"
+    animationType: 0
+    returnToOnEnd: 
+    callbacks: []
+  - animationName: StaticBlink
+    about: "Animation Type:\tForward\r\nAnimation:\tFrom: 23; To: 26"
+    animationType: 0
+    returnToOnEnd: 
+    callbacks: []
+  - animationName: StaticSeek
+    about: "Animation Type:\tForward\r\nAnimation:\tFrom: 27; To: 30"
+    animationType: 0
+    returnToOnEnd: 
+    callbacks: []
+  atlas: {instanceID: 0}
+  importType: 0

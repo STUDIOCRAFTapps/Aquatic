@@ -4,14 +4,24 @@ using UnityEngine;
 
 public class VisualChunk : MonoBehaviour {
     [HideInInspector] public VisualChunkLayer[] layers;
+    [HideInInspector] public List<GameObject> propList;
 
-    Vector2Int position;
+    public Vector2Int position { get; private set; }
     MeshData meshData = new MeshData();
 
     DataChunk dataChunk;
     MobileDataChunk mdc;
 
     public void Initiate (Vector2Int chunkPosition, bool changePosition) {
+        if(propList == null) {
+            propList = new List<GameObject>();
+        } else {
+            foreach(GameObject prop in propList) {
+                Destroy(prop);
+            }
+            propList.Clear();
+        }
+
         // Create layer object once
         int chunkSize = TerrainManager.inst.chunkSize;
         if(layers.Length == 0) {
@@ -83,6 +93,19 @@ public class VisualChunk : MonoBehaviour {
     }
 
     public void AddTileToMeshData (int x, int y, TerrainLayers layer, BaseTileAsset tileAsset) {
+        int ti = tileAsset.GetTextureIndex(
+            x + (position.x * TerrainManager.inst.chunkSize),
+            y + (position.y * TerrainManager.inst.chunkSize),
+            layer, mdc
+        );
+        if(ti < 0) {
+            if(tileAsset.DoSpawnPropOnPlayMode()) {
+                ((PropTileAsset)tileAsset).TrySpawnProp(x, y, this);
+            }
+
+            return;
+        }
+
         Vector3 vertPos;
         Vector3 vf = new Vector3(0, 0, 0);
 
@@ -102,12 +125,7 @@ public class VisualChunk : MonoBehaviour {
         meshData.tris.Add(meshData.faceOffset + 1);
         meshData.tris.Add(meshData.faceOffset + 2);
         meshData.faceOffset += tileAsset.verts.Length;
-
-        int ti = tileAsset.GetTextureIndex(
-            x + (position.x * TerrainManager.inst.chunkSize),
-            y + (position.y * TerrainManager.inst.chunkSize),
-            layer, mdc
-        );
+        
         Vector2 animUV = tileAsset.GetAnimationUV(x, y, layer, mdc);
         for(int w = 0; w < tileAsset.uvs.Length; w++) {
             meshData.uvs.Add(new Vector3(tileAsset.uvs[w].x, tileAsset.uvs[w].y, ti));
@@ -151,6 +169,12 @@ public class VisualChunk : MonoBehaviour {
             meshData.uvs.Add(new Vector3(tileAsset.uvs[w].x, tileAsset.uvs[w].y, ti));
             meshData.animUVs.Add(animUV);
         }
+    }
+
+    public void AddPropToChunk (Vector3 localPosition, GameObject prefab) {
+        GameObject newProp = Instantiate(prefab, transform);
+        newProp.transform.localPosition = localPosition;
+        propList.Add(newProp);
     }
 }
 

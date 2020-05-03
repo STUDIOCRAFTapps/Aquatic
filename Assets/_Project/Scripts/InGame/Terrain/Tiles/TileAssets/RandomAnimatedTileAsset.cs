@@ -10,6 +10,7 @@ public class RandomAnimatedTileAsset : BaseTileAsset {
     public int frameCount = 1;
     public float frameSpeed = 1;
     public int variationCount = 3;
+    public bool mustStandOnGround = true;
 
     /// <summary>
     /// Called whenever this tile is placed.
@@ -24,6 +25,10 @@ public class RandomAnimatedTileAsset : BaseTileAsset {
     }
 
     public virtual bool IsPresenceValid (int x, int y, TerrainLayers layer, MobileDataChunk mdc = null) {
+        if(!mustStandOnGround) {
+            return true;
+        }
+
         TerrainManager.inst.GetGlobalIDAt(x, y - 1, layer, out int underTile, mdc);
 
         return (underTile != 0) && underTile != globalID;

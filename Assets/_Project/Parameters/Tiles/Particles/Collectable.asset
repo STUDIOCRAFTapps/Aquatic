@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe178e1afe6744f46bd40a83dde45cfa, type: 3}
+  m_Name: Collectable
+  m_EditorClassIdentifier: 
+  tileAssets:
+  - {fileID: 11400000, guid: 872f88fb3fc429d448bbb6dabbd2d6de, type: 2}
+  - {fileID: 11400000, guid: cf6daceabfd4cc64187df831d238d56d, type: 2}
+  - {fileID: 11400000, guid: 09b1415b1e1bb9242ab9d6b571a55b7c, type: 2}
+  zOffset: -1
+  placingUnits:
+  - model: 1
+    texture: {fileID: 0}
+    textureCount: {x: 1, y: 1}
+    useFPS: 0
+    fps: 20
+    randomTextureCyclePositon: 0
+    offset: {x: 0, y: 0}
+    particleCount: 5
+    lifetimeMin: 0.5
+    lifetimeMax: 1
+    size: {x: 1, y: 1}
+    rotationVariation: 0
+    gravity: 1
+    speedMin: 1
+    speedMax: 7
+    limitVelocityAxesFactor: {x: 1, y: 1}
+    limitVelocityDampen: 0.1
+  breakingUnits:
+  - model: 5
+    texture: {fileID: 0}
+    textureCount: {x: 1, y: 1}
+    useFPS: 0
+    fps: 20
+    randomTextureCyclePositon: 0
+    offset: {x: 0, y: 0}
+    particleCount: 5
+    lifetimeMin: 0.5
+    lifetimeMax: 1
+    size: {x: 1, y: 1}
+    rotationVariation: 0
+    gravity: 1
+    speedMin: 1
+    speedMax: 7
+    limitVelocityAxesFactor: {x: 1, y: 1}
+    limitVelocityDampen: 0.1
+  - model: 2
+    texture: {fileID: 21300000, guid: d8743e9472b9eb64cb4cb60d5550a1f5, type: 3}
+    textureCount: {x: 7, y: 3}
+    useFPS: 0
+    fps: 16
+    randomTextureCyclePositon: 0
+    offset: {x: 0, y: 0}
+    particleCount: 5
+    lifetimeMin: 0.25
+    lifetimeMax: 0.75
+    size: {x: 1, y: 1}
+    rotationVariation: 0
+    gravity: 0.5
+    speedMin: 1
+    speedMax: 4
+    limitVelocityAxesFactor: {x: 1, y: 1}
+    limitVelocityDampen: 0.1

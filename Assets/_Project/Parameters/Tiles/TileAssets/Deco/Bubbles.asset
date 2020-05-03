@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67cb7c6e71b91a3429616c229967f3c3, type: 3}
+  m_Name: Bubbles
+  m_EditorClassIdentifier: 
+  fullName: ' Bubbles'
+  uiSprite: {fileID: 4078796110908485188, guid: 424056ad10839184182924eb2feec51a,
+    type: 3}
+  previewSprite: {fileID: 4078796110908485188, guid: 424056ad10839184182924eb2feec51a,
+    type: 3}
+  id: bubbles
+  defaultPlacingLayer: 4
+  allowsConnection: 0
+  connectsByDefault: 1
+  hasTextures: 1
+  textures:
+  - {fileID: 4078796110908485188, guid: 424056ad10839184182924eb2feec51a, type: 3}
+  verts:
+  - {x: 0, y: 0, z: -0.125}
+  - {x: 1, y: 0, z: -0.125}
+  - {x: 0, y: 1, z: -0.125}
+  - {x: 1, y: 1, z: -0.125}
+  uvs:
+  - {x: 0, y: 0}
+  - {x: 0.5, y: 0}
+  - {x: 0, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  hasCollision: 0
+  mass: 2
+  prefab: {fileID: 3344749410571236661, guid: e9efa331728ff0a47adc4a61622dde6e, type: 3}
+  offset: {x: 0.5, y: -0.5, z: 0.125}

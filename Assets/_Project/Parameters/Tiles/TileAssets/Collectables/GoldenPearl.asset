@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 089f37c470d5a2b48b35a7cd3d940446, type: 3}
+  m_Name: GoldenPearl
+  m_EditorClassIdentifier: 
+  fullName: Golden Pearl
+  uiSprite: {fileID: -4067479240219791079, guid: 7545afce1e16e3247a8408122c16d723,
+    type: 3}
+  previewSprite: {fileID: -4067479240219791079, guid: 7545afce1e16e3247a8408122c16d723,
+    type: 3}
+  id: golden_pearl
+  defaultPlacingLayer: 0
+  allowsConnection: 0
+  connectsByDefault: 1
+  hasTextures: 1
+  textures:
+  - {fileID: -4067479240219791079, guid: 7545afce1e16e3247a8408122c16d723, type: 3}
+  - {fileID: -1006605366200572818, guid: 7545afce1e16e3247a8408122c16d723, type: 3}
+  - {fileID: -2256193367645874486, guid: 7545afce1e16e3247a8408122c16d723, type: 3}
+  - {fileID: -5359404522442288397, guid: 7545afce1e16e3247a8408122c16d723, type: 3}
+  - {fileID: 3481107481682258932, guid: 7545afce1e16e3247a8408122c16d723, type: 3}
+  - {fileID: 454385531010906893, guid: 7545afce1e16e3247a8408122c16d723, type: 3}
+  verts:
+  - {x: 0, y: 0, z: 0}
+  - {x: 1, y: 0, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 1, y: 1, z: 0}
+  uvs:
+  - {x: 0, y: 0}
+  - {x: 0.5, y: 0}
+  - {x: 0, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  hasCollision: 0
+  mass: 0
+  frameSpeed: 4

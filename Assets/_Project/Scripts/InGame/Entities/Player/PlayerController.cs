@@ -27,9 +27,13 @@ public class PlayerStatus {
     public float lastSubmergedPercentage;
     public float fluidTime;
 
-    public void RemoveTimeRelativity (float currentTime) {
-        lastJumpTime -= currentTime;
-        lastGroundedTime -= currentTime;
+    public float time;
+
+    public BoundsInt prevTileOverlapBounds;
+
+    public void RemoveTimeRelativity () {
+        lastJumpTime -= time;
+        lastGroundedTime -= time;
     }
 }
 
@@ -103,18 +107,14 @@ public class PlayerController : MonoBehaviour {
             rbody.disableForAFrame = true;
         }
 
-        /*CheckIfGrounded();
-        CheckFluidTime();
-
-        ApplyFriction();
-        ApplyMovement();
-        JumpCheck();
-        StairJumpCheck();
-        ArealPropulsion();
-        ApplyGravity();*/
+        BoundsInt currentTileOverlap = CalculateTileOverlap();
+        if(currentTileOverlap != status.prevTileOverlapBounds && GameManager.inst.engineMode == EngineModes.Play) {
+            CheckForTileOverlap(currentTileOverlap);
+        }
     }
 
     private void Update () {
+        status.time = Time.time;
         Animate();
     }
     #endregion
@@ -122,9 +122,39 @@ public class PlayerController : MonoBehaviour {
     #region Status Loader
     public void LoadStatus (PlayerStatus newStatus) {
         info.status = newStatus;
+        status = newStatus;
+
+        status.RemoveTimeRelativity();
 
         transform.position = info.status.playerPos;
         rbody.velocity = info.status.prevVel;
+    }
+    #endregion
+
+    #region TileOverlap
+    BoundsInt CalculateTileOverlap () {
+        return new BoundsInt() {
+            min = Vector3Int.FloorToInt((rbody.aabb.min - (Vector2)PhysicsPixel.inst.queryExtension)),
+            max = Vector3Int.FloorToInt((rbody.aabb.max + (Vector2)PhysicsPixel.inst.queryExtension))
+        };
+    }
+
+    void CheckForTileOverlap (BoundsInt bounds) {
+        for(int x = bounds.min.x; x <= bounds.max.x; x++) {
+            for(int y = bounds.min.y; y <= bounds.max.y; y++) {
+                int tileGID = TerrainManager.inst.GetGlobalIDAt(x, y, TerrainLayers.Ground);
+                if(tileGID == 0) {
+                    continue;
+                }
+                BaseTileAsset bta = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(tileGID);
+                if(bta.GetType() != typeof(CollectableTileAsset)) {
+                    continue;
+                }
+                ((CollectableTileAsset)bta).OnCollect(x, y);
+            }
+        }
+
+        status.prevTileOverlapBounds = bounds;
     }
     #endregion
 
@@ -139,7 +169,7 @@ public class PlayerController : MonoBehaviour {
 
         if(accDirX != 0)
             spriteRenderer.flipX = accDirX > 0;
-
+        
         if(!status.isGrounded) {
             playerAnimator.ChangeState("jump");
         } else {

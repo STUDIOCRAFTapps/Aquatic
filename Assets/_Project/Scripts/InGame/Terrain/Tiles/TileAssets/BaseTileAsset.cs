@@ -109,4 +109,8 @@ public class BaseTileAsset : ScriptableObject {
         }
         return 0;
     }
+
+    public virtual bool DoSpawnPropOnPlayMode () {
+        return false;
+    }
 }
