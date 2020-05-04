@@ -68,8 +68,13 @@ public class BackgroundManager : MonoBehaviour {
                 (cam.transform.position.x * scrollFactor[l] + (autoScrollFactor[l] * Time.time)) / backgroundSprites[l].bounds.size.x,
                 (cam.transform.position.y * scrollFactor[l]) / backgroundSprites[l].bounds.size.y
             ));
-            mpb[l].SetVector("_size", new Vector4(subSizeX, 1f));
-            mpb[l].SetVector("_offset", new Vector4(subSizeX * l, 0f));
+            mpb[l].SetVector("_bounds", new Vector4(
+                backgroundSprites[l].uv[0].x,
+                backgroundSprites[l].uv[3].x,
+                backgroundSprites[l].uv[0].y,
+                backgroundSprites[l].uv[3].y
+            ));
+
             mpb[l].SetVector("_scale", new Vector4((scaleFactor + 0.5f) * 2f, (scaleFactor + 0.5f) * 2f));
             mpb[l].SetTexture("_MainTex", backgroundSprites[l].texture);
             layers[l].SetPropertyBlock(mpb[l]);

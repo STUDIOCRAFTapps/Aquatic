@@ -22,7 +22,7 @@ namespace AsepriteImporter
         [SerializeField] public string about;
         [SerializeField] public PixelAnimationClipType animationType;
         [SerializeField] public string returnToOnEnd;
-        [SerializeField] public List<PixelAnimationClipCallbacks> callbacks;
+        [SerializeField] public List<PixelAnimationClipCallbacks> callbacks = new List<PixelAnimationClipCallbacks>();
 
         public override string ToString()
         {

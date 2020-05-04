@@ -21,6 +21,9 @@ public class PixelAnimationGroup : ScriptableObject {
             return null;
         }
 
+        if(clipByName == null) {
+            Debug.LogError("This pixel animation group hasn't been initialized. Please add it to the list of used pixel animations.");
+        }
         if(clipByName.TryGetValue(name, out PixelAnimationClip clip)) {
             return clip;
         } else {

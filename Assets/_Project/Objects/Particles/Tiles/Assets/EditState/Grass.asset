@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe178e1afe6744f46bd40a83dde45cfa, type: 3}
+  m_Name: Grass
+  m_EditorClassIdentifier: 
+  tileAssets:
+  - {fileID: 11400000, guid: 85452bb7f9a1e984583e8aba8aa30f36, type: 2}
+  zOffset: -1
+  placingUnits:
+  - model: 3
+    texture: {fileID: 21300000, guid: a4e2324460ef9d24cb126be684eefbcd, type: 3}
+    textureCount: {x: 4, y: 2}
+    useFPS: 1
+    fps: 20
+    randomTextureCyclePositon: 1
+    offset: {x: 0, y: 0}
+    particleCount: 5
+    lifetimeMin: 0.5
+    lifetimeMax: 1
+    size: {x: 1, y: 1}
+    rotationVariation: 45
+    gravity: 1
+    speedMin: 1
+    speedMax: 7
+    limitVelocityAxesFactor: {x: 1, y: 1}
+    limitVelocityDampen: 0.1
+  breakingUnits:
+  - model: 2
+    texture: {fileID: 21300000, guid: a4e2324460ef9d24cb126be684eefbcd, type: 3}
+    textureCount: {x: 4, y: 2}
+    useFPS: 1
+    fps: 20
+    randomTextureCyclePositon: 0
+    offset: {x: 0, y: 0}
+    particleCount: 5
+    lifetimeMin: 1
+    lifetimeMax: 2
+    size: {x: 1, y: 1}
+    rotationVariation: 45
+    gravity: 0.5
+    speedMin: 1
+    speedMax: 7
+    limitVelocityAxesFactor: {x: 0.5, y: 1}
+    limitVelocityDampen: 0.1

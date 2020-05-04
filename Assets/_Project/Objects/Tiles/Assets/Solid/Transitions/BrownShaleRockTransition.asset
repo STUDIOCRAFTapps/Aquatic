@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11622d226fd814b4893824a01a276335, type: 3}
+  m_Name: BrownShaleRockTransition
+  m_EditorClassIdentifier: 
+  fullName: Brown Shale Rock Transition
+  uiSprite: {fileID: -8054289781471602131, guid: 245b2de44873c8846ab8fa3a492d676c,
+    type: 3}
+  previewSprite: {fileID: -8054289781471602131, guid: 245b2de44873c8846ab8fa3a492d676c,
+    type: 3}
+  id: brown_shale_rock_transition
+  defaultPlacingLayer: 4
+  allowsConnection: 0
+  connectsByDefault: 0
+  hasTextures: 1
+  textures:
+  - {fileID: -2785991980189060075, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: 4670472893263209366, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: -1995715082112105399, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: -6105785747948134376, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: -1041018825564741245, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: -5347131494996677304, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: -3400856834936652616, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: -2095907818296011451, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: 5736040734118491801, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: -5664331898081199264, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: 4660918094706843221, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: 2826553075266936444, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: -5545601836535743102, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: -1086152155983523433, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: -168656504668925355, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  - {fileID: 4164646138983457711, guid: 245b2de44873c8846ab8fa3a492d676c, type: 3}
+  verts:
+  - {x: 0, y: 0, z: -0.002}
+  - {x: 1, y: 0, z: -0.002}
+  - {x: 0, y: 1, z: -0.002}
+  - {x: 1, y: 1, z: -0.002}
+  uvs:
+  - {x: 0, y: 0}
+  - {x: 0.5, y: 0}
+  - {x: 0, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  hasCollision: 0
+  mass: 0
+  transitioningTile: {fileID: 11400000, guid: 97514959fdc8808469653d8f28dc860a, type: 2}

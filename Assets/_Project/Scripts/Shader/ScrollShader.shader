@@ -4,8 +4,7 @@
 		_Color("Tint", Color) = (1,1,1,1)
 		_pixelsPerUnit("Pixels Per Unit", Float) = 16
 		[PerRendererData]_scroll("Scroll", Vector) = (0,0,0,0)
-		[PerRendererData]_size("Size", Vector) = (0,0,0,0)
-		[PerRendererData]_offset("Offset", Vector) = (0,0,0,0)
+		[PerRendererData]_bounds("Bounds", Vector) = (0,0,0,0)
 		[PerRendererData]_scale("Scale", Vector) = (0,0,0,0)
 	}
 
@@ -39,8 +38,7 @@
 			//float2 _offset;
 			UNITY_INSTANCING_BUFFER_START(Props)
 				UNITY_DEFINE_INSTANCED_PROP(float2, _scroll)
-				UNITY_DEFINE_INSTANCED_PROP(float2, _size)
-				UNITY_DEFINE_INSTANCED_PROP(float2, _offset)
+				UNITY_DEFINE_INSTANCED_PROP(float4, _bounds)
 				UNITY_DEFINE_INSTANCED_PROP(float2, _scale)
 			UNITY_INSTANCING_BUFFER_END(Props)
 
@@ -67,6 +65,15 @@
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
+			float map(float value, float min1, float max1, float min2, float max2) {
+				// Convert the current value to a percentage
+				// 0% - min1, 100% - max1
+				float perc = (value - min1) / (max1 - min1);
+
+				// Do the same operation backwards with min2 and max2
+				return perc * (max2 - min2) + min2;
+			}
+
 			v2f vert(appdata_t IN) {
 				v2f OUT;
 
@@ -87,16 +94,23 @@
 
 			fixed4 SampleSpriteTexture(float2 uv) {
 				float2 srl = UNITY_ACCESS_INSTANCED_PROP(Props, _scroll);
-				float2 sze = UNITY_ACCESS_INSTANCED_PROP(Props, _size);
-				float2 off = UNITY_ACCESS_INSTANCED_PROP(Props, _offset);
+				float4 bnd = UNITY_ACCESS_INSTANCED_PROP(Props, _bounds);
 				float2 scl = UNITY_ACCESS_INSTANCED_PROP(Props, _scale);
 
-				uv *= scl;
-				float premod = uv.x + srl.x;
-				premod = (premod - floor(premod / sze.x) * sze.x);
+				float2 uv01 = float2(map(uv.x, bnd.x, bnd.y, 0.0, 1.0), map(uv.y, bnd.z, bnd.w, 0.0, 1.0));
 
-				uv = float2(premod + off.x, clamp((uv.y + off.y) + srl.y + (1.0f - scl.y) * 0.5f, 0, 1));
-				fixed4 color = tex2D(_MainTex, uv);
+				//modifuv *= scl;
+				//float premod = uv.x + srl.x;
+				//premod = (premod - floor(premod / sze.x) * sze.x);
+				//premod = fmod(x, sze.x);
+
+				//modifuv = float2(premod + off.x, clamp((modifuv.y + off.y) + srl.y + (1.0f - scl.y) * 0.5f, 0, 1));
+
+				float2 modifuv = float2(
+					fmod((uv01.x * scl.x) + srl.x, 1.0),
+					clamp((uv01.y * scl.y) - srl.y + (1.0f - scl.y) * 0.5f, 0.0, 0.9999)
+				);
+				fixed4 color = tex2D(_MainTex, float2(map(modifuv.x, 0.0, 1.0, bnd.x, bnd.y), map(modifuv.y, 0.0, 1.0, bnd.z, bnd.w)));
 
 				/*#if ETC1_EXTERNAL_ALPHA
 				color.a = tex2D(_AlphaTex, uv).r;
@@ -112,6 +126,7 @@
 				c.rgb *= c.a;
 				return c;
 			}
+
 			ENDCG
 		}
 	}

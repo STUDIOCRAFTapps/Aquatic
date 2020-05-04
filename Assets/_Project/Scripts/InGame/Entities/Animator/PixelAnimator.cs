@@ -5,7 +5,7 @@ using UnityEngine;
 public class PixelAnimator : MonoBehaviour {
     public SpriteRenderer targetGraphic;
     public PixelAnimationGroup animationGroup;
-    public LivingEntity livingEntity;
+    public MonoBehaviour callbackReciever;
 
     PixelAnimationClip clip;
     float timeOfStartClip = 0f;
@@ -25,11 +25,11 @@ public class PixelAnimator : MonoBehaviour {
                 PlayClip(clip.returnToOnEnd);
             }
             if(clip.callbacks.TryGetValue(clip.frames.Length, out ushort code)) {
-                livingEntity?.OnAnimationCallback(code);
+                ((IPixelAnimationCallbackReciever)callbackReciever)?.OnRecieveCallback(code);
             }
         } else if(frameStartTime > clip.secondsPerFrames[currentFrame]) {
             if(clip.callbacks.TryGetValue(currentFrame, out ushort code)) {
-                livingEntity?.OnAnimationCallback(code);
+                ((IPixelAnimationCallbackReciever)callbackReciever)?.OnRecieveCallback(code);
             }
             currentFrame = Modulo(currentFrame + 1, clip.secondsPerFrames.Length);
 
@@ -97,4 +97,8 @@ public class PixelAnimator : MonoBehaviour {
         int r = x % m;
         return r < 0 ? r + m : r;
     }
+}
+
+public interface IPixelAnimationCallbackReciever {
+    void OnRecieveCallback (uint code);
 }

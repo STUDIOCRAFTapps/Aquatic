@@ -163,7 +163,6 @@ namespace AsepriteImporter {
 
                 // Settings
                 animationClip.clipType = importSettings.animationType;
-                Debug.Log(importSettings.returnToOnEnd);
                 animationClip.returnToOnEnd = importSettings.returnToOnEnd;
                 animationClip.clipName = animation.TagName;
 

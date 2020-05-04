@@ -63,7 +63,7 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: textureSettings.extrudeEdges
-    value: 1
+    value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: textureSettings.spritePivot.x
@@ -111,84 +111,12 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: animationSettings.Array.size
-    value: 6
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[0].animationName
-    value: Chase
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[0].loopTime
-    value: 1
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[0].about
-    value: "Animation Type:\tForward\r\nAnimation:\tFrom: 0; To: 5"
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[1].animationName
-    value: Chomp
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[1].loopTime
-    value: 1
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[1].about
-    value: "Animation Type:\tForward\r\nAnimation:\tFrom: 6; To: 10"
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[2].animationName
-    value: Chill
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[2].loopTime
-    value: 1
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[2].about
-    value: "Animation Type:\tForward\r\nAnimation:\tFrom: 11; To: 16"
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[3].animationName
-    value: Check
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[3].loopTime
-    value: 1
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[3].about
-    value: "Animation Type:\tForward\r\nAnimation:\tFrom: 17; To: 22"
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[4].animationName
-    value: StaticBlink
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[4].loopTime
-    value: 1
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[4].about
-    value: "Animation Type:\tForward\r\nAnimation:\tFrom: 23; To: 26"
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[5].animationName
-    value: StaticSeek
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[5].loopTime
-    value: 1
-    objectReference: {fileID: 0}
-  - target: {fileID: 0}
-    propertyPath: animationSettings.Array.data[5].about
-    value: "Animation Type:\tForward\r\nAnimation:\tFrom: 27; To: 30"
+    value: 0
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: atlas
     value: 
-    objectReference: {fileID: -8328923581568760697, guid: e44f7f53d5eec854d95f172eaaaff71b,
+    objectReference: {fileID: -8328923581568760697, guid: edd74362b40c6a5419d0082f5fcc5051,
       type: 3}
   - target: {fileID: 0}
     propertyPath: importType

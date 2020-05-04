@@ -1,0 +1,100 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d81b553c056414b419a9bc84a43bfcfe, type: 3}
+  m_Name: GrassyLimestone
+  m_EditorClassIdentifier: 
+  fullName: Grassy Limestone
+  uiSprite: {fileID: 8965804296028117286, guid: 3657e6aad30fcf94eb9260fc00605cf2,
+    type: 3}
+  previewSprite: {fileID: -3480666886305762113, guid: 3657e6aad30fcf94eb9260fc00605cf2,
+    type: 3}
+  id: grassy_limestone
+  defaultPlacingLayer: 0
+  allowsConnection: 1
+  connectsByDefault: 1
+  hasTextures: 1
+  textures:
+  - {fileID: -5839679583151850112, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -7869509916245957775, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 4216547450449433828, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -8614155096309036672, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 4642716353444752587, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -9071663556495586911, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 6909700649967351024, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 1031625909510221324, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 3621583695158768340, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 1243059594402854396, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 6652647644425381782, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 5009970374287076181, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 9071555364723193842, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 5880105594024813627, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 5248664468669603316, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -3480666886305762113, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -1330492102394773124, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -5907348552472958674, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -8927828080395919388, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 8005581349286896907, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -2497292987417571218, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -5479315671265605048, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 5967062939434416964, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -9163258535946198056, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 3910332473922409090, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 6060856756742611592, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 235033395452542861, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -6016342328439669085, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 4868239283485212853, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -1125365959408922065, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 3531599943890505307, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -4444030567973105781, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 844933388627922438, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 845207948151580432, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 3664600494299123019, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -7931469239323571814, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 4061801382372662360, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 7929091523392875962, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 5948511401023045985, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -2547775226979162682, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -7745321846316215902, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -7188080662773722766, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 4694828582195208318, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -8716627313192061847, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -3733335153147614610, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -8751043526602325931, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 3419428360071795475, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -7302200503835197425, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 2527530173565815918, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -5130443825016052740, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -7506803495772465170, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 7936091084977311113, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 6787384246268648088, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 32687193126053584, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -1876371738119332539, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -3089934847087925172, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -6469797737108588511, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -7058325795744654931, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 3538422039114206293, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -7247803319489194660, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: -936048144049883874, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 7210116086480312867, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  - {fileID: 8059084199305672022, guid: 3657e6aad30fcf94eb9260fc00605cf2, type: 3}
+  verts:
+  - {x: 0, y: 0, z: 0}
+  - {x: 1, y: 0, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 1, y: 1, z: 0}
+  uvs:
+  - {x: 0, y: 0}
+  - {x: 0.5, y: 0}
+  - {x: 0, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  hasCollision: 1
+  mass: 4
