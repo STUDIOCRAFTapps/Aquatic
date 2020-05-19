@@ -81,7 +81,7 @@ public class GameManager : MonoBehaviour {
             return DataLoadMode.Default;
         }
     }
-#endregion
+    #endregion
 
     public PlayerController GetNearestPlayer (Vector2 position) {
         int nearestPlayerIndex = -1;

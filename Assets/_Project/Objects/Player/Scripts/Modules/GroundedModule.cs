@@ -25,7 +25,7 @@ public class GroundedModule : BasePlayerModule {
 
         // Land particle
         if(!wasGrounded && info.status.isGrounded && info.status.prevVel.y < -20f) {
-            ParticleManager.inst.PlayEntityParticle(info.rbody.transform.position, 1);
+            ParticleManager.inst.PlayFixedParticle(info.rbody.transform.position, 1);
         }
         info.status.prevVel = info.rbody.velocity;
     }

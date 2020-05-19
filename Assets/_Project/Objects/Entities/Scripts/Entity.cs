@@ -54,7 +54,6 @@ public class Entity : MonoBehaviour {
         if(TerrainManager.inst.WorldToChunk(entityData.previousPosition) != TerrainManager.inst.WorldToChunk(entityData.position)) {
             if(!EntityRegionManager.inst.MoveEntity(this, entityData.previousPosition)) {
                 // Failed moving, region not loaded. Must load and unload region imidiatly
-
                 EntityRegionManager.inst.LoadRegionAtChunk(TerrainManager.inst.WorldToChunk(entityData.position));
                 EntityRegionManager.inst.MoveEntity(this, entityData.previousPosition);
                 EntityRegionManager.inst.UnloadRegionAtChunk(TerrainManager.inst.WorldToChunk(entityData.position));
@@ -97,4 +96,9 @@ public class Entity : MonoBehaviour {
         OnFixedUpdate();
     }
     #endregion
+}
+
+public interface IInteractableEntity {
+    bool OnCheckInteractWithCollider(Collider2D collider);
+    float OnCheckInteractWithRay (Ray2D ray);
 }

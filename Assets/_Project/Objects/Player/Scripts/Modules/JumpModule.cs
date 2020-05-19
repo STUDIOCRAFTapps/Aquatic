@@ -47,7 +47,7 @@ public class JumpModule : BasePlayerModule {
             info.status.isInAirBecauseOfJump = true;
 
             if(jumpOptReq0) {
-                ParticleManager.inst.PlayEntityParticle(info.status.playerPos, 0);
+                ParticleManager.inst.PlayFixedParticle(info.status.playerPos, 0);
             }
         }
 

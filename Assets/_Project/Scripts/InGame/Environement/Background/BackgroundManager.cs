@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.U2D;
 
 public class BackgroundManager : MonoBehaviour {
-    public float scaleFactor = 0.5f;
+    public float scaleFactor;
     public float backgroundHeight = 0.5f;
 
     public int layerCount = 5;
@@ -51,16 +51,20 @@ public class BackgroundManager : MonoBehaviour {
     public void CreateLayers () {
         Vector2 camSize = GetCamSize();
         previousCamSize = camSize;
-        cameraOriginOffset.x = camSize.x * scaleFactor;
+        cameraOriginOffset.x = camSize.x * (scaleFactor * 0.5f) - 0.5f;
 
         RearangeLayers();
     }
 
     void RearangeLayers () {
+        if(scaleFactor == 0f) {
+            scaleFactor = 1f;
+        }
+
         Vector3 camAnchor = -cameraOriginOffset;
         camAnchor.z = 0f;
         transform.position = ppc.RoundToPixel(new Vector3(cam.transform.position.x, cam.transform.position.y, transform.position.z));
-        transform.localScale = new Vector3((scaleFactor + 0.5f) * 2f, (scaleFactor + 0.5f) * 2f, 1f);
+        transform.localScale = new Vector3(scaleFactor, scaleFactor, 1f);
         float subSizeX = 1f / layerCount;
 
         for(int l = 0; l < layerCount; l++) {
@@ -74,8 +78,8 @@ public class BackgroundManager : MonoBehaviour {
                 backgroundSprites[l].uv[0].y,
                 backgroundSprites[l].uv[3].y
             ));
-
-            mpb[l].SetVector("_scale", new Vector4((scaleFactor + 0.5f) * 2f, (scaleFactor + 0.5f) * 2f));
+            
+            mpb[l].SetVector("_scale", new Vector4(scaleFactor, scaleFactor));
             mpb[l].SetTexture("_MainTex", backgroundSprites[l].texture);
             layers[l].SetPropertyBlock(mpb[l]);
 

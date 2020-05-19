@@ -30,10 +30,10 @@ public class Tile63OverlayAsset : BaseTileAsset {
     //Bottom = +8
     //+256
     public static Vector2Int[][] checkPosition = new Vector2Int[][] {
-        new Vector2Int[] {new Vector2Int(-1, 2), new Vector2Int(0, 2), new Vector2Int(1, 2)}, //Top (index: 0)
-        new Vector2Int[] {new Vector2Int(-2, -1), new Vector2Int(-2, 0), new Vector2Int(-2, 1)}, //Left (index: 1)
-        new Vector2Int[] {new Vector2Int(2, -1), new Vector2Int(2, 0), new Vector2Int(2, 1)}, //Right (index: 2)
-        new Vector2Int[] {new Vector2Int(-1, -2), new Vector2Int(0, -2), new Vector2Int(1, -2)} //Bottom (index: 3)
+        new Vector2Int[] { new Vector2Int(0, 2), new Vector2Int(-1, 2), new Vector2Int(1, 2)}, //Top (index: 0)
+        new Vector2Int[] { new Vector2Int(-2, 0), new Vector2Int(-2, -1), new Vector2Int(-2, 1)}, //Left (index: 1)
+        new Vector2Int[] { new Vector2Int(2, 0), new Vector2Int(2, -1), new Vector2Int(2, 1)}, //Right (index: 2)
+        new Vector2Int[] { new Vector2Int(0, -2), new Vector2Int(-1, -2), new Vector2Int(1, -2)} //Bottom (index: 3)
     };
 
     public static Vector2Int ul = new Vector2Int(-1, 1);
@@ -48,10 +48,15 @@ public class Tile63OverlayAsset : BaseTileAsset {
         byte left = DoConnectTo(position + Vector2Int.left, layer, mdc);
         byte right = DoConnectTo(position + Vector2Int.right, layer, mdc);
         byte bottom = DoConnectTo(position + Vector2Int.down, layer, mdc);
-        byte topLeft = (byte)(DoConnectTo(position + ul, layer, mdc) & top & left);
-        byte topRight = (byte)(DoConnectTo(position + ur, layer, mdc) & top & right);
-        byte bottomRight = (byte)(DoConnectTo(position + dr, layer, mdc) & bottom & right);
-        byte bottomLeft = (byte)(DoConnectTo(position + dl, layer, mdc) & bottom & left);
+        byte topLeft = 0, topRight = 0, bottomRight = 0, bottomLeft = 0;
+        if(top == 1 && left == 1)
+            topLeft = (byte)(DoConnectTo(position + ul, layer, mdc) & top & left);
+        if(top == 1 && right == 1)
+            topRight = (byte)(DoConnectTo(position + ur, layer, mdc) & top & right);
+        if(bottom == 1 && right == 1)
+            bottomRight = (byte)(DoConnectTo(position + dr, layer, mdc) & bottom & right);
+        if(bottom == 1 && left == 1)
+            bottomLeft = (byte)(DoConnectTo(position + dl, layer, mdc) & bottom & left);
         ushort mask = (ushort)(
             (1 * topLeft) + (2 * top) + (4 * topRight) + (8 * left) + (16 * right) +
             (32 * bottomLeft) + (64 * bottom) + (128 * bottomRight)
@@ -63,7 +68,10 @@ public class Tile63OverlayAsset : BaseTileAsset {
             for(int i = 0; i < checkPosition.Length; i++) {
                 bool isAllWall = true;
                 for(int l = 0; l < checkPosition[i].Length; l++) {
-                    isAllWall = (DoConnectTo(position + checkPosition[i][l], layer, mdc) == 1) && isAllWall;
+                    if(!(DoConnectTo(position + checkPosition[i][l], layer, mdc) == 1)) {
+                        isAllWall = false;
+                        continue;
+                    }
                 }
                 mask += (ushort)((1 << i) * (isAllWall ? 0 : 1));
             }

@@ -19,10 +19,10 @@ MonoBehaviour:
   prefab: {fileID: 3428889606896973310, guid: 452e7a1a40e129d4a99b0e75ecf9310b, type: 3}
   loadBoxOffset: {x: -0.125, y: -0.125}
   loadBoxSize: {x: 1.875, y: 1.25}
-  offset: {x: -0.125, y: -0.125}
+  offset: {x: 0, y: 0}
   size: {x: 1.875, y: 1.25}
   mass: 9
-  maxHealth: 20
+  maxHealth: 40
   animationGroup: {fileID: 552821699678306382, guid: 4addb3fc5c42fd64abb25b05d0f7e9f9,
     type: 3}
   maxTargetingDistance: 15

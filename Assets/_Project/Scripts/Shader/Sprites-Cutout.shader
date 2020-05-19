@@ -7,13 +7,18 @@
 
 // modified to use vertex colors
 
-Shader "Unlit/Transparent Cutout Color" {
-	Properties{
-		[PerRendererData] _MainTex("Base (RGB) Trans (A)", 2D) = "white" {}
-	_Cutoff("Alpha cutoff", Range(0,1)) = 0.5
+Shader "Sprites/Cutout" {
+	Properties {
+		/*[PerRendererData] */_MainTex("Base (RGB) Trans (A)", 2D) = "white" {}
+		_Cutoff("Alpha cutoff", Range(0,1)) = 0.5
 	}
-		SubShader{
-		Tags{ "Queue" = "AlphaTest" "IgnoreProjector" = "True" "RenderType" = "TransparentCutout" }
+	SubShader {
+		Tags {
+			"Queue" = "AlphaTest"
+			"IgnoreProjector" = "True"
+			"RenderType" = "TransparentCutout"
+			"PreviewType" = "Plane" 
+		}
 		LOD 100
 
 		Cull Off

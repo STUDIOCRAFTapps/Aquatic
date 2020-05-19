@@ -63,20 +63,7 @@ public class DataChunk {
         }
     }
 
-    virtual public void RefreshTiles () {
-        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
-            for(int x = 0; x < chunkSize; x++) {
-                for(int y = 0; y < chunkSize; y++) {
-                    if(tileData[(TerrainLayers)l][x][y].gid == 0) {
-                        continue;
-                    }
-
-                    BaseTileAsset tileAsset = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(GetGlobalID(x, y, (TerrainLayers)l));
-                    tileAsset.OnTileRefreshed(new Vector2Int(x + chunkPosition.x * chunkSize, y + chunkPosition.y * chunkSize), (TerrainLayers)l);
-                }
-            }
-        }
-    }
+    
     #endregion
 
     #region Tile Editing / Reading
@@ -111,6 +98,69 @@ public class DataChunk {
     public bool HasLayerBeenEdited (TerrainLayers layer) {
         return hasLayerBeenEdited[(int)layer];
     }
+    #endregion
+
+    #region Refreshes
+    public virtual void RefreshTiles () {
+        RefreshTiles(4, false);
+    }
+
+    public void RefreshTiles (int pattern, bool cropMiddle = true) {
+        int border = 2;
+
+        int min_x = (refreshPatterns[pattern * 4 + 0] == 0) ? 0 : chunkSize - border;
+        int max_x = (refreshPatterns[pattern * 4 + 1] == 0) ? chunkSize : border;
+        int min_y = (refreshPatterns[pattern * 4 + 2] == 0) ? 0 : chunkSize - border;
+        int max_y = (refreshPatterns[pattern * 4 + 3] == 0) ? chunkSize : border;
+
+        bool isChunkUp = TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition + Vector2Int.up));
+        bool isChunkDown = TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition + Vector2Int.down));
+        bool isChunkLeft = TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition + Vector2Int.left));
+        bool isChunkRight = TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition + Vector2Int.right));
+
+        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
+            for(int x = min_x; x < max_x; x++) {
+                for(int y = min_y; y < max_y; y++) {
+                    // No need to refresh the inside of a full chunk
+                    if(cropMiddle && pattern == 4 && (x >= border && x < chunkSize - border) && (y >= border && y < chunkSize - border)) {
+                        continue;
+                    } else if(pattern == 4) {
+                        if(!isChunkUp && y >= chunkSize - border) {
+                            continue;
+                        }
+                        if(!isChunkDown && y < border) {
+                            continue;
+                        }
+                        if(!isChunkLeft && x < border) {
+                            continue;
+                        }
+                        if(!isChunkRight && x >= chunkSize - border) {
+                            continue;
+                        }
+                    }
+                    if(tileData[(TerrainLayers)l][x][y].gid == 0) {
+                        continue;
+                    }
+                    BaseTileAsset tileAsset = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(GetGlobalID(x, y, (TerrainLayers)l));
+                    tileAsset.OnTileRefreshed(new Vector2Int(x + chunkPosition.x * chunkSize, y + chunkPosition.y * chunkSize), (TerrainLayers)l);
+                }
+            }
+            TerrainManager.inst.QueueChunkReloadAtTile(chunkPosition.x * chunkSize, chunkPosition.y * chunkSize, (TerrainLayers)l);
+        }
+    }
+
+    //x - min/max, y - min/max
+    static readonly int[] refreshPatterns = {
+        -1,  0, -1,  0, //bottom-left
+         0,  0, -1,  0, //bottom
+         0,  1, -1,  0, //bottom-right
+        -1,  0,  0,  0, //left
+         0,  0,  0,  0, //center
+         0,  1,  0,  0, //right
+        -1,  0,  0,  1, //top-left
+         0,  0,  0,  1, //top
+         0,  1,  0,  1, //top-right
+    };
     #endregion
 }
 

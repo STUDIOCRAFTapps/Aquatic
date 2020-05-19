@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PixelAnimator : MonoBehaviour {
+    public bool canFlash = false;
     public SpriteRenderer targetGraphic;
     public PixelAnimationGroup animationGroup;
     public MonoBehaviour callbackReciever;
@@ -11,6 +12,8 @@ public class PixelAnimator : MonoBehaviour {
     float timeOfStartClip = 0f;
     int currentFrame = 0;
     float timeOfStartFrame = 0f;
+    float timeOfLastFlash = 0f;
+    float flashLength = 0f;
 
     void Update () {
         if(clip == null) {
@@ -35,6 +38,18 @@ public class PixelAnimator : MonoBehaviour {
 
             timeOfStartFrame = Time.time;
             targetGraphic.sprite = clip.frames[currentFrame];
+        }
+
+        if(canFlash) {
+            if(Time.time < timeOfLastFlash + flashLength) {
+                if(Time.time < timeOfLastFlash + flashLength * 0.5f) {
+                    targetGraphic.color = PixelAnimationManager.inst.maxFlash;
+                } else {
+                    targetGraphic.color = PixelAnimationManager.inst.minFlash;
+                }
+            } else {
+                targetGraphic.color = Color.clear;
+            }
         }
     }
 
@@ -87,6 +102,11 @@ public class PixelAnimator : MonoBehaviour {
         timeOfStartFrame = Time.time;
         currentFrame = 0;
         clip = newClip;
+    }
+
+    public void PlayHitFlash (float length) {
+        flashLength = length;
+        timeOfLastFlash = Time.time;
     }
 
     public PixelAnimationClip GetCurrentClip () {

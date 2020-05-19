@@ -8,12 +8,15 @@ public class CameraNavigator : MonoBehaviour {
     public BackgroundManager backgroundManager;
     public PixelPerfectCamera pixelPerfect;
 
+    public Vector2Int largeScreenTarget = Vector2Int.one;
     new public Camera camera;
     public float pixelPerUnit = 16;
     public float pixelScale = 2;
     public float moveSmooth = 1f;
     public float velocitySmooth = 1f;
     public float velocityFriction = 1f;
+
+    public float ratioDebug = 0f;
 
     public bool playerFollowMode;
 
@@ -25,6 +28,8 @@ public class CameraNavigator : MonoBehaviour {
 
     Vector2Int initTargetRes;
 
+    bool zoomIn = true;
+
     private void Start () {
         initTargetRes = new Vector2Int(pixelPerfect.refResolutionX, pixelPerfect.refResolutionY); 
     }
@@ -35,18 +40,18 @@ public class CameraNavigator : MonoBehaviour {
         if(Input.GetKeyDown(KeyCode.F)) {
             backgroundManager.CreateLayers();
             playerFollowMode = !playerFollowMode;
-            backgroundManager.scaleFactor = playerFollowMode ? 0.0f : 0.5f;
         }
 
         if(playerFollowMode) {
             maintainedVelocity = Vector2.zero;
             transform.position = new Vector3(playerCenter.position.x, playerCenter.position.y, transform.position.z);//Vector3.Lerp(transform.position, new Vector3(playerCenter.position.x, playerCenter.position.y, transform.position.z), blend);
-            pixelPerfect.refResolutionX = initTargetRes.x / 2;
-            pixelPerfect.refResolutionY = initTargetRes.y / 2;
+
+            zoomIn = true;
         } else {
-            pixelPerfect.refResolutionX = initTargetRes.x;
-            pixelPerfect.refResolutionY = initTargetRes.y;
+            zoomIn = false;
         }
+
+        CalculateResolution();
 
         if(Input.GetMouseButtonDown(2) && !playerFollowMode) {
             camOrigin = transform.position;
@@ -63,6 +68,22 @@ public class CameraNavigator : MonoBehaviour {
             transform.position += new Vector3(maintainedVelocity.x, maintainedVelocity.y) * Time.deltaTime;
             maintainedVelocity *= (1f - Time.deltaTime) * velocityFriction;
         }
+    }
+
+    public void CalculateResolution () {
+        Vector2Int screenRes = new Vector2Int(Screen.width, Screen.height);
+
+        if(screenRes.x / 2 > initTargetRes.x || screenRes.y / 2 > initTargetRes.y) {
+            //Debug.Log("Larger Screen");
+            pixelPerfect.refResolutionX = largeScreenTarget.x;
+            pixelPerfect.refResolutionY = largeScreenTarget.y;
+            zoomIn = false;
+        } else {
+            //Debug.Log("Smaller Screen");
+            pixelPerfect.refResolutionX = zoomIn ? initTargetRes.x / 2 : initTargetRes.x;
+            pixelPerfect.refResolutionY = zoomIn ? initTargetRes.y / 2 : initTargetRes.y;
+        }
+        backgroundManager.scaleFactor = zoomIn ? 1f : 2f;
     }
 
     public Vector2 ScreenDeltaToWorldDelta (Vector2 screenDelta) {

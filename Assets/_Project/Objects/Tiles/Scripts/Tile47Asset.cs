@@ -26,11 +26,16 @@ public class Tile47Asset : BaseTileAsset {
         byte left = DoConnectTo(position + Vector2Int.left, layer, mdc);
         byte right = DoConnectTo(position + Vector2Int.right, layer, mdc);
         byte bottom = DoConnectTo(position + Vector2Int.down, layer, mdc);
-        byte topLeft = (byte)(DoConnectTo(position + ul, layer, mdc) & top & left);
-        byte topRight = (byte)(DoConnectTo(position + ur, layer, mdc) & top & right);
-        byte bottomRight = (byte)(DoConnectTo(position + dr, layer, mdc) & bottom & right);
-        byte bottomLeft = (byte)(DoConnectTo(position + dl, layer, mdc) & bottom & left);
-        byte mask = (byte)(
+        byte topLeft = 0, topRight = 0, bottomRight = 0, bottomLeft = 0;
+        if(top == 1 && left == 1)
+            topLeft = (byte)(DoConnectTo(position + ul, layer, mdc) & top & left);
+        if(top == 1 && right == 1)
+            topRight = (byte)(DoConnectTo(position + ur, layer, mdc) & top & right);
+        if(bottom == 1 && right == 1)
+            bottomRight = (byte)(DoConnectTo(position + dr, layer, mdc) & bottom & right);
+        if(bottom == 1 && left == 1)
+            bottomLeft = (byte)(DoConnectTo(position + dl, layer, mdc) & bottom & left);
+        ushort mask = (ushort)(
             (1 * topLeft) + (2 * top) + (4 * topRight) + (8 * left) + (16 * right) +
             (32 * bottomLeft) + (64 * bottom) + (128 * bottomRight)
         );

@@ -84,7 +84,7 @@ public class VisualChunkManager : MonoBehaviour {
         VisualChunk vc = GetNewVisualChunk(chunkPosition);
 
         if(!TerrainManager.inst.GetChunkAtPosition(chunkPosition, out DataChunk dataChunk)) {
-            Debug.LogError($"A data chunk wasn't found at {chunkPosition}");
+            //Debug.LogError($"A data chunk wasn't found at {chunkPosition}");
 
             unusedVisualChunkPool.Enqueue(vc);
             return;

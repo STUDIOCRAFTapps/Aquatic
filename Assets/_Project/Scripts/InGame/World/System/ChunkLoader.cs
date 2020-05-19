@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Linq;
 
 public class ChunkLoader : MonoBehaviour {
 
     public Transform player;
-    public Dictionary<Vector2Int, ChunkLoadCounter> loadCounters;
+    public Dictionary<long, ChunkLoadCounter> loadCounters;
+    public Dictionary<long, Vector2Int> chunkToLoad;
+    public Dictionary<long, Action> chunkToUnload;
 
     public static ChunkLoader inst;
 
@@ -15,10 +18,25 @@ public class ChunkLoader : MonoBehaviour {
     ChunkLoadBounds previousLoadBounds;
 
     void Awake () {
-        loadCounters = new Dictionary<Vector2Int, ChunkLoadCounter>();
+        loadCounters = new Dictionary<long, ChunkLoadCounter>();
+        chunkToLoad = new Dictionary<long, Vector2Int>();
+        chunkToUnload = new Dictionary<long, Action>();
 
         if(inst == null) {
             inst = this;
+        }
+    }
+    
+    private void Update () {
+        if(chunkToLoad.Count > 0) {
+            long firstKey = chunkToLoad.First().Key;
+            LoadChunkAt(chunkToLoad[firstKey]);
+            chunkToLoad.Remove(firstKey);
+        }
+        if(chunkToUnload.Count > 0) {
+            long firstKey = chunkToUnload.First().Key;
+            chunkToUnload[firstKey]();
+            chunkToUnload.Remove(firstKey);
         }
     }
 
@@ -55,47 +73,78 @@ public class ChunkLoader : MonoBehaviour {
         );
 
         ExecuteInNewBoundOnly(newBounds, previousLoadBounds, (x, y) => {
-            LoadChunkAt(new Vector2Int(x, y));
+            Vector2Int pos = new Vector2Int(x, y);
+            long key = Hash.hVec2Int(pos);
+            if(chunkToUnload.ContainsKey(key)) {
+                chunkToUnload.Remove(key);
+            }
+            if(!chunkToLoad.ContainsKey(key)) {
+                chunkToLoad.Add(key, pos);
+            }
         });
+
         ExecuteInOldBoundOnly(newBounds, previousLoadBounds, (x, y) => {
-            UnloadChunkAt(new Vector2Int(x, y), false);
+            Vector2Int pos = new Vector2Int(x, y);
+            long key = Hash.hVec2Int(pos);
+            if(chunkToLoad.ContainsKey(key)) {
+                chunkToLoad.Remove(key);
+            }
+            UnloadChunkAt(pos, false);
         });
 
         previousLoadBounds = newBounds;
     }
+
+
     #endregion
 
+    #region Load & Unload
+    // Returns true if a visual chunk has been or should be loaded
     void LoadChunkAt (Vector2Int chunkPosition) {
-
+        long key = Hash.hVec2Int(chunkPosition);
+        // Manage load counters
+        // - If a chunk was running a timer to get deleted, cancel it
         bool doLoadFromFileOrGenerate = false;
-        if(loadCounters.ContainsKey(chunkPosition)) {
-            if(loadCounters[chunkPosition].loadCount == 0) {
-                if(loadCounters[chunkPosition].timer.isRunning) {
-                    loadCounters[chunkPosition].timer.Cancel();
-                    loadCounters[chunkPosition].timer = new CancellableTimer();
-                    loadCounters[chunkPosition].loadCount++;
+        if(loadCounters.TryGetValue(key, out ChunkLoadCounter loadCounter)) {
+            if(loadCounter.loadCount == 0) {
+                if(loadCounter.timer.isRunning) {
+                    loadCounter.timer.Cancel();
+                    loadCounter.timer = new CancellableTimer();
+                    loadCounter.loadCount++;
                 } else {
                     doLoadFromFileOrGenerate = true;
                 }
             } else {
-                loadCounters[chunkPosition].loadCount++;
+                loadCounter.loadCount++;
                 
                 if(!TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition))) {
                     doLoadFromFileOrGenerate = true;
                 }
             }
         } else {
-            doLoadFromFileOrGenerate = true;
+            if(!TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition))) {
+                doLoadFromFileOrGenerate = true;
+            } else {
+                loadCounters.Add(key, new ChunkLoadCounter(chunkPosition));
+            }
+        }
+        if(TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition))) {
+            doLoadFromFileOrGenerate = false;
         }
 
+        // If the chunk's data need to be loaded for real!
         if(doLoadFromFileOrGenerate) {
-            if(!loadCounters.ContainsKey(chunkPosition)) {
-                loadCounters.Add(chunkPosition, new ChunkLoadCounter());
-            }
-            loadCounters[chunkPosition].loadCount++;
 
+            // Augment the load counter of the chunk once it gets loaded
+            if(!loadCounters.ContainsKey(key)) {
+                loadCounters.Add(key, new ChunkLoadCounter(chunkPosition));
+            }
+            loadCounters[key].loadCount++;
+
+            // Try to load the data chunk from the files. If this failes, create a new chunk
             DataChunk dataChunk = TerrainManager.inst.GetNewDataChunk(chunkPosition);
             if(!WorldSaving.inst.LoadChunkFile(dataChunk, GameManager.inst.currentDataLoadMode)) {
+                #region Generate Empty Chunk
                 for(int x = 0; x < TerrainManager.inst.chunkSize; x++) {
                     for(int y = 0; y < TerrainManager.inst.chunkSize; y++) {
                         dataChunk.SetGlobalID(x, y, TerrainLayers.Ground, Mathf.RoundToInt(Mathf.Clamp01(
@@ -113,17 +162,19 @@ public class ChunkLoader : MonoBehaviour {
                         dataChunk.SetGlobalID(x, y, TerrainLayers.WaterSurface, 0);
                     }
                 }
-                //dataChunk.ClearTiles();
+                dataChunk.RefreshTiles();
+                #endregion
             }
-            TerrainManager.inst.RefreshSurroundingChunks(chunkPosition, 2);
 
-            VisualChunkManager.inst.LoadChunkAt(chunkPosition);
+            // This will take care of generating the visual chunks later.
+            TerrainManager.inst.RefreshSurroundingChunks(chunkPosition);
+
+            EntityRegionManager.inst.LoadRegionAtChunk(chunkPosition);
         }
-        
-        EntityRegionManager.inst.LoadRegionAtChunk(chunkPosition);
     }
 
     void UnloadChunkAt (Vector2Int chunkPosition, bool imidiatly, bool doSave = true) {
+        long key = Hash.hVec2Int(chunkPosition);
         if(imidiatly) {
             if(TerrainManager.inst.chunks.TryGetValue(Hash.hVec2Int(chunkPosition), out DataChunk dataChunk)) {
                 if(doSave) {
@@ -137,38 +188,44 @@ public class ChunkLoader : MonoBehaviour {
             return;
         }
 
-        if(loadCounters.ContainsKey(chunkPosition)) {
-            int loadCount = loadCounters[chunkPosition].loadCount;
+        if(loadCounters.ContainsKey(key)) {
+            int loadCount = loadCounters[key].loadCount;
 
             if(loadCount - 1 == 0) {
-                loadCounters[chunkPosition].loadCount = 0;
-                if(loadCounters[chunkPosition].timer == null) {
-                    loadCounters[chunkPosition].timer = new CancellableTimer();
+                loadCounters[key].loadCount = 0;
+                if(loadCounters[key].timer == null) {
+                    loadCounters[key].timer = new CancellableTimer();
                 }
-                loadCounters[chunkPosition].timer.Start(TerrainManager.inst.unloadTimer, () => {
-                    if(TerrainManager.inst.chunks.TryGetValue(Hash.hVec2Int(chunkPosition), out DataChunk dataChunk)) {
-                        if(doSave) {
-                            WorldSaving.inst.SaveChunk(dataChunk);
-                        }
-                        TerrainManager.inst.SetDataChunkAsUnused(chunkPosition);
-                        VisualChunkManager.inst.UnloadChunkAt(chunkPosition);
+                loadCounters[key].timer.Start(TerrainManager.inst.unloadTimer, () => {
+                    if(!chunkToUnload.ContainsKey(key)) {
+                        chunkToUnload.Add(key, () => {
+                            if(TerrainManager.inst.chunks.TryGetValue(Hash.hVec2Int(chunkPosition), out DataChunk dataChunk)) {
+                                if(doSave) {
+                                    WorldSaving.inst.SaveChunk(dataChunk);
+                                }
+                                TerrainManager.inst.SetDataChunkAsUnused(chunkPosition);
+                                VisualChunkManager.inst.UnloadChunkAt(chunkPosition);
 
-                        EntityRegionManager.inst.UnloadRegionAtChunk(chunkPosition);
+                                EntityRegionManager.inst.UnloadRegionAtChunk(chunkPosition);
+                            }
+                        });
                     }
                 });
             } else if(loadCount - 1 >= 0) {
-                loadCounters[chunkPosition].loadCount--;
+                loadCounters[key].loadCount--;
             }
         }
     }
+    #endregion
 
+    #region Load & Unload ALL
     public void UnloadAll (bool doSave = true) {
-        foreach(KeyValuePair<Vector2Int, ChunkLoadCounter> kvp in loadCounters) {
+        foreach(KeyValuePair<long, ChunkLoadCounter> kvp in loadCounters) {
             if(kvp.Value.loadCount > 0) {
-                UnloadChunkAt(kvp.Key, true, doSave);
+                UnloadChunkAt(kvp.Value.position, true, doSave);
             } else {
                 kvp.Value.timer.Cancel();
-                UnloadChunkAt(kvp.Key, true, doSave);
+                UnloadChunkAt(kvp.Value.position, true, doSave);
             }
         }
         loadCounters.Clear();
@@ -190,6 +247,7 @@ public class ChunkLoader : MonoBehaviour {
             LoadChunkAt(new Vector2Int(x, y));
         });
     }
+    #endregion
 
     #region Bounds Execution Utils
     private void ExecuteInBound (ChunkLoadBounds bounds, Action<int, int> action) {

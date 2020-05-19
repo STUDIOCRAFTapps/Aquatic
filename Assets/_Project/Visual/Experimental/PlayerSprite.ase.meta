@@ -27,13 +27,16 @@ ScriptedImporter:
     about: "Animation Type:\tForward\r\nAnimation:\tFrom: 0; To: 0"
     animationType: 0
     returnToOnEnd: 
+    callbacks: []
   - animationName: Run
     about: "Animation Type:\tForward\r\nAnimation:\tFrom: 1; To: 16"
     animationType: 0
     returnToOnEnd: 
+    callbacks: []
   - animationName: Jump
     about: "Animation Type:\tForward\r\nAnimation:\tFrom: 17; To: 20"
     animationType: 0
     returnToOnEnd: 
+    callbacks: []
   atlas: {instanceID: 0}
   importType: 0

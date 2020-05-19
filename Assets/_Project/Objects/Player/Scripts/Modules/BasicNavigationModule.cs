@@ -29,10 +29,10 @@ public class BasicNavigationModule : BasePlayerModule {
                 groundMaxSpeed, groundAcceleration
             );
             if(info.status.lastCombinedDirection.x <= 0 && info.status.combinedDirection.x > 0) {
-                ParticleManager.inst.PlayEntityParticle(info.rbody.transform.position, 2);
+                ParticleManager.inst.PlayFixedParticle(info.rbody.transform.position, 2);
             }
             if(info.status.lastCombinedDirection.x >= 0 && info.status.combinedDirection.x < 0) {
-                ParticleManager.inst.PlayEntityParticle(info.rbody.transform.position, 3);
+                ParticleManager.inst.PlayFixedParticle(info.rbody.transform.position, 3);
             }
         } else {
             AccelerateBody(

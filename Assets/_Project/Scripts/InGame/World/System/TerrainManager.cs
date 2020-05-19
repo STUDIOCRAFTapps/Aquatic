@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class TerrainManager : MonoBehaviour {
@@ -8,7 +9,7 @@ public class TerrainManager : MonoBehaviour {
     public static TerrainManager inst;
     public Dictionary<long, DataChunk> chunks;
     public Queue<DataChunk> unusedChunks;
-    public Queue<Vector2Int> chunkToReload;
+    public Dictionary<long, Vector2Int> chunkToReload;
     public Queue<int> mobileChunkToReload;
 
     [Header("Reference")]
@@ -40,7 +41,7 @@ public class TerrainManager : MonoBehaviour {
 
         chunks = new Dictionary<long, DataChunk>();
         unusedChunks = new Queue<DataChunk>();
-        chunkToReload = new Queue<Vector2Int>();
+        chunkToReload = new Dictionary<long, Vector2Int>();
         mobileChunkToReload = new Queue<int>();
         tiles.BuildDictionaries();
 
@@ -50,15 +51,18 @@ public class TerrainManager : MonoBehaviour {
     }
 
     private void LateUpdate () {
-        while(chunkToReload?.Count > 0) {
-            VisualChunkManager.inst?.LoadChunkAt(chunkToReload.Dequeue());
-        }
-        while(mobileChunkToReload?.Count > 0) {
-            if(VisualChunkManager.inst != null) {
-                int key = mobileChunkToReload.Dequeue();
-                if(VisualChunkManager.inst.mobileChunkPool.ContainsKey(key)) {
-                    MobileChunk mc = VisualChunkManager.inst.mobileChunkPool[key];
-                    VisualChunkManager.inst.BuildMobileChunk(mc);
+        if(VisualChunkManager.inst != null) {
+            foreach(KeyValuePair<long, Vector2Int> kvp in chunkToReload) {
+                VisualChunkManager.inst?.LoadChunkAt(kvp.Value);
+            }
+            chunkToReload.Clear();
+            while(mobileChunkToReload?.Count > 0) {
+                if(VisualChunkManager.inst != null) {
+                    int key = mobileChunkToReload.Dequeue();
+                    if(VisualChunkManager.inst.mobileChunkPool.ContainsKey(key)) {
+                        MobileChunk mc = VisualChunkManager.inst.mobileChunkPool[key];
+                        VisualChunkManager.inst.BuildMobileChunk(mc);
+                    }
                 }
             }
         }
@@ -104,12 +108,14 @@ public class TerrainManager : MonoBehaviour {
         }
     }
 
-    public void RefreshSurroundingChunks (Vector2Int chunkPosition, int radius = 2) {
-        for(int x = -(radius - 1); x < radius; x++) {
-            for(int y = -(radius - 1); y < radius; y++) {
+    public void RefreshSurroundingChunks (Vector2Int chunkPosition) {
+        int index = 0;
+        for(int y = -1; y < 2; y++) {
+            for(int x = -1; x < 2; x++) {
                 if(chunks.TryGetValue(Hash.hVec2Int(chunkPosition + new Vector2Int(x, y)), out DataChunk value)) {
-                    value.RefreshTiles();
+                    value.RefreshTiles(index);
                 }
+                index++;
             }
         }
     }
@@ -118,8 +124,9 @@ public class TerrainManager : MonoBehaviour {
         Vector2Int cpos = GetChunkPositionAtTile(x, y);
 
         if(GetChunkAtPosition(cpos, out DataChunk dataChunk)) {
-            if(!chunkToReload.Contains(cpos)) {
-                chunkToReload.Enqueue(cpos);
+            long hashKey = Hash.hVec2Int(cpos);
+            if(!chunkToReload.ContainsKey(hashKey)) {
+                chunkToReload.Add(hashKey, cpos);
             }
         }
     }
@@ -363,7 +370,7 @@ public class TerrainManager : MonoBehaviour {
 
         for(int x = min.x; x <= max.x; x++) {
             for(int y = min.y; y <= max.y; y++) {
-                if(!VisualChunkManager.inst.visualChunkPool.ContainsKey(Hash.hVec2Int(x, y))) {
+                if(!chunks.ContainsKey(Hash.hVec2Int(x, y))) {
                     return false;
                 }
             }
@@ -377,7 +384,7 @@ public class TerrainManager : MonoBehaviour {
 
         for(int x = min.x; x <= max.x; x++) {
             for(int y = min.y; y <= max.y; y++) {
-                if(!VisualChunkManager.inst.visualChunkPool.ContainsKey(Hash.hVec2Int(x, y))) {
+                if(!chunks.ContainsKey(Hash.hVec2Int(x, y))) {
                     return false;
                 }
             }

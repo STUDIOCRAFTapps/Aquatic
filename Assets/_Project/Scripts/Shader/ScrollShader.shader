@@ -74,6 +74,10 @@
 				return perc * (max2 - min2) + min2;
 			}
 
+			float correctMod(float x, float m) {
+				return (x%m + m) % m;
+			}
+
 			v2f vert(appdata_t IN) {
 				v2f OUT;
 
@@ -107,7 +111,7 @@
 				//modifuv = float2(premod + off.x, clamp((modifuv.y + off.y) + srl.y + (1.0f - scl.y) * 0.5f, 0, 1));
 
 				float2 modifuv = float2(
-					fmod((uv01.x * scl.x) + srl.x, 1.0),
+					correctMod((uv01.x * scl.x) + srl.x, 1.0),
 					clamp((uv01.y * scl.y) - srl.y + (1.0f - scl.y) * 0.5f, 0.0, 0.9999)
 				);
 				fixed4 color = tex2D(_MainTex, float2(map(modifuv.x, 0.0, 1.0, bnd.x, bnd.y), map(modifuv.y, 0.0, 1.0, bnd.z, bnd.w)));

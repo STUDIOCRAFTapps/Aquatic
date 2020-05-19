@@ -20,7 +20,7 @@ public struct MeshData {
 
     public void Initiate () {
         verts = new List<Vector3>(1024);
-        tris = new List<int>(2048);
+        tris = new List<int>(6144);
         uvs = new List<Vector3>(1024);
         animUVs = new List<Vector2>(1024);
         faceOffset = 0;
@@ -30,7 +30,7 @@ public struct MeshData {
         verts.Clear();
         tris.Clear();
         uvs.Clear();
-        animUVs = new List<Vector2>();
+        animUVs.Clear();
         faceOffset = 0;
     }
 
@@ -101,8 +101,13 @@ public struct ChunkLoadBounds {
 }
 
 public class ChunkLoadCounter {
+    public Vector2Int position;
     public int loadCount;
     public CancellableTimer timer;
+
+    public ChunkLoadCounter (Vector2Int position) {
+        this.position = position;
+    }
 }
 
 public class CancellableTimer {
@@ -213,6 +218,19 @@ public struct Bounds2D {
             min.y += delta.y;
         } else {
             max.y += delta.y;
+        }
+    }
+
+    public void ExtendByDelta (float deltaX, float deltaY) {
+        if(deltaX < 0f) {
+            min.x += deltaX;
+        } else {
+            max.x += deltaX;
+        }
+        if(deltaY < 0f) {
+            min.y += deltaY;
+        } else {
+            max.y += deltaY;
         }
     }
 

@@ -41,6 +41,31 @@ public class EntityManager : MonoBehaviour {
         }
     }
 
+    public void ExecuteOverlapsEntity (Collider2D coll, Action<Entity> action) {
+        for(int i = allLoadedEntities.Count - 1; i >= 0; i--) {
+            Entity target = allLoadedEntities[i];
+            IInteractableEntity interactEntity = target as IInteractableEntity;
+            if(interactEntity != null) {
+                if(interactEntity.OnCheckInteractWithCollider(coll)) {
+                    action(target);
+                }
+            }
+        }
+    }
+
+    public float RaycastEntities (Ray2D ray) {
+        float minDistance = Mathf.Infinity;
+        foreach(Entity target in allLoadedEntities) {
+            IInteractableEntity interactEntity = target as IInteractableEntity;
+            if(interactEntity != null) {
+                float dist = interactEntity.OnCheckInteractWithRay(ray);
+                if(dist < minDistance) {
+                    minDistance = dist;
+                }
+            }
+        }
+        return minDistance;
+    }
 
     public Entity Spawn (Vector2 position, EntityString entity) {
         return Spawn(position, entityCollectionGroup.collByString[entity.nspace].entitiesByString[entity.id].globalID);

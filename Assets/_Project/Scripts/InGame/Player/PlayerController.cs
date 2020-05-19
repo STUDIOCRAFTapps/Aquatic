@@ -44,9 +44,7 @@ public class PlayerInfo {
 #endregion
 
 public class PlayerController : MonoBehaviour {
-
-    public GameObject debug;
-
+    
     #region References
     [Header("References")]
     public RigidbodyPixel rbody;
@@ -69,6 +67,8 @@ public class PlayerController : MonoBehaviour {
 
     [System.NonSerialized] public PlayerStatus status;
     [System.NonSerialized] public PlayerInfo info;
+
+    public Transform attackIndicator;
 
     public float timeOfLastAutosave;
     #endregion
@@ -96,8 +96,9 @@ public class PlayerController : MonoBehaviour {
 
         bool isChunkAbsent = true; 
         Vector2Int chunkPos = TerrainManager.inst.WorldToChunk(transform.position);
-        if(ChunkLoader.inst.loadCounters.ContainsKey(chunkPos)) {
-            if(ChunkLoader.inst.loadCounters[chunkPos].loadCount > 0) {
+        long key = Hash.hVec2Int(chunkPos);
+        if(ChunkLoader.inst.loadCounters.TryGetValue(key, out ChunkLoadCounter value)) {
+            if(value.loadCount > 0) {
                 isChunkAbsent = false;
             }
         }
@@ -115,15 +116,53 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
+    float timeOfAttack = 0f;
+    //Vector2 attackPressScreenPos;
+    //Vector2 startDir;
+
     private void Update () {
         status.time = Time.time;
         Animate();
 
-        if(Input.GetMouseButtonDown(0)) {
-            Vector2 offset = ((Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition) - GetHeadPosition()).normalized;
-            float angle = Mathf.Atan2(-offset.x, offset.y) * Mathf.Rad2Deg;
+        if(GameManager.inst.engineMode != EngineModes.Play) {
+            attackIndicator.gameObject.SetActive(false);
+            return;
+        } else {
+            attackIndicator.gameObject.SetActive(true);
+        }
 
-            Instantiate(debug, (Vector3)(GetHeadPosition() + offset * 2f) + Vector3.back, Quaternion.Euler(0f, 0f, angle));
+        Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 dir = (pos - GetHeadPosition()).normalized;
+        float angle = Mathf.Atan2(-dir.x, dir.y) * Mathf.Rad2Deg;
+        float dist = EntityManager.inst.RaycastEntities(new Ray2D(GetHeadPosition(), dir));
+        attackIndicator.position = (GetHeadPosition() + dir * Mathf.Min(dist + 0.2f, 1.5f));
+        attackIndicator.eulerAngles = Vector3.forward * angle;
+
+        if(Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)) {
+            timeOfAttack = Time.time;
+        }
+        if(Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1)) {
+            Vector2 attackGrab = dir * Mathf.Min(30f, (Time.time - timeOfAttack) * 2);
+
+            if(Input.GetMouseButtonUp(0)) {
+                CombatManager.inst.SpawnStrike(
+                    this,
+                    0,
+                    (Vector3)(GetHeadPosition() + dir * Mathf.Min(dist + 0.2f, 1.5f)),
+                    angle,
+                    dir,
+                    rbody.velocity * 0.5f + attackGrab
+                );
+            } else {
+                CombatManager.inst.SpawnStrike(
+                    this,
+                    1,
+                    (Vector3)(GetHeadPosition() + dir * Mathf.Min(dist + 0.2f, 1.5f)),
+                    0f,
+                    dir,
+                    Vector2.zero
+                );
+            }
         }
     }
     #endregion
@@ -190,16 +229,16 @@ public class PlayerController : MonoBehaviour {
         }
 
         if(rbody.submergedPercentage > 0f && status.lastSubmergedPercentage <= 0f) {
-            ParticleManager.inst.PlayEntityParticle(transform.position, 4);
+            ParticleManager.inst.PlayAdaptiveParticle(transform.position, 0);
         }
         if(rbody.submergedPercentage <= 0f && status.lastSubmergedPercentage > 0f) {
-            ParticleManager.inst.PlayEntityParticle(transform.position + Vector3.down, 4);
+            ParticleManager.inst.PlayAdaptiveParticle(transform.position + Vector3.down, 0);
         }
         if(rbody.submergedPercentage > 0.6f && rbody.submergedPercentage < 0.95f && rbody.velocity.x < -5f && waterWaveCooldown > 0.2f) {
-            ParticleManager.inst.PlayEntityParticle(transform.position + Mathf.Max(rbody.submergedPercentage * rbody.box.size.y - 0.25f, 0f) * Vector3.up, 5);
+            ParticleManager.inst.PlayAdaptiveParticle(transform.position + Mathf.Max(rbody.submergedPercentage * rbody.box.size.y - 0.25f, 0f) * Vector3.up, 1);
         }
         if(rbody.submergedPercentage > 0.6f && rbody.submergedPercentage < 0.95f && rbody.velocity.x > 5f && waterWaveCooldown > 0.2f) {
-            ParticleManager.inst.PlayEntityParticle(transform.position + Mathf.Max(rbody.submergedPercentage * rbody.box.size.y - 0.25f, 0f) * Vector3.up, 6);
+            ParticleManager.inst.PlayAdaptiveParticle(transform.position + Mathf.Max(rbody.submergedPercentage * rbody.box.size.y - 0.25f, 0f) * Vector3.up, 2);
         }
         if(waterWaveCooldown > 0.2f) {
             waterWaveCooldown = 0f;

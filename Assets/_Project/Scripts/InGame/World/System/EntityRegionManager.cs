@@ -67,7 +67,7 @@ public class EntityRegionManager : MonoBehaviour {
         entityRegions.Add(regionPosition, uEntityRegion);
 
         uEntityRegion.ChangeSubRegionPositions();
-        uEntityRegion.LoadAllMobileChunks();
+        uEntityRegion.LoadAllEntitiesChunks();
     }
 
     void SetRegionAsUnused (EntityRegion entityRegion) {
@@ -300,7 +300,7 @@ public class EntityRegion {
                     x + regionPosition.x * TerrainManager.inst.chunksPerRegionSide,
                     y + regionPosition.y * TerrainManager.inst.chunksPerRegionSide);
                 
-                if(VisualChunkManager.inst.visualChunkPool.ContainsKey(Hash.hVec2Int(chunkPosition))) {
+                if(TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition))) {
                     return true;
                 }
             }
@@ -331,7 +331,7 @@ public class EntityRegion {
     #endregion
 
     #region Load/Unload Events
-    public void LoadAllMobileChunks () {
+    public void LoadAllEntitiesChunks () {
         for(int x = 0; x < TerrainManager.inst.chunksPerRegionSide; x++) {
             for(int y = 0; y < TerrainManager.inst.chunksPerRegionSide; y++) {
                 for(int i = subRegions[x][y].mobileChunkUIDs.Count - 1; i >= 0; i--) {

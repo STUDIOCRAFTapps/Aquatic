@@ -7,6 +7,26 @@ public class ParticleConfigurator : MonoBehaviour {
     public bool isAdaptive = true;
     [HideInInspector] public int id;
     public ParticleSystem target;
+    new public ParticleSystemRenderer renderer;
+
+    public void Configure (EntityParticleAsset asset) {
+        ParticleSystem.TextureSheetAnimationModule tsam = target.textureSheetAnimation;
+        ParticleSystem.MainModule main = target.main;
+
+        main.startSizeX = asset.size.x;
+        main.startSizeY = asset.size.y;
+
+        tsam.numTilesX = asset.textureCountPerAxis.x;
+        tsam.numTilesY = asset.textureCountPerAxis.y;
+
+        main.startLifetime = asset.lifetime;
+        renderer.pivot = asset.pivot;
+        renderer.flip = asset.flip;
+
+        MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+        mpb.SetTexture("_MainTex", asset.textures.texture);
+        renderer.SetPropertyBlock(mpb);
+    }
 
     void Awake () {
         ParticleSystem.MainModule main = target.main;

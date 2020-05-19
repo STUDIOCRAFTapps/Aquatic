@@ -8,9 +8,12 @@ public class ParticleManager : MonoBehaviour {
     public CustomTileParticle defaultTileParticles;
 
     public TileParticleConfigurator[] tileParticlePrefabs;
-    public ParticleConfigurator[] entityParticlePrefabs;
+    public ParticleConfigurator fixedParticlePrefab;
+    public EntityParticleAsset[] fixedParticleAssets;
+    public ParticleConfigurator[] adaptiveParticlePrefabs;
 
-    private List<ParticleConfigurator> entityParticles;
+    private List<ParticleConfigurator> adaptiveParticles;
+    private List<ParticleConfigurator> fixedParticles;
     private Queue<TileParticleConfigurator>[] unusedTileParticles;
     private Dictionary<int, CustomTileParticle> gidToCustomTileParticle;
 
@@ -22,12 +25,16 @@ public class ParticleManager : MonoBehaviour {
             unusedTileParticles[i] = new Queue<TileParticleConfigurator>();
         }
 
-        entityParticles = new List<ParticleConfigurator>();
-        for(int i = 0; i < entityParticlePrefabs.Length; i++) {
-            entityParticles.Add(Instantiate(entityParticlePrefabs[i], transform));
+        adaptiveParticles = new List<ParticleConfigurator>();
+        for(int i = 0; i < adaptiveParticlePrefabs.Length; i++) {
+            adaptiveParticles.Add(Instantiate(adaptiveParticlePrefabs[i], transform));
         }
 
-
+        fixedParticles = new List<ParticleConfigurator>();
+        for(int i = 0; i < fixedParticleAssets.Length; i++) {
+            fixedParticles.Add(Instantiate(fixedParticlePrefab, transform));
+            fixedParticles[i].Configure(fixedParticleAssets[i]);
+        }
 
         gidToCustomTileParticle = new Dictionary<int, CustomTileParticle>();
         foreach(CustomTileParticle ctp in customTileParticles) {
@@ -71,8 +78,12 @@ public class ParticleManager : MonoBehaviour {
         }
     }
 
-    public void PlayEntityParticle (Vector3 position, int id) {
-        GetUnusedStaticEntityParticle(id).Play(position);
+    public void PlayFixedParticle (Vector3 position, int id) {
+        fixedParticles[id].Play(position);
+    }
+
+    public void PlayAdaptiveParticle (Vector3 position, int id) {
+        adaptiveParticles[id].Play(position);
     }
 
     #endregion
@@ -93,12 +104,6 @@ public class ParticleManager : MonoBehaviour {
     public void SetTileParticleAsUnused (int modelType, TileParticleConfigurator tileParticle) {
         tileParticle.gameObject.SetActive(false);
         unusedTileParticles[modelType].Enqueue(tileParticle);
-    }
-    #endregion
-
-    #region EntityParticlePool
-    private ParticleConfigurator GetUnusedStaticEntityParticle (int id) {
-        return entityParticles[id];
     }
     #endregion
 }

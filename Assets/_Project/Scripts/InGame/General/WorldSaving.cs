@@ -127,7 +127,7 @@ public class WorldSaving : MonoBehaviour {
         string engmf = (GameManager.inst.engineMode == EngineModes.Edit) ? editFolder : playFolder;
 
         mobileChunkDatapath = datapath + s + savesFolder + s + saveFolderName + s + engmf + s + dimentions[dimension] + s + mobileChunkDataFolder + s;
-        mobileChunkReadonlyDatapath = datapath + s + savesFolder + s + saveFolderName + s + engmf + s + dimentions[dimension] + s + mobileChunkDataFolder + s;
+        mobileChunkReadonlyDatapath = datapath + s + savesFolder + s + saveFolderName + s + editFolder + s + dimentions[dimension] + s + mobileChunkDataFolder + s;
         if(!Directory.Exists(mobileChunkDatapath)) {
             Directory.CreateDirectory(mobileChunkDatapath);
         }

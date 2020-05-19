@@ -39,6 +39,7 @@ public class RigidbodyPixel : MonoBehaviour {
     private float totalVolume = 0f;
     private float subtractedVolume = 0f;
     private List<ForcePixel> forces;
+    public float superPushForce = 0f;
 
     // Hidden Variables
     [HideInInspector] public BoxCollider2D box;

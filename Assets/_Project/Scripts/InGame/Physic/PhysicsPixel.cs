@@ -939,6 +939,16 @@ public class PhysicsPixel : MonoBehaviour {
     }
 
     void SolveWeakManifold (RigidbodyPixel a, RigidbodyPixel b, Vector2 normal, float penetration) {
+        float aInv = a.inverseMass;
+        float bInv = b.inverseMass;
+
+        if(a.superPushForce > 0) {
+            aInv = 1f / ((1f / aInv) + a.superPushForce);
+        }
+        if(b.superPushForce > 0) {
+            bInv = 1f / ((1f / bInv) + b.superPushForce);
+        }
+
         // Calculate relative velocity
         Vector2 rv = b.velocity - a.velocity;
 
@@ -954,12 +964,13 @@ public class PhysicsPixel : MonoBehaviour {
 
         // Calculate impulse scalar
         float j = -(1 + e) * velAlongNormal;
-        j /= a.inverseMass + b.inverseMass;
+        j /= aInv + bInv;
+        j = Mathf.Max(j, 30f);
 
         // Apply impulse
         Vector2 impulse = j * normal;
-        a.velocity -= a.inverseMass * impulse * 0.5f;
-        b.velocity += b.inverseMass * impulse * 0.5f;
+        a.velocity -= aInv * impulse * 0.5f;
+        b.velocity += bInv * impulse * 0.5f;
     }
 
     bool GetWeakManifold (Bounds2D abox, Bounds2D bbox, out Vector2 normal, out float penetration) {
@@ -1088,6 +1099,38 @@ public class PhysicsPixel : MonoBehaviour {
             return Max(deltaY, collider.max.y - bounds.min.y + errorHandler);
         } else if(deltaY > 0 && bounds.max.y <= collider.min.y) {
             return Min(deltaY, collider.min.y - bounds.max.y - errorHandler);
+        }
+
+        return deltaY;
+    }
+
+    public float MinimizeDeltaX (float deltaX, float boxX, float boxY, ref Bounds2D bounds) {
+        // Bail out if not within the same Y plane.
+        if(!IsRangeOverlapping(boxY, boxY + 1f, bounds.min.y, bounds.max.y)) {
+            return deltaX;
+        }
+
+        //Reduce the delta to the smallest (ignoring the sign) colliding "axis".
+        if(deltaX < 0 && bounds.min.x >= boxX + 1f) {
+            return Max(deltaX, boxX + 1f - bounds.min.x + errorHandler);
+        } else if(deltaX > 0 && bounds.max.x <= boxX) {
+            return Min(deltaX, boxX - bounds.max.x - errorHandler);
+        }
+
+        return deltaX;
+    }
+
+    public float MinimizeDeltaY (float deltaY, float boxX, float boxY, ref Bounds2D bounds) {
+        // Bail out if not within the same X plane.
+        if(!IsRangeOverlapping(boxX, boxX + 1f, bounds.min.x, bounds.max.x)) {
+            return deltaY;
+        }
+
+        //Reduce the delta to the smallest (ignoring the sign) colliding "axis".
+        if(deltaY < 0 && bounds.min.y >= boxY + 1f) {
+            return Max(deltaY, boxY + 1f - bounds.min.y + errorHandler);
+        } else if(deltaY > 0 && bounds.max.y <= boxY) {
+            return Min(deltaY, boxY - bounds.max.y - errorHandler);
         }
 
         return deltaY;

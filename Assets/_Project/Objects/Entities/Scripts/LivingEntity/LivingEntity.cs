@@ -9,7 +9,7 @@ public class LivingEntityData : EntityData {
     public int state = 0;
 }
 
-public class LivingEntity : Entity, IPixelAnimationCallbackReciever {
+public class LivingEntity : Entity, IPixelAnimationCallbackReciever, IInteractableEntity {
 
     new public RigidbodyPixel rigidbody;
     public PixelAnimator animator;
@@ -54,11 +54,43 @@ public class LivingEntity : Entity, IPixelAnimationCallbackReciever {
 
     }
 
+    public virtual void HitEntity (float damage) {
+        ((LivingEntityData)entityData).health -= damage;
+
+        if(((LivingEntityData)entityData).health <= 0) {
+            EntityManager.inst.Kill(this);
+            ParticleManager.inst.PlayFixedParticle(transform.position, 4);
+        }
+    }
+
     public override Type GetDataType () {
         return typeof(LivingEntityData);
     }
 
     public virtual void OnRecieveCallback (uint code) {
 
+    }
+
+    public virtual bool OnCheckInteractWithCollider (Collider2D collider) {
+        Bounds targeter = collider.bounds;
+        targeter.SetMinMax(new Vector3(targeter.min.x, targeter.min.y), new Vector3(targeter.max.x, targeter.max.y));
+        Bounds target = rigidbody.box.bounds;
+        target.SetMinMax(new Vector3(target.min.x, target.min.y), new Vector3(target.max.x, target.max.y));
+
+        if(!targeter.Intersects(target)) {
+            return false;
+        }
+        //Debug.Log(collider.IsTouching(rigidbody.box));
+        return true;
+    }
+
+    public virtual float OnCheckInteractWithRay (Ray2D ray) {
+        Bounds target = rigidbody.box.bounds;
+        target.SetMinMax(new Vector3(target.min.x, target.min.y), new Vector3(target.max.x, target.max.y));
+        
+        if(target.IntersectRay(new Ray(ray.origin, ray.direction), out float distance)) {
+            return distance;
+        }
+        return Mathf.Infinity;
     }
 }
