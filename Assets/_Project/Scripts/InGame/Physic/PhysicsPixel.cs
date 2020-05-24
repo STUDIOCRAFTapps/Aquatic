@@ -405,6 +405,12 @@ public class PhysicsPixel : MonoBehaviour {
                 if(rbs[i].disableForAFrame || rbs[j].disableForAFrame) {
                     continue;
                 }
+                if(rbs[i].ignoreProjectileOwnerUntilHitWall == rbs[j]) {
+                    continue;
+                }
+                if(rbs[j].ignoreProjectileOwnerUntilHitWall == rbs[i]) {
+                    continue;
+                }
 
                 //Broadphase Test
                 if(!IsRangeOverlapping(rbs[i].aabb.min.x - inter, rbs[i].aabb.max.x + inter, rbs[j].aabb.min.x - inter, rbs[j].aabb.max.x + inter)) {
@@ -922,6 +928,12 @@ public class PhysicsPixel : MonoBehaviour {
                 if(rbs[i].disableForAFrame || rbs[j].disableForAFrame) {
                     continue;
                 }
+                if(rbs[i].ignoreProjectileOwnerUntilHitWall == rbs[j]) {
+                    continue;
+                }
+                if(rbs[j].ignoreProjectileOwnerUntilHitWall == rbs[i]) {
+                    continue;
+                }
 
                 //Broadphase Test
                 if(!IsRangeOverlapping(rbs[i].aabb.min.x - inter, rbs[i].aabb.max.x + inter, rbs[j].aabb.min.x - inter, rbs[j].aabb.max.x + inter)) {
@@ -932,6 +944,8 @@ public class PhysicsPixel : MonoBehaviour {
                 }
 
                 if(GetWeakManifold(rbs[i].aabb, rbs[j].aabb, out Vector2 normal, out float penetration)) {
+                    rbs[i].CallOnWeakCollision(rbs[j]);
+                    rbs[j].CallOnWeakCollision(rbs[i]);
                     SolveWeakManifold(rbs[i], rbs[j], normal, penetration);
                 }
             }

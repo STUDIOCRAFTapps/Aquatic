@@ -126,6 +126,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   layers: []
+  propList: []
 --- !u!1 &6349742527855253222
 GameObject:
   m_ObjectHideFlags: 0
@@ -209,13 +210,17 @@ MonoBehaviour:
   clipPermision: 0
   clipAmout: 0.25
   weakPushCandidate: 0
+  superPushForce: 0
+  ignoreProjectileOwnerUntilHitWall: {fileID: 0}
   box: {fileID: 0}
   velocity: {x: 0, y: 0}
+  lastVelocity: {x: 0, y: 0}
   inverseMass: 0
   movementDelta: {x: 0, y: 0}
   mobileChunk: {fileID: 0}
   aligmentObject: {fileID: 6161401451517095989}
   disableForAFrame: 0
+  deltaDischarge: {x: 0, y: 0}
   hadCollisionDown: 0
   hadCollisionLeft: 0
   hadCollisionUp: 0
@@ -229,6 +234,7 @@ MonoBehaviour:
   isCollidingWallUp: 0
   isCollidingWallRight: 0
   isInsideComplexObject: {fileID: 0}
+  buoyancyEnabled: 1
   submergedPercentage: 0
   volume: 0
 --- !u!61 &6349742527855253145

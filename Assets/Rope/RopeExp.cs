@@ -4,16 +4,24 @@ using UnityEngine;
 
 public class RopeExp : MonoBehaviour { 
 
+    [Header("Monobehaviour References")]
     public Camera cam;
     public LineRenderer lineRenderer;
-    public Transform anchor;
+    public Transform visualAnchor;
+    public Transform connectionAnchor;
+    public RigidbodyPixel physicAnchor;
+    public Transform leftAnchorPoint;
+    public Transform rightAnchorPoint;
 
     [Header("Rope Parameters")]
     public int segmentCount;
     public float targetChainSegmentLength = 0.333f;
+    public float targetAnchorSegmentLength = 0.333f;
     public float segmentMass = 0.5f;
     public float anchorMass = 16f;
     public float collRadius = 0.25f;
+    public float smoothTurn = 0.1f;
+    public float turnSpeed = 1f;
 
     [Header("Rope Physic Parameters")]
     public Vector2 gravity = new Vector2(0, -10f);
@@ -27,16 +35,55 @@ public class RopeExp : MonoBehaviour {
     public float springDampRatio = 50f;
     public float jointMaxPosCorrection = 200f;
     public bool enablePosCorrection = false;
+    public bool posCorrectionUseMass = false;
+    public float posCorrectionFactor = 1f;
+
+    RigidbodyPixel attachedBodyLeft;
+    RigidbodyPixel attachedBodyRight;
+    Vector2 attachedBodyDeltaLeft;
+    Vector2 attachedBodyDeltaRight;
 
     List<RopeJoint> distanceJoints;
     List<MovingMass> movingMasses;
+    Vector3[] interpositions;
     Vector3[] positions;
+    Vector3[] lastPositions;
 
     void Start () {
         GenerateRope();
+
+        physicAnchor.OnWeakCollision += AnchorHitSomething; //Should auto-unsubscribe
+    }
+
+    void AnchorHitSomething (RigidbodyPixel target) {
+        if(target.name == "Player") {
+            return;
+        }
+        
+        float leftDist = Vector2.Distance(target.transform.position, leftAnchorPoint.position);
+        float rightDist = Vector2.Distance(target.transform.position, rightAnchorPoint.position);
+
+        if(leftDist < rightDist) {
+            if(attachedBodyLeft == null && target != attachedBodyRight) {
+                if(target.GetBoundFromCollider().Overlaps(leftAnchorPoint.position)) {
+                    attachedBodyLeft = target;
+                    attachedBodyDeltaLeft = attachedBodyLeft.transform.position - leftAnchorPoint.position;
+                }
+            }
+        } else {
+            if(attachedBodyRight == null && target != attachedBodyLeft) {
+                if(target.GetBoundFromCollider().Overlaps(rightAnchorPoint.position)) {
+                    attachedBodyRight = target;
+                    attachedBodyDeltaRight = attachedBodyRight.transform.position - rightAnchorPoint.position;
+                }
+            }
+        }
+        
     }
 
     private void Update () {
+
+        // THROW DEBUG
         if(Input.GetKey(KeyCode.C)) {
             pinPoint = cam.ScreenToWorldPoint(new Vector3(Screen.width * 0.5f, Screen.height * 0.5f));
             Vector2 aimPoint = cam.ScreenToWorldPoint(Input.mousePosition);
@@ -45,17 +92,52 @@ public class RopeExp : MonoBehaviour {
             for(int i = 0; i < movingMasses.Count; i++) {
                 movingMasses[i].position = pinPoint;
                 movingMasses[i].prevPos = pinPoint;
-                movingMasses[i].velocity = Vector2.zero;
+                movingMasses[i].SetVelocity(0f, 0f);
             }
 
-            movingMasses[movingMasses.Count - 1].velocity = dir * 50f;
+            movingMasses[movingMasses.Count - 1].SetVelocity(dir.x * 50f, dir.y * 50f);
+
+            physicAnchor.ignoreProjectileOwnerUntilHitWall = GameManager.inst.allPlayers[0].rbody;
         }
+        // THROW DEBUG
+
+
+        DrawRope();
     }
 
     private void FixedUpdate () {
+        System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+        sw.Start();
+        
         PinRopeToMouse();
         Simulate();
-        DrawRope();
+
+        GetLastPositions();
+        GetPositions();
+
+        sw.Stop();
+        long ticks = sw.ElapsedTicks;
+        double milliseconds = (ticks / (double)System.Diagnostics.Stopwatch.Frequency) * 1000;
+        //Debug.Log(milliseconds);
+        
+        if(attachedBodyLeft != null) {
+            attachedBodyLeft.velocity = Vector2.zero;
+
+            Vector2 targetPosition = leftAnchorPoint.position + (Vector3)attachedBodyDeltaLeft;
+            attachedBodyLeft.MovePosition(targetPosition);
+            if((targetPosition - (Vector2)attachedBodyLeft.transform.position).sqrMagnitude > 4f) {
+                attachedBodyLeft = null;
+            }
+        }
+        if(attachedBodyRight != null) {
+            attachedBodyRight.velocity = Vector2.zero;
+
+            Vector2 targetPosition = rightAnchorPoint.position + (Vector3)attachedBodyDeltaRight;
+            attachedBodyRight.MovePosition(targetPosition);
+            if((targetPosition - (Vector2)attachedBodyRight.transform.position).sqrMagnitude > 4f) {
+                attachedBodyRight = null;
+            }
+        }
     }
 
     Vector2 pinPoint = Vector2.zero;
@@ -67,8 +149,9 @@ public class RopeExp : MonoBehaviour {
             for(int i = 0; i < movingMasses.Count; i++) {
                 movingMasses[i].position = pinPoint;
                 movingMasses[i].prevPos = pinPoint;
-                movingMasses[i].velocity = Vector2.zero;
+                movingMasses[i].SetVelocity(0f, 0f);
             }
+            physicAnchor.transform.position = movingMasses[movingMasses.Count - 1].position;
         }
     }
 
@@ -76,12 +159,14 @@ public class RopeExp : MonoBehaviour {
         distanceJoints = new List<RopeJoint>();
         movingMasses = new List<MovingMass>();
         positions = new Vector3[segmentCount];
+        lastPositions = new Vector3[segmentCount];
+        interpositions = new Vector3[segmentCount];
 
         Vector2 initPos = transform.position;
         
         for(int i = 0; i < segmentCount; i++) {
             MovingMass mm;
-            if(i == segmentCount - 1) {
+            if(i >= segmentCount - 1) {
                 mm = new MovingMass(initPos, anchorMass, collRadius);
             } else {
                 mm = new MovingMass(initPos, segmentMass, collRadius);
@@ -92,59 +177,127 @@ public class RopeExp : MonoBehaviour {
         }
 
         for(int i = 1; i < segmentCount; i++) {
-            distanceJoints.Add(new RopeJoint(this, movingMasses[i-1], movingMasses[i]));
+            if(i == segmentCount - 1) {
+                distanceJoints.Add(new RopeJoint(this, movingMasses[i - 1], movingMasses[i], targetAnchorSegmentLength));
+            } else {
+                distanceJoints.Add(new RopeJoint(this, movingMasses[i - 1], movingMasses[i], targetChainSegmentLength));
+            }
         }
-    }
 
+        movingMasses[movingMasses.Count - 1].Pair(physicAnchor);
+    }
+    
     void Simulate () {
         float deltaTimeStep = Time.deltaTime / simulationSteps;
         float deltaTime = Time.deltaTime;
 
         for(int simstep = 0; simstep < simulationSteps; simstep++) {
-            movingMasses[0].position = pinPoint;
-            movingMasses[0].velocity = Vector2.zero;
-            movingMasses[0].forces = Vector2.zero;
             for(int i = 0; i < movingMasses.Count; i++) {
-                MovingMass mm = movingMasses[i];
-
-                mm.AddForce(gravity.x * mm.mass, gravity.y * mm.mass);
                 movingMasses[i].UpdatePosition(deltaTimeStep);
-                mm.UpdateCollision();
             }
             for(int j = distanceJoints.Count - 1; j >= 0; j--) {
-                distanceJoints[j].InitiateVelocityConstraint(Time.deltaTime);
+                distanceJoints[j].InitiateVelocityConstraint(deltaTimeStep);
+                distanceJoints[j].CalculateVelocityConstraint(deltaTimeStep);
+                distanceJoints[j].SolvePositionConstraints(deltaTimeStep);
             }
-            for(int j = distanceJoints.Count - 1; j >= 0; j--) {
-                distanceJoints[j].CalculateVelocityConstraint(Time.deltaTime);
-            }
-            for(int j = distanceJoints.Count - 1; j >= 0; j--) {
-                distanceJoints[j].SolvePositionConstraints(Time.deltaTime);
-            }
+            movingMasses[0].position = pinPoint;
+            movingMasses[0].SetVelocity(0f, 0f);
+            movingMasses[0].forces = Vector2.zero;
         }
 
         for(int i = 0; i < movingMasses.Count; i++) {
             MovingMass mm = movingMasses[i];
 
             if(i == movingMasses.Count - 1) {
-                mm.velocity *= 1.0f / (1.0f + deltaTime * anchorAirDrag);
+                mm.MulVelocity(1.0f / (1.0f + deltaTime * anchorAirDrag));
             } else {
-                mm.velocity *= 1.0f / (1.0f + deltaTime * chainAirDrag);
+                mm.MulVelocity(1.0f / (1.0f + deltaTime * chainAirDrag));
             }
 
-            mm.UpdateCollision();
+            if(i == movingMasses.Count - 1) {
+                mm.UpdateCollision();
+            }
+            mm.AddForce(gravity.x * mm.mass, gravity.y * mm.mass);
+            mm.UpdatePosition(deltaTime);
         }
+
+        if(physicAnchor.isCollidingWallDown) {
+            movingMasses[movingMasses.Count - 2].position = new Vector2(
+                movingMasses[movingMasses.Count - 2].position.x,
+                Mathf.Max(movingMasses[movingMasses.Count - 2].position.y, physicAnchor.transform.position.y)
+            );
+        }
+
+        if(physicAnchor.lastVelocity.magnitude > 10f) {
+            if(physicAnchor.velocity.magnitude > 5f) {
+                goto exit;
+            }
+            ParticleManager.inst.PlayFixedParticle(physicAnchor.GetPosition() + Vector3.down, 4);
+            bool hadCollision = physicAnchor.hadCollisionDown || physicAnchor.hadCollisionUp || physicAnchor.hadCollisionLeft || physicAnchor.hadCollisionRight;
+            if(!hadCollision) {
+                goto exit;
+            }
+            bool hasCollision = physicAnchor.isCollidingDown || physicAnchor.isCollidingUp || physicAnchor.isCollidingLeft || physicAnchor.isCollidingRight;
+            if(hasCollision) {
+                ParticleManager.inst.PlayFixedParticle(physicAnchor.GetPosition() + Vector3.down, 4);
+            }
+        }
+        exit:;
     }
 
     void DrawRope () {
+        float interfactor = InterpolationManager.InterpolationFactor;
+        for(int i = 0; i < segmentCount; i++) {
+            interpositions[i].Set(Mathf.Lerp(lastPositions[i].x, positions[i].x, interfactor), Mathf.Lerp(lastPositions[i].y, positions[i].y, interfactor), 0f);
+        }
+
+        lineRenderer.positionCount = positions.Length;
+        lineRenderer.SetPositions(interpositions);
+
+        PositionAnchor();
+    }
+
+    void PositionAnchor () {
+        float t = 1f - Mathf.Pow(1f - smoothTurn, Time.deltaTime * 30f);
+        float angle = visualAnchor.eulerAngles.z + 90f;
+
+        Vector2 targetDir = (interpositions[segmentCount - 2] - interpositions[segmentCount - 1]).normalized;
+        Vector2 currDir = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+        Vector2 newDir = Vector3.Slerp(targetDir, currDir, t * turnSpeed);
+
+        visualAnchor.position = interpositions[segmentCount - 2];
+        visualAnchor.eulerAngles = Vector3.forward * Mathf.Atan2(-newDir.x, newDir.y) * Mathf.Rad2Deg;
+
+        float lastVelocityMag = new Vector2(
+            movingMasses[segmentCount - 1].GetVelocityX(),
+            movingMasses[segmentCount - 1].GetVelocityY()
+        ).magnitude;
+        if(lastVelocityMag > 2f) {
+            if(PhysicsPixel.inst.IsPointSolid(leftAnchorPoint.position)) {
+                if(Random.Range(0, 8) == 0) {
+                    ParticleManager.inst.PlayFixedParticle(leftAnchorPoint.position, 7);
+                }
+                ParticleManager.inst.PlayFixedParticle(leftAnchorPoint.position, 6);
+            }
+            if(PhysicsPixel.inst.IsPointSolid(rightAnchorPoint.position)) {
+                if(Random.Range(0, 8) == 0) {
+                    ParticleManager.inst.PlayFixedParticle(rightAnchorPoint.position, 7);
+                }
+                ParticleManager.inst.PlayFixedParticle(rightAnchorPoint.position, 6);
+            }
+        }
+    }
+
+    void GetLastPositions () {
+        for(int i = 0; i < segmentCount; i++) {
+            lastPositions[i] = positions[i];
+        }
+    }
+
+    void GetPositions () {
         for(int i = 0; i < movingMasses.Count; i++) {
             positions[i] = movingMasses[i].position;
         }
-        lineRenderer.positionCount = positions.Length;
-        lineRenderer.SetPositions(positions);
-
-        Vector2 diff = movingMasses[movingMasses.Count - 2].position - movingMasses[movingMasses.Count - 1].position;
-        anchor.eulerAngles = Vector3.forward * Mathf.Atan2(-diff.x, diff.y) * Mathf.Rad2Deg;
-        anchor.transform.position = movingMasses[movingMasses.Count - 1].position;
     }
 }
 
@@ -164,12 +317,14 @@ public class RopeJoint {
     float m_gamma;
     float m_bias;
 
-    public RopeJoint (RopeExp rope, MovingMass a, MovingMass b) {
+    float spring_length = 0.3333f;
+
+    public RopeJoint (RopeExp rope, MovingMass a, MovingMass b, float length) {
         this.rope = rope;
         this.a = a;
         this.b = b;
+        spring_length = length;
     }
-
 
     #region Update Springs
     public void InitiateVelocityConstraint (float deltaTime) {
@@ -189,7 +344,7 @@ public class RopeJoint {
         m_mass = invMass != 0.0f ? 1.0f / invMass : 0.0f;
 
         if(rope.springFrequency > 0.0f) {
-            float distError = length - rope.targetChainSegmentLength;
+            float distError = length - spring_length;
             float omega = 2.0f * Mathf.PI * rope.springFrequency;   // Frequency
             float dampCo = 2.0f * m_mass * rope.springDampRatio * omega; // Damping coefficient
             float k = m_mass * omega * omega;                       // Spring stiffness
@@ -211,10 +366,8 @@ public class RopeJoint {
             m_impulse *= 1f;//data.step.dtRatio;
             float P_x = m_impulse * m_u_x;
             float P_y = m_impulse * m_u_y;
-            a.velocity.x -= a.invMass * P_x;
-            a.velocity.y -= a.invMass * P_y;
-            b.velocity.x += b.invMass * P_x;
-            b.velocity.y += b.invMass * P_y;
+            a.AddVelocity(-a.invMass * P_x, -a.invMass * P_y);
+            b.AddVelocity(b.invMass * P_x, b.invMass * P_y);
         }
     }
 
@@ -222,18 +375,16 @@ public class RopeJoint {
         if(m_u_mag == 0f) {
             return;
         }
-        float diffvel_x = b.velocity.x - a.velocity.x;
-        float diffvel_y = b.velocity.y - a.velocity.y;
+        float diffvel_x = b.GetVelocityX() - a.GetVelocityX();
+        float diffvel_y = b.GetVelocityY() - a.GetVelocityY();
 
         float Cdot = m_u_x * diffvel_x + m_u_y * diffvel_y;
 
         float impulse = -m_mass * (Cdot + m_bias + m_gamma * m_impulse);
         m_impulse += impulse;
 
-        a.velocity.x -= a.invMass * impulse * m_u_x;
-        a.velocity.y -= a.invMass * impulse * m_u_y;
-        b.velocity.x += b.invMass * impulse * m_u_x;
-        b.velocity.y += b.invMass * impulse * m_u_y;
+        a.AddVelocity(-a.invMass * impulse * m_u_x, -a.invMass * impulse * m_u_y);
+        b.AddVelocity(b.invMass * impulse * m_u_x, b.invMass * impulse * m_u_y);
     }
 
     public void SolvePositionConstraints (float deltaTime) {
@@ -250,104 +401,57 @@ public class RopeJoint {
         }
         diff_x /= length;
         diff_y /= length;
-        float C = length - rope.targetChainSegmentLength;
+        float C = length - spring_length;
         C = Mathf.Clamp(C, -rope.jointMaxPosCorrection, rope.jointMaxPosCorrection);
+        
+        float impulse = -(rope.posCorrectionUseMass ? m_mass : 1f) * C;
 
-        float impulse = -m_mass * C;
-
-        a.TryMovePositionByDelta(-a.invMass * impulse * diff_x, -a.invMass * impulse * diff_y);
-        b.TryMovePositionByDelta(b.invMass * impulse * diff_x, b.invMass * impulse * diff_y);
+        float aInvMass = rope.posCorrectionUseMass ? a.invMass : 1f;
+        float bInvMass = rope.posCorrectionUseMass ? b.invMass : 1f;
+        a.TryMovePositionByDelta(-aInvMass * impulse * diff_x, -aInvMass * impulse * diff_y);
+        b.TryMovePositionByDelta( bInvMass * impulse * diff_x,  bInvMass * impulse * diff_y);
     }
     #endregion
-
-    #region Unused experimental shit
-    /*static float b2Cross (ref Vector2 a, ref Vector2 b) {
-	    return a.x* b.y - a.y* b.x;
-    }
-
-    static Vector2 b2Cross (ref float s, ref Vector2 a) {
-	    return new Vector2(-s* a.y, s* a.x);
-    }
-
-    public void CalculateForceType3 (float deltaTime) {
-        Vector2 delta = b.position - a.position;
-        float deltalength = delta.magnitude;
-        if(deltalength == 0f) {
-            return;
-        }
-        Vector2 dir = delta / deltalength;
-
-        float relDist = (deltalength - rope.targetDistance);
-        float relVelocity = Vector2.Dot(b.velocity - a.velocity, dir);
-
-        float remove = relVelocity + relDist / deltaTime;
-        Vector2 impulse = (remove / (a.invMass + b.invMass)) * dir;
-
-        a.forces += impulse;
-        b.forces -= impulse;
-    }
-
-    public void CalculateForceType2 (float deltaTime) {
-        Vector2 delta = b.position - a.position;
-        float deltalength = delta.magnitude;
-        if(deltalength == 0f) {
-            return;
-        }
-        Vector2 dir = delta / deltalength;
-
-        float diff = (deltalength - rope.targetDistance) / (deltalength * (a.invMass + b.invMass));
-        a.position += a.invMass * delta * diff;
-        b.position -= b.invMass * delta * diff;
-    }
-
-    public void CalculateForce () {
-        Vector3 delta = b.position - a.position;
-        float mag = delta.magnitude;
-        if(mag == 0f) {
-            previousMag = 0f;
-            return;
-        }
-        Vector3 normalized = delta / mag;
-
-        float p = mag - rope.targetDistance;
-        float d = mag - previousMag;
-        i += mag - rope.targetDistance;
-
-        force += (p * rope.pMultiplier + d * rope.dMultiplier + i * rope.iMultiplier) * normalized;
-        previousMag = mag;
-    }
-
-
-    public void ApplyForce () {
-        a.AddForce(force);
-        b.AddForce(-force);
-        force = Vector3.zero;
-    }*/
-    #endregion
+    
 }
 
 public class MovingMass {
-    public Vector2 position;
+    Vector2 _position;
     public Vector2 forces;
     public float mass;
     public float invMass;
-    public Vector2 velocity;
     public float colliderRadius;
+    Vector2 velocity;
+
+    public Vector2 position {
+        get {
+            return _position;
+        }
+        set {
+            _position = value;
+            if(isPaired) {
+                pairing.transform.position = _position;
+            }
+        }
+    }
 
     bool wasInsideTileLastCheck;
     public Vector2 prevPos;
-
-    public bool hasCollidedUp;
-    public bool hasCollidedDown;
-    public bool hasCollidedLeft;
-    public bool hasCollidedRight;
+    
+    bool isPaired;
+    RigidbodyPixel pairing;
 
     public MovingMass (Vector2 position, float mass, float colliderRadius) {
-        this.position = position;
+        _position = position;
         velocity = Vector2.zero;
         this.mass = mass;
         invMass = (mass == 0f || float.IsInfinity(mass)) ? 0 : 1f / mass;
         this.colliderRadius = colliderRadius;
+    }
+
+    public void Pair (RigidbodyPixel pairing) {
+        this.pairing = pairing;
+        isPaired = true;
     }
 
     public void AddForce (float x, float y) {
@@ -355,242 +459,165 @@ public class MovingMass {
         forces.y += y;
     }
 
+    public void AddVelocity (float x, float y) {
+        if(isPaired) {
+            pairing.velocity.x += x;
+            pairing.velocity.y += y;
+        } else {
+            velocity.x += x;
+            velocity.y += y;
+        }
+    }
+
+    public void MulVelocity (float x) {
+        if(isPaired) {
+            pairing.velocity.x *= x;
+            pairing.velocity.y *= x;
+        } else {
+            velocity.x *= x;
+            velocity.y *= x;
+        }
+    }
+
+    public void SetVelocity (float x, float y) {
+        if(isPaired) {
+            pairing.velocity.x = x;
+            pairing.velocity.y = y;
+        } else {
+            velocity.x = x;
+            velocity.y = y;
+        }
+    }
+
+    public float GetVelocityX () {
+        if(isPaired) {
+            return pairing.velocity.x;
+        } else {
+            return velocity.x;
+        }
+    }
+
+    public float GetVelocityY () {
+        if(isPaired) {
+            return pairing.velocity.y;
+        } else {
+            return velocity.y;
+        }
+    }
+
     public void UpdatePosition (float deltaTime) {
+        float deltaX, deltaY;
+        if(isPaired) {
+            pairing.velocity.x += forces.x * invMass * deltaTime;
+            pairing.velocity.y += forces.y * invMass * deltaTime;
+            
+            deltaX = pairing.velocity.x * deltaTime;
+            deltaY = pairing.velocity.y * deltaTime;
+
+            _position.x += deltaX;
+            _position.y += deltaY;
+
+            forces.x = 0f;
+            forces.y = 0f;
+
+            return;
+        }
+
         velocity.x += forces.x * invMass * deltaTime;
         velocity.y += forces.y * invMass * deltaTime;
-        float deltaX = velocity.x * deltaTime;
-        float deltaY = velocity.y * deltaTime;
 
-        if(deltaX > 0 && !hasCollidedRight || deltaX < 0 && !hasCollidedLeft || true) {
-            position.x += deltaX;
-        }
-        if(deltaY > 0 && !hasCollidedUp || deltaY < 0 && !hasCollidedDown || true) {
-            position.y += deltaY;
-        }
+        deltaX = velocity.x * deltaTime;
+        deltaY = velocity.y * deltaTime;
+
+        _position.x += deltaX;
+        _position.y += deltaY;
+
         forces.x = 0f;
         forces.y = 0f;
     }
 
     public void TryMovePositionByDelta (float deltaX, float deltaY) {
-        if(deltaX > 0 && !hasCollidedRight || deltaX < 0 && !hasCollidedLeft || true) {
-            position.x += deltaX;
+        if(isPaired) {
+            _position.x += deltaX;
+            _position.y += deltaY;
+            pairing.deltaDischarge += new Vector2(deltaX, deltaY);
+            return;
         }
-        if(deltaY > 0 && !hasCollidedUp || deltaY < 0 && !hasCollidedDown || true) {
-            position.y += deltaY;
-        }
+
+        _position.x += deltaX;
+        _position.y += deltaY;
     }
 
     public void UpdateCollision () {
-        int currentTileX = Mathf.FloorToInt(position.x);
-        int currentTileY = Mathf.FloorToInt(position.y);
-        int prevTileX = Mathf.FloorToInt(prevPos.x);
-        int prevTileY = Mathf.FloorToInt(prevPos.y);
-
-        // Has moved to solid tile?
-        bool newTileHasCollision = false;
-        if(currentTileX != prevTileX || currentTileY != prevTileY) {
-            if(TerrainManager.inst.GetGlobalIDAt(currentTileX, currentTileY, TerrainLayers.Ground, out int globalID)) {
-                if(globalID != 0 && TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).hasCollision) {
-                    newTileHasCollision = true;
-                }
-            }
+        if(isPaired) {
+            _position = pairing.transform.position;
+            return;
         }
 
-        if(newTileHasCollision || true) {
-            float deltaX = position.x - prevPos.x;
-            float deltaY = position.y - prevPos.y;
-            Bounds2D bounds = new Bounds2D(new Vector2(prevPos.x - colliderRadius, prevPos.y - colliderRadius), new Vector2(prevPos.x + colliderRadius, prevPos.y + colliderRadius));
-            //PhysicsPixel.DrawBounds(bounds, Color.red);
-            Bounds2D queryBounds = bounds;
-            queryBounds.ExtendByDelta(deltaX, deltaY);
-            //PhysicsPixel.DrawBounds(queryBounds, Color.magenta);
-            Debug.DrawLine(prevPos, prevPos + velocity * 0.1f, (hasCollidedLeft || hasCollidedRight) ? Color.red : Color.blue);
+        float deltaX = _position.x - prevPos.x;
+        float deltaY = _position.y - prevPos.y;
+        Bounds2D bounds = new Bounds2D(new Vector2(prevPos.x - colliderRadius, prevPos.y - colliderRadius), new Vector2(prevPos.x + colliderRadius, prevPos.y + colliderRadius));
+        Bounds2D queryBounds = bounds;
 
-            int queryTileMinX = Mathf.FloorToInt(queryBounds.min.x);
-            int queryTileMinY = Mathf.FloorToInt(queryBounds.min.y);
-            int queryTileMaxX = Mathf.FloorToInt(queryBounds.max.x);
-            int queryTileMaxY = Mathf.FloorToInt(queryBounds.max.y);
+        queryBounds.ExtendByDelta(deltaX, deltaY);
 
-            float newDeltaX = deltaX;
-            float newDeltaY = deltaY;
+        float newDeltaX = deltaX;
+        float newDeltaY = deltaY;
 
-            for(int tileX = queryTileMinX; tileX <= queryTileMaxX; tileX++) {
-                for(int tileY = queryTileMinY; tileY <= queryTileMaxY; tileY++) {
-                    //PhysicsPixel.DrawBounds(new Bounds2D(new Vector2(tileX, tileY), new Vector2(tileX + 1f, tileY + 1f)), Color.green);
-                    // If tile is solid...
-                    if(TerrainManager.inst.GetGlobalIDAt(tileX, tileY, TerrainLayers.Ground, out int globalID)) {
-                        if(globalID != 0 && TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).hasCollision) {
-                            newDeltaY = PhysicsPixel.inst.MinimizeDeltaY(newDeltaY, tileX, tileY, ref bounds);
-                            newDeltaX = PhysicsPixel.inst.MinimizeDeltaX(newDeltaX, tileX, tileY, ref bounds);
-                        }
-                    }
-                }
-            }
-
-            hasCollidedUp = false;
-            hasCollidedDown = false;
-            hasCollidedRight = false;
-            hasCollidedLeft = false;
-            
-            if(newDeltaY > deltaY) { //Down
-                velocity.y = 0f;
-                hasCollidedDown = true;
-            } else if(newDeltaY < deltaY) { //Up
-                velocity.y = 0f;
-                hasCollidedUp = true;
-            }
-            if(newDeltaX > deltaX) { //Left
-                velocity.x = 0f;
-                hasCollidedLeft = true;
-            } else if(newDeltaX < deltaX) { //Right
-                velocity.x = 0f;
-                hasCollidedRight = true;
-            }
-
-            position.x = prevPos.x + newDeltaX;
-            position.y = prevPos.y + newDeltaY;
+        if(deltaX > deltaY) {
+            MoveDeltaY(ref queryBounds, ref bounds, deltaY, ref newDeltaY);
+            MoveDeltaX(ref queryBounds, ref bounds, deltaX, ref newDeltaX);
+        } else {
+            MoveDeltaX(ref queryBounds, ref bounds, deltaX, ref newDeltaX);
+            MoveDeltaY(ref queryBounds, ref bounds, deltaY, ref newDeltaY);
         }
 
-        wasInsideTileLastCheck = newTileHasCollision;
-        prevPos = new Vector2(position.x, position.y);
+        _position.x = prevPos.x + newDeltaX;
+        _position.y = prevPos.y + newDeltaY;
+        prevPos = new Vector2(_position.x, _position.y);
     }
 
     #region Awful Physics Code
-    // I'm still not sure what this does even if I made it. It's magic.
-    public bool RaycastTerrainBox (float origin_x, float origin_y, float dir_x, float dir_y, float maxDistance, out float dist, out bool hitWall) {
+    void MoveDeltaY (ref Bounds2D queryBounds, ref Bounds2D bounds, float deltaY, ref float newDeltaY) {
+        queryBounds = bounds;
+        queryBounds.ExtendByDelta(0f, deltaY);
+        int queryTileMinX = Mathf.FloorToInt(queryBounds.min.x);
+        int queryTileMinY = Mathf.FloorToInt(queryBounds.min.y);
+        int queryTileMaxX = Mathf.CeilToInt(queryBounds.max.x);
+        int queryTileMaxY = Mathf.CeilToInt(queryBounds.max.y);
 
-        // Voxel traversal preparation
-        float pos0_x = origin_x;                float pos0_y = origin_y;
-        float pos1_x = pos0_x;                  float pos1_y = pos0_y;
-        float step_x = Mathf.Sign(dir_x);       float step_y = Mathf.Sign(dir_y);
-        float tMax_x = IntBound(pos0_x, dir_x); float tMax_y = IntBound(pos0_y, dir_y);
-        float tDelta_x = (dir_x != 0) ? (1f / dir_x * step_x) : 0f;
-        float tDelta_y = (dir_y != 0) ? (1f / dir_y * step_y) : 0f;
-        if(dir_x == 0 && dir_y == 0) {
-            dist = 0f;
-            hitWall = false;
-            return false;
-        }
-
-        float invdir_x = dir_x == 0f ? 0f : 1f / dir_x;
-        float invdir_y = dir_y == 0f ? 0f : 1f / dir_y;
-
-        // Execute a 2D voxel traversal routine to find solid tile
-        int tilePos_x, tilePos_y;
-        int limtCounter = Mathf.CeilToInt(maxDistance) + 1;
-        for(int i = limtCounter; i >= 0; i--) {
-            tilePos_x = Mathf.FloorToInt(pos0_x);
-            tilePos_y = Mathf.FloorToInt(pos0_y);
-            //PhysicsPixel.DrawBounds(new Bounds2D(new Vector2(tilePos_x, tilePos_y), new Vector2(tilePos_x + 1f, tilePos_y + 1f)), new Color(0.8f, 0.4f, 0.07f));
-
-            if(TerrainManager.inst.GetGlobalIDAt(tilePos_x, tilePos_y, TerrainLayers.Ground, out int globalID)) {
-                if(globalID != 0 && TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).hasCollision) {
-                    if(BoxRaycast(origin_x, origin_y, invdir_x, invdir_y, tilePos_x, tilePos_y, out float distance)) {
-                        if(distance > maxDistance) {
-                            dist = maxDistance;
-                            hitWall = false;
-                            return false;
-                        } else {
-                            dist = distance;
-                            float hitPos_x = (origin_x + dir_x * distance);
-                            float hitPos_y = (origin_y + dir_y * distance);
-                            hitWall = Mathf.Approximately(hitPos_x, tilePos_x) || Mathf.Approximately(hitPos_x, tilePos_x + 1f);
-                            return true;
-                        }
+        for(int tileX = queryTileMinX; tileX <= queryTileMaxX; tileX++) {
+            for(int tileY = queryTileMinY; tileY <= queryTileMaxY; tileY++) {
+                //PhysicsPixel.DrawBounds(new Bounds2D(new Vector2(tileX, tileY), new Vector2(tileX + 1f, tileY + 1f)), Color.green);
+                // If tile is solid...
+                if(TerrainManager.inst.GetGlobalIDAt(tileX, tileY, TerrainLayers.Ground, out int globalID)) {
+                    if(globalID != 0 && TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).hasCollision) {
+                        newDeltaY = PhysicsPixel.inst.MinimizeDeltaY(newDeltaY, tileX, tileY, ref bounds);
                     }
-                    dist = maxDistance;
-                    hitWall = false;
-                    return false;
                 }
             }
-            
-            if(tMax_x < tMax_y) {
-                pos0_x += step_x;
-                tMax_x += tDelta_x;
-            } else {
-                pos0_y += step_y;
-                tMax_y += tDelta_y;
+        }
+    }
+
+    void MoveDeltaX (ref Bounds2D queryBounds, ref Bounds2D bounds, float deltaX, ref float newDeltaX) {
+        queryBounds = bounds;
+        queryBounds.ExtendByDelta(deltaX, 0f);
+        int queryTileMinX = Mathf.FloorToInt(queryBounds.min.x);
+        int queryTileMinY = Mathf.FloorToInt(queryBounds.min.y);
+        int queryTileMaxX = Mathf.CeilToInt(queryBounds.max.x);
+        int queryTileMaxY = Mathf.CeilToInt(queryBounds.max.y);
+
+        for(int tileX = queryTileMinX; tileX <= queryTileMaxX; tileX++) {
+            for(int tileY = queryTileMinY; tileY <= queryTileMaxY; tileY++) {
+                //PhysicsPixel.DrawBounds(new Bounds2D(new Vector2(tileX, tileY), new Vector2(tileX + 1f, tileY + 1f)), Color.green);
+                // If tile is solid...
+                if(TerrainManager.inst.GetGlobalIDAt(tileX, tileY, TerrainLayers.Ground, out int globalID)) {
+                    if(globalID != 0 && TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).hasCollision) {
+                        newDeltaX = PhysicsPixel.inst.MinimizeDeltaX(newDeltaX, tileX, tileY, ref bounds);
+                    }
+                }
             }
         }
-
-        dist = maxDistance;
-        hitWall = false;
-        return false;
     }
-
-    // I'm still not sure what this does even if I made it. It's magic
-    // MAKE SURE THE DIRECTION IS INVERTED WITH (dir == 0? 0f : 1f/dir)
-    public bool BoxRaycast (float origin_x, float origin_y, float dir_x, float dir_y, float box_x, float box_y, out float dist) {
-        bool signDirX = dir_x < 0;
-        bool signDirY = dir_y < 0;
-        float bbox_x = 0f;
-        float bbox_y = 0f;
-
-        if(signDirX) {
-            bbox_x = box_x + 1f;
-            bbox_y = box_y + 1f;
-        } else {
-            bbox_x = box_x;
-            bbox_y = box_y;
-        }
-        float tmin = (bbox_x - origin_x) * dir_x;
-        if(signDirX) {
-            bbox_x = box_x;
-            bbox_y = box_y;
-        } else {
-            bbox_x = box_x + 1f;
-            bbox_y = box_y + 1f;
-        }
-        float tmax = (bbox_x - origin_x) * dir_x;
-        if(signDirY) {
-            bbox_x = box_x + 1f;
-            bbox_y = box_y + 1f;
-        } else {
-            bbox_x = box_x;
-            bbox_y = box_y;
-        }
-        float tymin = (bbox_y - origin_y) * dir_y;
-        if(signDirY) {
-            bbox_x = box_x;
-            bbox_y = box_y;
-        } else {
-            bbox_x = box_x + 1f;
-            bbox_y = box_y + 1f;
-        }
-        float tymax = (bbox_y - origin_y) * dir_y;
-
-        if((tmin > tymax) || (tymin > tmax)) {
-            dist = 0f;
-            return false;
-        }
-        if(tymin > tmin) {
-            tmin = tymin;
-        }
-        if(tymax < tmax) {
-            tmax = tymax;
-        }
-
-        dist = tmin;
-        return true;
-    }
-
-    static float IntBound (float s, float ds) {
-        // Find the smallest positive t such that s+t*ds is an integer.
-        if(ds < 0) {
-            return IntBound(-s, -ds);
-        } else {
-            s = Modulo(s, 1);
-            // problem is now s+t*ds = 1
-            return (1 - s) / ds;
-        }
-    }
-
-    static float Modulo (float value, float modulus) {
-        return (value % modulus + modulus) % modulus;
-    }
-
-    static int Modulo (int value, int modulus) {
-        return (value % modulus + modulus) % modulus;
-    }
-    #endregion Awful Physics Code
+    #endregion
 }

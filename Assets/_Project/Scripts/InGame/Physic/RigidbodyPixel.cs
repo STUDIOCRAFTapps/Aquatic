@@ -27,6 +27,10 @@ public class RigidbodyPixel : MonoBehaviour {
     public bool clipPermision = false;
     public float clipAmout = 0.25f;
     public bool weakPushCandidate = true;
+    public float superPushForce = 0f;
+
+    [Header("Masking")]
+    [HideInInspector] public RigidbodyPixel ignoreProjectileOwnerUntilHitWall;
 
     // Privates
     private bool failedInitialization;
@@ -39,17 +43,18 @@ public class RigidbodyPixel : MonoBehaviour {
     private float totalVolume = 0f;
     private float subtractedVolume = 0f;
     private List<ForcePixel> forces;
-    public float superPushForce = 0f;
 
     // Hidden Variables
     [HideInInspector] public BoxCollider2D box;
     [HideInInspector] public Vector2 velocity;
+    [HideInInspector] public Vector2 lastVelocity;
     [HideInInspector] public Bounds2D aabb;
     [HideInInspector] public float inverseMass = 0f;
     [HideInInspector] public Vector2 movementDelta;
     [HideInInspector] public MobileChunk mobileChunk;
     [HideInInspector] public Transform aligmentObject;
     [HideInInspector] public bool disableForAFrame;
+    [HideInInspector] public Vector2 deltaDischarge;
 
     [HideInInspector] public bool hadCollisionDown;
     [HideInInspector] public bool hadCollisionLeft;
@@ -69,6 +74,7 @@ public class RigidbodyPixel : MonoBehaviour {
     public RigidbodyPixel isInsideComplexObject;
 
     [Header("Fluid Output")]
+    public bool buoyancyEnabled = true;
     public float submergedPercentage = 0f;
     public float volume = 0f;
 
@@ -86,7 +92,7 @@ public class RigidbodyPixel : MonoBehaviour {
         if(hasBeenInit) {
             return;
         }
-        
+
         hasBeenInit = true;
 
         // Adding rigibody to the global rigibody registery
@@ -122,6 +128,8 @@ public class RigidbodyPixel : MonoBehaviour {
 
     private void OnDestroy () {
         PhysicsPixel.inst.rbs.Remove(this);
+
+        CloseOnWeakCollision();
     }
     #endregion
 
@@ -140,6 +148,9 @@ public class RigidbodyPixel : MonoBehaviour {
 
     // Apply special buoyancy forces
     public void ApplyBuoyancy () {
+        if(!buoyancyEnabled) {
+            return;
+        }
         velocity += (submergedPercentage * volume) * PhysicsPixel.inst.fluidMassPerUnitDensity * -PhysicsPixel.inst.genericGravityForce * inverseMass * Time.deltaTime;
         velocity *= Mathf.Lerp(1f, (1f - Time.fixedDeltaTime * PhysicsPixel.inst.fluidDrag), submergedPercentage);
     }
@@ -210,6 +221,24 @@ public class RigidbodyPixel : MonoBehaviour {
     }
     #endregion
 
+    #region Event Listeners
+    public delegate void OnWeakCollisionHandler(RigidbodyPixel target);
+    public event OnWeakCollisionHandler OnWeakCollision;
+
+    public void CallOnWeakCollision (RigidbodyPixel target) {
+        OnWeakCollision?.Invoke(target);
+    }
+
+    void CloseOnWeakCollision () {
+        if(OnWeakCollision == null) {
+            return;
+        }
+        foreach(System.Delegate d in OnWeakCollision.GetInvocationList()) {
+            OnWeakCollision -= (OnWeakCollisionHandler)d;
+        }
+    }
+    #endregion
+
 
     #region External Functions
     /// <summary>
@@ -217,7 +246,7 @@ public class RigidbodyPixel : MonoBehaviour {
     /// </summary>
     /// <param name="position">The position to move to.</param>
     public void MovePosition (Vector2 position) {
-        Vector2 delta = new Vector2(transform.position.x, transform.position.y) - position;
+        Vector2 delta = new Vector2(position.x - transform.position.x, position.y - transform.position.y);
 
         MoveByDelta(delta);
     }
@@ -233,6 +262,7 @@ public class RigidbodyPixel : MonoBehaviour {
 
     #region Internal Functions
     private void ApplyVelocity () {
+        lastVelocity = velocity;
         Vector2 delta = velocity * Time.fixedDeltaTime;
         if(delta.x > 0) {
             pVelDir.x = 1f;
@@ -245,6 +275,8 @@ public class RigidbodyPixel : MonoBehaviour {
             pVelDir.y = -1f;
         }
         delta += pVelDir * PhysicsPixel.inst.errorHandler;
+        delta += deltaDischarge;
+        deltaDischarge.Set(0f, 0f);
 
         if(parentPlatform != null) {
             if(parentPlatform.canBeParentPlatform) {
@@ -336,6 +368,9 @@ public class RigidbodyPixel : MonoBehaviour {
         }
         if(isCollidingLeft || isCollidingRight) {
             velocity.x *= (1f - Time.fixedDeltaTime * defaultWallFriction);
+        }
+        if(isCollidingWallDown || isCollidingUp || isCollidingWallLeft || isCollidingWallRight) {
+            ignoreProjectileOwnerUntilHitWall = null;
         }
 
         // Limit the velocity when a wall is it

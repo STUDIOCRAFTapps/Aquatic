@@ -1,10 +1,7 @@
 fileFormatVersion: 2
-guid: 20169e1a4fd15d544922f8088ef5b83d
+guid: 735f21b24e4cc184d927fac4748acb85
 TextureImporter:
-  internalIDToNameTable:
-  - first:
-      213: 6441070806388384517
-    second: AnchorHighRes
+  internalIDToNameTable: []
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -43,12 +40,12 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 32
+  spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -110,52 +107,9 @@ TextureImporter:
     overridden: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
-    buildTarget: Android
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 0
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
-    sprites:
-    - serializedVersion: 2
-      name: AnchorHighRes
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 0
-        width: 62
-        height: 56
-      alignment: 9
-      pivot: {x: 0.5, y: 0.8565}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape:
-      - - {x: 10, y: -28}
-        - {x: -10, y: -28}
-        - {x: -31, y: -21}
-        - {x: -31, y: -8}
-        - {x: -5, y: -8}
-        - {x: -18, y: 8}
-        - {x: 18, y: 8}
-        - {x: 5, y: -8}
-        - {x: 32, y: -8}
-        - {x: 32, y: -22}
-      tessellationDetail: 0
-      bones: []
-      spriteID: 5032beba5c7436950800000000000000
-      internalID: 6441070806388384517
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
+    sprites: []
     outline: []
     physicsShape: []
     bones: []
