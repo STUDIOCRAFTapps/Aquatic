@@ -54,13 +54,15 @@ public class LivingEntity : Entity, IPixelAnimationCallbackReciever, IInteractab
 
     }
 
-    public virtual void HitEntity (float damage) {
+    public virtual bool HitEntity (float damage) {
         ((LivingEntityData)entityData).health -= damage;
 
         if(((LivingEntityData)entityData).health <= 0) {
             EntityManager.inst.Kill(this);
             ParticleManager.inst.PlayFixedParticle(transform.position, 4);
+            return true;
         }
+        return false;
     }
 
     public override Type GetDataType () {

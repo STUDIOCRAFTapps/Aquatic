@@ -31,13 +31,7 @@ public class PixelAnimator : MonoBehaviour {
                 ((IPixelAnimationCallbackReciever)callbackReciever)?.OnRecieveCallback(code);
             }
         } else if(frameStartTime > clip.secondsPerFrames[currentFrame]) {
-            if(clip.callbacks.TryGetValue(currentFrame, out ushort code)) {
-                ((IPixelAnimationCallbackReciever)callbackReciever)?.OnRecieveCallback(code);
-            }
-            currentFrame = Modulo(currentFrame + 1, clip.secondsPerFrames.Length);
-
-            timeOfStartFrame = Time.time;
-            targetGraphic.sprite = clip.frames[currentFrame];
+            PlayFrame();
         }
 
         if(canFlash) {
@@ -53,6 +47,20 @@ public class PixelAnimator : MonoBehaviour {
         }
     }
 
+    private void PlayFrame () {
+        if(clip.callbacks.TryGetValue(currentFrame, out ushort code)) {
+            ((IPixelAnimationCallbackReciever)callbackReciever)?.OnRecieveCallback(code);
+        }
+        currentFrame = Modulo(currentFrame + 1, clip.secondsPerFrames.Length);
+
+        timeOfStartFrame = Time.time;
+        targetGraphic.sprite = clip.frames[currentFrame];
+    }
+
+    private void DrawFrame () {
+        targetGraphic.sprite = clip.frames[currentFrame];
+    }
+
     public void PlayClip (string clipName) {
         PixelAnimationClip newClip = animationGroup.GetClipByName(clipName);
         if(newClip == null) {
@@ -63,6 +71,7 @@ public class PixelAnimator : MonoBehaviour {
         timeOfStartFrame = Time.time;
         currentFrame = 0;
         clip = newClip;
+        DrawFrame();
     }
 
     public void PlayClipWithoutRestart (string clipName) {
@@ -81,6 +90,7 @@ public class PixelAnimator : MonoBehaviour {
         timeOfStartFrame = Time.time;
         currentFrame = 0;
         clip = newClip;
+        DrawFrame();
     }
 
     public void PlayClipIfIsLoop (string clipName) {
@@ -102,6 +112,7 @@ public class PixelAnimator : MonoBehaviour {
         timeOfStartFrame = Time.time;
         currentFrame = 0;
         clip = newClip;
+        DrawFrame();
     }
 
     public void PlayHitFlash (float length) {

@@ -4,7 +4,7 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "TileCollection", menuName = "Terrain/Collections/TileCollection")]
 public class TileCollection : ScriptableObject {
-    public string id;
+    new public string name;
 
     [HideInInspector] public Dictionary<string, BaseTileAsset> tilesByString = new Dictionary<string, BaseTileAsset>();
     public BaseTileAsset[] items = null;

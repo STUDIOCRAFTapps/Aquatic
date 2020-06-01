@@ -31,6 +31,8 @@ public class PlayerStatus {
 
     public BoundsInt prevTileOverlapBounds;
 
+    public float health;
+
     public void RemoveTimeRelativity () {
         lastJumpTime -= time;
         lastGroundedTime -= time;
@@ -44,9 +46,10 @@ public class PlayerInfo {
 #endregion
 
 public class PlayerController : MonoBehaviour {
-    
+
     #region References
     [Header("References")]
+    public PlayerHUD hud;
     public RigidbodyPixel rbody;
     public Collider2D collBox;
     public SpriteRenderer spriteRenderer;
@@ -68,9 +71,9 @@ public class PlayerController : MonoBehaviour {
     [System.NonSerialized] public PlayerStatus status;
     [System.NonSerialized] public PlayerInfo info;
 
-    public Transform attackIndicator;
-
     public float timeOfLastAutosave;
+
+    const float defaultHealth = 5f;
     #endregion
 
     #region MonoBehaviour
@@ -81,6 +84,8 @@ public class PlayerController : MonoBehaviour {
             status = status
         };
         currentState = playerStates[0];
+
+        hud.BuildHealthContainer(Mathf.CeilToInt(defaultHealth));
     }
 
     private void OnEnable () {
@@ -123,47 +128,8 @@ public class PlayerController : MonoBehaviour {
     private void Update () {
         status.time = Time.time;
         Animate();
-
-        if(GameManager.inst.engineMode != EngineModes.Play) {
-            attackIndicator.gameObject.SetActive(false);
-            return;
-        } else {
-            attackIndicator.gameObject.SetActive(true);
-        }
-
-        Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2 dir = (pos - GetHeadPosition()).normalized;
-        float angle = Mathf.Atan2(-dir.x, dir.y) * Mathf.Rad2Deg;
-        float dist = EntityManager.inst.RaycastEntities(new Ray2D(GetHeadPosition(), dir));
-        attackIndicator.position = (GetHeadPosition() + dir * Mathf.Min(dist + 0.2f, 1.5f));
-        attackIndicator.eulerAngles = Vector3.forward * angle;
-
-        if(Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)) {
-            timeOfAttack = Time.time;
-        }
-        if(Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1)) {
-            Vector2 attackGrab = dir * Mathf.Min(30f, (Time.time - timeOfAttack) * 2);
-
-            if(Input.GetMouseButtonUp(0)) {
-                CombatManager.inst.SpawnStrike(
-                    this,
-                    0,
-                    (Vector3)(GetHeadPosition() + dir * Mathf.Min(dist + 0.2f, 1.5f)),
-                    angle,
-                    dir,
-                    rbody.velocity * 0.5f + attackGrab
-                );
-            } else {
-                CombatManager.inst.SpawnStrike(
-                    this,
-                    1,
-                    (Vector3)(GetHeadPosition() + dir * Mathf.Min(dist + 0.2f, 1.5f)),
-                    0f,
-                    dir,
-                    Vector2.zero
-                );
-            }
-        }
+        
+        UpdateHealthHud();
     }
     #endregion
 
@@ -176,6 +142,8 @@ public class PlayerController : MonoBehaviour {
 
         transform.position = info.status.playerPos;
         rbody.velocity = info.status.prevVel;
+        
+        UpdateHealthHud();
     }
     #endregion
 
@@ -251,6 +219,15 @@ public class PlayerController : MonoBehaviour {
     #endregion
 
     #region Public Function
+    public void DamagePlayer (float healthPoint) {
+        status.health = Mathf.Max(0f, status.health);
+        UpdateHealthHud();
+    }
+
+    public void UpdateHealthHud () {
+        hud?.UpdateHealth(status.health);
+    }
+
     public Vector2 GetHeadPosition () {
         return (Vector2)transform.position + rbody.box.size.y * Vector2.up;
     }

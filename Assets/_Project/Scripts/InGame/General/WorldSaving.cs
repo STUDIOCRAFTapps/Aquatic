@@ -244,6 +244,7 @@ public class WorldSaving : MonoBehaviour {
 
     public void SavePlayer (PlayerStatus status, int uid) {
         //Serialize and save.
+        Debug.Log(uid);
         using(FileStream fs = new FileStream(GetPlayerDirectory(uid), FileMode.Create))
         using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
         using(StreamWriter sw = new StreamWriter(defs))
@@ -436,6 +437,7 @@ public class WorldSaving : MonoBehaviour {
 
         bool hasSucceded;
         if(!File.Exists(entityPath)) {
+            Debug.Log("failed loading player data");
             playerData = null;
             return false;
         } else {
@@ -447,6 +449,7 @@ public class WorldSaving : MonoBehaviour {
 
                 playerData = serializer.Deserialize<PlayerStatus>(jr);
                 hasSucceded = true;
+                Debug.Log("succed load");
             }
         }
 

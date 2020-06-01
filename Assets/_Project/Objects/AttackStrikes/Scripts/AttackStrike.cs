@@ -48,7 +48,7 @@ public class AttackStrike : MonoBehaviour, IPixelAnimationCallbackReciever {
     }
 
     public virtual void Die () {
-        if(hitCount < asset.maxHitCount) {
+        if(hitCount < asset.maxHitCount && asset.maxHitCount > 1) {
             return;
         }
 

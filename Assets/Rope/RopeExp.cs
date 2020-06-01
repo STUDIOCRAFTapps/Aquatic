@@ -8,10 +8,11 @@ public class RopeExp : MonoBehaviour {
     public Camera cam;
     public LineRenderer lineRenderer;
     public Transform visualAnchor;
-    public Transform connectionAnchor;
     public RigidbodyPixel physicAnchor;
     public Transform leftAnchorPoint;
     public Transform rightAnchorPoint;
+    public Transform holdPoint;
+    public PlayerController owner;
 
     [Header("Rope Parameters")]
     public int segmentCount;
@@ -39,12 +40,15 @@ public class RopeExp : MonoBehaviour {
     public float posCorrectionFactor = 1f;
 
     RigidbodyPixel attachedBodyLeft;
+    LivingEntity attachedEntityLeft;
     RigidbodyPixel attachedBodyRight;
+    LivingEntity attachedEntityRight;
     Vector2 attachedBodyDeltaLeft;
     Vector2 attachedBodyDeltaRight;
+    Vector2 pinPoint = Vector2.zero;
 
     List<RopeJoint> distanceJoints;
-    List<MovingMass> movingMasses;
+    List<RopeMovingMass> movingMasses;
     Vector3[] interpositions;
     Vector3[] positions;
     Vector3[] lastPositions;
@@ -68,6 +72,8 @@ public class RopeExp : MonoBehaviour {
                 if(target.GetBoundFromCollider().Overlaps(leftAnchorPoint.position)) {
                     attachedBodyLeft = target;
                     attachedBodyDeltaLeft = attachedBodyLeft.transform.position - leftAnchorPoint.position;
+
+                    attachedEntityLeft = attachedBodyLeft.GetComponent<LivingEntity>();
                 }
             }
         } else {
@@ -75,6 +81,8 @@ public class RopeExp : MonoBehaviour {
                 if(target.GetBoundFromCollider().Overlaps(rightAnchorPoint.position)) {
                     attachedBodyRight = target;
                     attachedBodyDeltaRight = attachedBodyRight.transform.position - rightAnchorPoint.position;
+
+                    attachedEntityRight = attachedBodyRight.GetComponent<LivingEntity>();
                 }
             }
         }
@@ -85,22 +93,60 @@ public class RopeExp : MonoBehaviour {
 
         // THROW DEBUG
         if(Input.GetKey(KeyCode.C)) {
+            /*for(int i = 0; i < movingMasses.Count; i++) {
+                movingMasses[i].position = pinPoint;
+                movingMasses[i].prevPos = pinPoint;
+                movingMasses[i].SetVelocity(0f, 0f);
+            }*/
+            
+            physicAnchor.ignoreProjectileOwnerUntilHitWall = GameManager.inst.allPlayers[0].rbody;
+        }
+        if(Input.GetKeyUp(KeyCode.C)) {
+            pinPoint = cam.ScreenToWorldPoint(new Vector3(Screen.width * 0.5f, Screen.height * 0.5f));
+            Vector2 aimPoint = cam.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 dir = (aimPoint - pinPoint).normalized;
+            movingMasses[movingMasses.Count - 1].SetVelocity(dir.x * 50f, dir.y * 50f);
+        }
+        // THROW DEBUG
+
+        // CONTROL DEBUG
+        if(Input.GetKey(KeyCode.V)) {
             pinPoint = cam.ScreenToWorldPoint(new Vector3(Screen.width * 0.5f, Screen.height * 0.5f));
             Vector2 aimPoint = cam.ScreenToWorldPoint(Input.mousePosition);
             Vector2 dir = (aimPoint - pinPoint).normalized;
 
-            for(int i = 0; i < movingMasses.Count; i++) {
-                movingMasses[i].position = pinPoint;
-                movingMasses[i].prevPos = pinPoint;
-                movingMasses[i].SetVelocity(0f, 0f);
-            }
+            float targetLength = segmentCount * targetChainSegmentLength;
+            Vector2 targetPosition = aimPoint + dir * targetLength;
+            Vector2 targetDirection = (targetPosition - (Vector2)physicAnchor.transform.position).normalized;
+            Debug.DrawLine(pinPoint, pinPoint + targetDirection);
+            Debug.DrawLine(pinPoint, targetPosition);
 
-            movingMasses[movingMasses.Count - 1].SetVelocity(dir.x * 50f, dir.y * 50f);
-
-            physicAnchor.ignoreProjectileOwnerUntilHitWall = GameManager.inst.allPlayers[0].rbody;
+            movingMasses[segmentCount - 1].AddVelocity(targetDirection.x * Time.deltaTime * 30f, targetDirection.y * Time.deltaTime * 30f);
         }
-        // THROW DEBUG
+        // CONTROL DEBUG
 
+        float velDiff = physicAnchor.lastVelocity.magnitude - physicAnchor.velocity.magnitude;
+        if(velDiff > 4f) {
+            float healthDamage = velDiff * 0.2f;
+            if(attachedEntityLeft != null && attachedEntityLeft.HitEntity(healthDamage)) {
+                attachedEntityLeft = null;
+                attachedBodyLeft = null;
+            }
+            if(attachedEntityRight != null && attachedEntityRight.HitEntity(healthDamage)) {
+                attachedEntityRight = null;
+                attachedBodyRight = null;
+            }
+        }
+
+        if(Input.GetKey(KeyCode.X)) {
+            Vector2 diff = GameManager.inst.allPlayers[0].GetHeadPosition() - (Vector2)physicAnchor.transform.position;
+            float dist = diff.magnitude;
+            Vector2 dir = diff / dist;
+
+            if(dist > 3f) {
+                physicAnchor.velocity += new Vector2(dir.x * .2f, dir.y * .2f);
+            }
+        }
 
         DrawRope();
     }
@@ -108,9 +154,23 @@ public class RopeExp : MonoBehaviour {
     private void FixedUpdate () {
         System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
         sw.Start();
-        
-        PinRopeToMouse();
-        Simulate();
+
+        if(Input.GetMouseButton(0)) {
+            Vector2 aimPoint = cam.ScreenToWorldPoint(Input.mousePosition);
+
+            var damp = 12f;
+            var maxSpeed = 30f;
+            var target = aimPoint;
+            physicAnchor.velocity = Vector2.ClampMagnitude(physicAnchor.velocity, maxSpeed);
+
+            var n1 = physicAnchor.velocity - ((Vector2)physicAnchor.transform.position - target) * damp * damp * Time.deltaTime;
+            var n2 = 1 + damp * Time.deltaTime;
+            physicAnchor.velocity += (n1 / (n2 * n2)) - (physicAnchor.velocity);
+
+        }
+
+        ConstraintRope();
+        SimulateRope();
 
         GetLastPositions();
         GetPositions();
@@ -140,24 +200,12 @@ public class RopeExp : MonoBehaviour {
         }
     }
 
-    Vector2 pinPoint = Vector2.zero;
-    private void PinRopeToMouse () {
-        pinPoint = cam.ScreenToWorldPoint(Input.mousePosition);
-        //pinPoint = cam.ScreenToWorldPoint(new Vector3(Screen.width * 0.5f, Screen.height * 0.5f));
 
-        if(Input.GetMouseButton(0)) {
-            for(int i = 0; i < movingMasses.Count; i++) {
-                movingMasses[i].position = pinPoint;
-                movingMasses[i].prevPos = pinPoint;
-                movingMasses[i].SetVelocity(0f, 0f);
-            }
-            physicAnchor.transform.position = movingMasses[movingMasses.Count - 1].position;
-        }
-    }
 
-    void GenerateRope () {
+
+    private void GenerateRope () {
         distanceJoints = new List<RopeJoint>();
-        movingMasses = new List<MovingMass>();
+        movingMasses = new List<RopeMovingMass>();
         positions = new Vector3[segmentCount];
         lastPositions = new Vector3[segmentCount];
         interpositions = new Vector3[segmentCount];
@@ -165,11 +213,11 @@ public class RopeExp : MonoBehaviour {
         Vector2 initPos = transform.position;
         
         for(int i = 0; i < segmentCount; i++) {
-            MovingMass mm;
+            RopeMovingMass mm;
             if(i >= segmentCount - 1) {
-                mm = new MovingMass(initPos, anchorMass, collRadius);
+                mm = new RopeMovingMass(initPos, anchorMass, collRadius);
             } else {
-                mm = new MovingMass(initPos, segmentMass, collRadius);
+                mm = new RopeMovingMass(initPos, segmentMass, collRadius);
             }
             movingMasses.Add(mm);
 
@@ -186,11 +234,15 @@ public class RopeExp : MonoBehaviour {
 
         movingMasses[movingMasses.Count - 1].Pair(physicAnchor);
     }
-    
-    void Simulate () {
+
+    /// <summary>
+    /// Simulates the rope (joints and moving masses) for one frame (Must me run fixed frame interval)
+    /// </summary>
+    private void SimulateRope () {
         float deltaTimeStep = Time.deltaTime / simulationSteps;
         float deltaTime = Time.deltaTime;
 
+        // Multiple simulation step are needed to get a stable result, but it's utterly slow.
         for(int simstep = 0; simstep < simulationSteps; simstep++) {
             for(int i = 0; i < movingMasses.Count; i++) {
                 movingMasses[i].UpdatePosition(deltaTimeStep);
@@ -205,8 +257,9 @@ public class RopeExp : MonoBehaviour {
             movingMasses[0].forces = Vector2.zero;
         }
 
+        // Now we apply the gravity and move the point accordingly
         for(int i = 0; i < movingMasses.Count; i++) {
-            MovingMass mm = movingMasses[i];
+            RopeMovingMass mm = movingMasses[i];
 
             if(i == movingMasses.Count - 1) {
                 mm.MulVelocity(1.0f / (1.0f + deltaTime * anchorAirDrag));
@@ -214,6 +267,7 @@ public class RopeExp : MonoBehaviour {
                 mm.MulVelocity(1.0f / (1.0f + deltaTime * chainAirDrag));
             }
 
+            // Not sure why this is needed but it is.
             if(i == movingMasses.Count - 1) {
                 mm.UpdateCollision();
             }
@@ -221,6 +275,7 @@ public class RopeExp : MonoBehaviour {
             mm.UpdatePosition(deltaTime);
         }
 
+        // This prevents the anchor from being upside down when sitting on the ground by preventing a point from dipping lower than the anchor.
         if(physicAnchor.isCollidingWallDown) {
             movingMasses[movingMasses.Count - 2].position = new Vector2(
                 movingMasses[movingMasses.Count - 2].position.x,
@@ -228,6 +283,8 @@ public class RopeExp : MonoBehaviour {
             );
         }
 
+        // In case of collision, play a particle effect and hurt the entity. Note that the reference of pooled entity hasn't been taked into
+        // account correctly all throughout the game's code. This is just a simple patch to a bigger issue.
         if(physicAnchor.lastVelocity.magnitude > 10f) {
             if(physicAnchor.velocity.magnitude > 5f) {
                 goto exit;
@@ -245,7 +302,28 @@ public class RopeExp : MonoBehaviour {
         exit:;
     }
 
-    void DrawRope () {
+    /// <summary>
+    /// Constrain one end of the rope to the hold point
+    /// </summary>
+    private void ConstraintRope () {
+        pinPoint = holdPoint.position;
+
+        // DEBUG BRING BACK
+        if(Input.GetKey(KeyCode.Z)) {
+            for(int i = 0; i < movingMasses.Count; i++) {
+                movingMasses[i].position = pinPoint;
+                movingMasses[i].prevPos = pinPoint;
+                movingMasses[i].SetVelocity(0f, 0f);
+            }
+            physicAnchor.transform.position = movingMasses[movingMasses.Count - 1].position;
+            physicAnchor.ignoreProjectileOwnerUntilHitWall = owner.rbody;
+        }
+    }
+
+    /// <summary>
+    /// Animates the anchor and sets the correct positions to the line renderer.
+    /// </summary>
+    private void DrawRope () {
         float interfactor = InterpolationManager.InterpolationFactor;
         for(int i = 0; i < segmentCount; i++) {
             interpositions[i].Set(Mathf.Lerp(lastPositions[i].x, positions[i].x, interfactor), Mathf.Lerp(lastPositions[i].y, positions[i].y, interfactor), 0f);
@@ -254,10 +332,13 @@ public class RopeExp : MonoBehaviour {
         lineRenderer.positionCount = positions.Length;
         lineRenderer.SetPositions(interpositions);
 
-        PositionAnchor();
+        AnimateAnchor();
     }
 
-    void PositionAnchor () {
+    /// <summary>
+    /// Animates and spawn the correct particles around the anchor.
+    /// </summary>
+    private void AnimateAnchor () {
         float t = 1f - Mathf.Pow(1f - smoothTurn, Time.deltaTime * 30f);
         float angle = visualAnchor.eulerAngles.z + 90f;
 
@@ -268,6 +349,7 @@ public class RopeExp : MonoBehaviour {
         visualAnchor.position = interpositions[segmentCount - 2];
         visualAnchor.eulerAngles = Vector3.forward * Mathf.Atan2(-newDir.x, newDir.y) * Mathf.Rad2Deg;
 
+        // Scraping the ground particle effect.
         float lastVelocityMag = new Vector2(
             movingMasses[segmentCount - 1].GetVelocityX(),
             movingMasses[segmentCount - 1].GetVelocityY()
@@ -288,24 +370,34 @@ public class RopeExp : MonoBehaviour {
         }
     }
 
-    void GetLastPositions () {
+    /// <summary>
+    /// Fills the array of old positions with the current array of positions.
+    /// </summary>
+    private void GetLastPositions () {
         for(int i = 0; i < segmentCount; i++) {
             lastPositions[i] = positions[i];
         }
     }
 
-    void GetPositions () {
+    /// <summary>
+    /// Fills the array of positions from the moving masses.
+    /// </summary>
+    private void GetPositions () {
         for(int i = 0; i < movingMasses.Count; i++) {
             positions[i] = movingMasses[i].position;
         }
     }
 }
 
+
+/// <summary>
+/// A constraint applied to two RopeMovingMass, similar to box2d's distance joint, used to simulate rope segments.
+/// </summary>
 public class RopeJoint {
     public RopeExp rope;
 
-    public MovingMass a;
-    public MovingMass b;
+    public RopeMovingMass a;
+    public RopeMovingMass b;
 
     // Failed attempt at reading Box2D's variables
     const float b2_linearSlop = 0.005f;
@@ -319,7 +411,7 @@ public class RopeJoint {
 
     float spring_length = 0.3333f;
 
-    public RopeJoint (RopeExp rope, MovingMass a, MovingMass b, float length) {
+    public RopeJoint (RopeExp rope, RopeMovingMass a, RopeMovingMass b, float length) {
         this.rope = rope;
         this.a = a;
         this.b = b;
@@ -415,7 +507,10 @@ public class RopeJoint {
     
 }
 
-public class MovingMass {
+/// <summary>
+/// Physics object using euler's model used to simulate ropes. I failed at implementing collision to the ropes.
+/// </summary>
+public class RopeMovingMass {
     Vector2 _position;
     public Vector2 forces;
     public float mass;
@@ -441,7 +536,7 @@ public class MovingMass {
     bool isPaired;
     RigidbodyPixel pairing;
 
-    public MovingMass (Vector2 position, float mass, float colliderRadius) {
+    public RopeMovingMass (Vector2 position, float mass, float colliderRadius) {
         _position = position;
         velocity = Vector2.zero;
         this.mass = mass;
@@ -577,7 +672,7 @@ public class MovingMass {
         prevPos = new Vector2(_position.x, _position.y);
     }
 
-    #region Awful Physics Code
+    #region Unused Physics Code
     void MoveDeltaY (ref Bounds2D queryBounds, ref Bounds2D bounds, float deltaY, ref float newDeltaY) {
         queryBounds = bounds;
         queryBounds.ExtendByDelta(0f, deltaY);
