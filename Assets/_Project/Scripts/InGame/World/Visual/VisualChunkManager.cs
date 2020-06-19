@@ -31,10 +31,10 @@ public class VisualChunkManager : MonoBehaviour {
         mobileChunkPool = new Dictionary<int, MobileChunk>();
 
         globalMaterial = new Material(baseMaterial);
-        if(TerrainManager.inst.tiles.textures == null) {
+        if(GeneralAsset.inst.textures == null) {
             Debug.LogError("The texture hasn't been built. This may be caused by the TerrainManager getting initied after the VisualChunkManager.");
         } else {
-            globalMaterial.SetTexture("_MainTex", TerrainManager.inst.tiles.textures);
+            globalMaterial.SetTexture("_MainTex", GeneralAsset.inst.textures);
         }
 
         //DEBUG

@@ -55,7 +55,7 @@ public class MobileChunk : MonoBehaviour {
                 int gid = mobileDataChunk.GetGlobalID(x, y, TerrainLayers.Ground);
 
                 if(gid != 0) {
-                    totalMass += TerrainManager.inst.tiles.GetTileAssetFromGlobalID(gid).mass;
+                    totalMass += GeneralAsset.inst.GetTileAssetFromGlobalID(gid).mass;
                 }
             }
         }

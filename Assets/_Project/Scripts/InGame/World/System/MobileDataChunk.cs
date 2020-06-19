@@ -28,7 +28,7 @@ public class MobileDataChunk : DataChunk {
                         continue;
                     }
 
-                    BaseTileAsset tileAsset = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(GetGlobalID(x, y, (TerrainLayers)l));
+                    BaseTileAsset tileAsset = GeneralAsset.inst.GetTileAssetFromGlobalID(GetGlobalID(x, y, (TerrainLayers)l));
                     tileAsset.OnTileRefreshed(new Vector2Int(x, y), (TerrainLayers)l, this);
                 }
             }

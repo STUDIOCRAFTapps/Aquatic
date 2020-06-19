@@ -12,10 +12,14 @@ public class ParticleManager : MonoBehaviour {
     public EntityParticleAsset[] fixedParticleAssets;
     public ParticleConfigurator[] adaptiveParticlePrefabs;
 
+    public Flytext flytextPrefab;
+
     private List<ParticleConfigurator> adaptiveParticles;
     private List<ParticleConfigurator> fixedParticles;
+    private Queue<Flytext> flytextParticlePool;
     private Queue<TileParticleConfigurator>[] unusedTileParticles;
     private Dictionary<int, CustomTileParticle> gidToCustomTileParticle;
+
 
     private void Awake () {
         inst = this;
@@ -42,8 +46,9 @@ public class ParticleManager : MonoBehaviour {
                 gidToCustomTileParticle.Add(bta.globalID, ctp);
             }
         }
-    }
 
+        flytextParticlePool = new Queue<Flytext>();
+    }
 
     #region Public Functions
     public void PlayTilePlace (Vector2Int pos, BaseTileAsset tileAsset, MobileDataChunk mdc = null) {
@@ -84,6 +89,25 @@ public class ParticleManager : MonoBehaviour {
 
     public void PlayAdaptiveParticle (Vector3 position, int id) {
         adaptiveParticles[id].Play(position);
+    }
+
+
+
+    public void PlayFlytext (Vector2 pos, string value, float length, float velY) {
+        Flytext flytext;
+        if(flytextParticlePool.Count == 0) {
+            flytext = Instantiate(flytextPrefab, transform);
+        } else {
+            flytext = flytextParticlePool.Dequeue();
+        }
+
+        flytext.gameObject.SetActive(true);
+        flytext.Configure(pos, value, length, velY);
+    }
+
+    public void ReturnFlytext (Flytext flytext) {
+        flytext.gameObject.SetActive(false);
+        flytextParticlePool.Enqueue(flytext);
     }
 
     #endregion

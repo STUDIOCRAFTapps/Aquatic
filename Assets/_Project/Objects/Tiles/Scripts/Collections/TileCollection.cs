@@ -9,6 +9,8 @@ public class TileCollection : ScriptableObject {
     [HideInInspector] public Dictionary<string, BaseTileAsset> tilesByString = new Dictionary<string, BaseTileAsset>();
     public BaseTileAsset[] items = null;
 
+    [HideInInspector] public NamespaceAssetGroup parent;
+
     public void BuildDictionary () {
         tilesByString.Clear();
         foreach(BaseTileAsset it in items) {

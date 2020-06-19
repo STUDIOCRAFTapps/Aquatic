@@ -9,17 +9,17 @@ public class AttackStrike : MonoBehaviour, IPixelAnimationCallbackReciever {
     public int assetID;
     protected PlayerController owner;
     protected Vector2 additionnalAttVel;
-    protected BaseAttackStrikeAsset asset;
+    protected BaseAttackStrikeData data;
     protected Vector2 dir;
 
     int hitCount = 0;
 
-    public virtual void Init (PlayerController owner, BaseAttackStrikeAsset asset, Vector2 additionnalAttVel, Vector2 direction) {
+    public virtual void Init (PlayerController owner, BaseAttackStrikeData data, Vector2 additionnalAttVel, Vector2 direction) {
         hitCount = 0;
         this.owner = owner;
         pixelAnimator.PlayClip("Strike");
         this.additionnalAttVel = additionnalAttVel;
-        this.asset = asset;
+        this.data = data;
         dir = direction;
     }
 
@@ -36,24 +36,25 @@ public class AttackStrike : MonoBehaviour, IPixelAnimationCallbackReciever {
         EntityManager.inst.ExecuteOverlapsEntity(hitCollider, (e) => {
             LivingEntity le = e as LivingEntity;
             if(le != null) {
-                if(asset.knockbackUponLast && hitCount == asset.maxHitCount) {
-                    le.rigidbody.velocity = (dir * 25f * asset.knockbackMultiplier + additionnalAttVel);
+                if(data.knockbackUponLast && hitCount == data.maxHitCount) {
+                    le.rigidbody.velocity = (dir * 25f * data.knockbackMultiplier + additionnalAttVel);
                 } else {
                     le.rigidbody.velocity = Vector2.zero;
                 }
                 le.animator.PlayHitFlash(0.2f);
-                le.HitEntity(asset.damage);
+                le.HitEntity(data.damage);
+                //le.ApplyEffect("default:freeze", 1f, 0);
             }
         });
     }
 
     public virtual void Die () {
-        if(hitCount < asset.maxHitCount && asset.maxHitCount > 1) {
+        if(hitCount < data.maxHitCount && data.maxHitCount > 1) {
             return;
         }
 
-        if(asset.playParticleOnDeath != -1) {
-            ParticleManager.inst.PlayFixedParticle(transform.position, asset.playParticleOnDeath);
+        if(data.playParticleOnDeath != -1) {
+            ParticleManager.inst.PlayFixedParticle(transform.position, data.playParticleOnDeath);
         }
         CombatManager.inst.SetStrikeAsUnused(assetID, this);
     }

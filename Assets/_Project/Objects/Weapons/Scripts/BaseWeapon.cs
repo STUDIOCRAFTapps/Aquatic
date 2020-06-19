@@ -15,22 +15,36 @@ public abstract class BaseWeapon : ScriptableObject {
     public Sprite icon;
     public WeaponTypes type;
 
+    [HideInInspector] public int gid;
+
     /// <summary>
-    /// This is called the frame the player presses the attack button
+    /// Called once the weapon has been equiped. This can be used, for instance, to instantiate the anchor before it's used.
     /// </summary>
-    public virtual void OnStartAttack (WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
+    public virtual void OnEquipWeapon () {
     }
 
     /// <summary>
-    /// This is called for every normal (not fixed) frame the player holds the attack button
+    /// Called once the weapon has been unequiped. This can be used, for instance, to remove the anchor after it's been used.
     /// </summary>
-    public virtual void OnHoldAttack (WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
+    public virtual void OnUnequipWeapon () {
     }
 
     /// <summary>
-    /// This is called the frame the player releases the attack button
+    /// Called the frame the player presses the attack button
     /// </summary>
-    public virtual void OnReleaseAttack (WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
+    public virtual void OnStartAttack (ref WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
+    }
+
+    /// <summary>
+    /// Called for every normal (not fixed) frame the player holds the attack button
+    /// </summary>
+    public virtual void OnHoldAttack (ref WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
+    }
+
+    /// <summary>
+    /// Called the frame the player releases the attack button
+    /// </summary>
+    public virtual void OnReleaseAttack (ref WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
     }
 
     public virtual WeaponPlayerData CreateWeaponPlayerData () {

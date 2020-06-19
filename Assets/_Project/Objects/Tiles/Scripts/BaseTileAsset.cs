@@ -102,8 +102,8 @@ public class BaseTileAsset : ScriptableObject {
         if(targetID == globalID) {
             return 1;
         }
-        if(TerrainManager.inst.tiles.GetTileAssetFromGlobalID(targetID).allowsConnection) {
-            if(TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).connectsByDefault) {
+        if(GeneralAsset.inst.GetTileAssetFromGlobalID(targetID).allowsConnection) {
+            if(GeneralAsset.inst.GetTileAssetFromGlobalID(globalID).connectsByDefault) {
                 return 1;
             }
         }

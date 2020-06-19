@@ -6,6 +6,24 @@ public class InterpolatedTransform : MonoBehaviour {
     private TransformData[] m_lastTransforms;
     private int m_newTransformIndex;
 
+    public void SetTransformPosition (Vector3 position) {
+        transform.localPosition = position;
+        m_lastTransforms[0].position = position;
+        m_lastTransforms[1].position = position;
+    }
+
+    public void SetTransformRotation (Quaternion rotation) {
+        transform.localRotation = rotation;
+        m_lastTransforms[0].rotation = rotation;
+        m_lastTransforms[1].rotation = rotation;
+    }
+
+    public void SetTransformScale (Vector3 scale) {
+        transform.localScale = scale;
+        m_lastTransforms[0].scale = scale;
+        m_lastTransforms[1].scale = scale;
+    }
+
     void OnEnable () {
         ForgetPreviousTransforms();
     }

@@ -83,7 +83,7 @@ public class PhysicsPixel : MonoBehaviour {
 
         if(TerrainManager.inst.GetGlobalIDAt(tileX, tileY, TerrainLayers.Ground, out int globalID, mdc)) {
             if(globalID != 0) {
-                bta = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID);
+                bta = GeneralAsset.inst.GetTileAssetFromGlobalID(globalID);
                 if(!bta.hasCollision) {
                     return false;
                 }
@@ -307,7 +307,7 @@ public class PhysicsPixel : MonoBehaviour {
 
     public bool IsPointSolid (Vector2 point) {
         Vector2Int tile = Vector2Int.FloorToInt(point);
-
+        
         // Seek tiles
         bool tileFound = TerrainManager.inst.GetGlobalIDAt(tile.x, tile.y, TerrainLayers.Ground, out int globalID, null);
         if(!tileFound || globalID == 0) {
@@ -315,7 +315,7 @@ public class PhysicsPixel : MonoBehaviour {
         }
 
         // Test asset
-        BaseTileAsset bta = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(TerrainManager.inst.GetGlobalIDAt(tile.x, tile.y, TerrainLayers.Ground, null));
+        BaseTileAsset bta = GeneralAsset.inst.GetTileAssetFromGlobalID(TerrainManager.inst.GetGlobalIDAt(tile.x, tile.y, TerrainLayers.Ground, null));
         if(!bta.hasCollision) {
             return false;
         }
@@ -323,7 +323,7 @@ public class PhysicsPixel : MonoBehaviour {
             return false;
         }
         for(int i = 0; i < bta.collisionBoxes.Length; i++) {
-            if(bta.collisionBoxes[i].Overlaps(point - tile - (Vector2.one * 0.5f))) {
+            if(bta.collisionBoxes[i].Overlaps(point - tile)) {
                 return true;
             }
         }
@@ -393,41 +393,44 @@ public class PhysicsPixel : MonoBehaviour {
         float inter = broadphaseMaxInterval;
         for(int i = 0; i < rbs.Count; i++) {
             for(int j = i + 1; j < rbs.Count; j++) {
-                if(!rbs[i].gameObject.activeSelf || !rbs[j].gameObject.activeSelf) {
+                RigidbodyPixel rbsi = rbs[i];
+                RigidbodyPixel rbsj = rbs[j];
+
+                if(!rbsi.gameObject.activeSelf || !rbsj.gameObject.activeSelf) {
                     continue;
                 }
-                if((rbs[i].collidesOnlyWithTerrain || rbs[j].collidesOnlyWithTerrain)/* && !(rbs[i].interactsWithComplexCollider || rbs[j].interactsWithComplexCollider)*/) {
+                if((rbsi.collidesOnlyWithTerrain || rbsj.collidesOnlyWithTerrain)/* && !(rbsi.interactsWithComplexCollider || rbsj.interactsWithComplexCollider)*/) {
                     continue;
                 }
-                if(rbs[i].inverseMass == 0 && rbs[j].inverseMass == 0) {
+                if(rbsi.inverseMass == 0 && rbsj.inverseMass == 0) {
                     continue;
                 }
-                if(rbs[i].disableForAFrame || rbs[j].disableForAFrame) {
+                if(rbsi.disableForAFrame || rbsj.disableForAFrame) {
                     continue;
                 }
-                if(rbs[i].ignoreProjectileOwnerUntilHitWall == rbs[j]) {
+                if(rbsi.ignoreProjectileOwnerUntilHitWall == rbsj) {
                     continue;
                 }
-                if(rbs[j].ignoreProjectileOwnerUntilHitWall == rbs[i]) {
+                if(rbsj.ignoreProjectileOwnerUntilHitWall == rbsi) {
                     continue;
                 }
 
                 //Broadphase Test
-                if(!IsRangeOverlapping(rbs[i].aabb.min.x - inter, rbs[i].aabb.max.x + inter, rbs[j].aabb.min.x - inter, rbs[j].aabb.max.x + inter)) {
+                if(!IsRangeOverlapping(rbsi.aabb.min.x - inter, rbsi.aabb.max.x + inter, rbsj.aabb.min.x - inter, rbsj.aabb.max.x + inter) && rbsi.mobileChunk == null && rbsj.mobileChunk == null) {
                     continue;
                 }
-                if(!IsRangeOverlapping(rbs[i].aabb.min.y - inter, rbs[i].aabb.max.y + inter, rbs[j].aabb.min.y - inter, rbs[j].aabb.max.y + inter)) {
+                if(!IsRangeOverlapping(rbsi.aabb.min.y - inter, rbsi.aabb.max.y + inter, rbsj.aabb.min.y - inter, rbsj.aabb.max.y + inter) && rbsi.mobileChunk == null && rbsj.mobileChunk == null) {
                     continue;
                 }
 
                 Manifold manif = GetNewManifold();
                 manif.anyBodyMoved = false;
                 manif.hadCollision = false;
-                manif.properComplexInteraction = (rbs[i].isComplexCollider && rbs[j].interactsWithComplexCollider) || (rbs[j].isComplexCollider && rbs[i].interactsWithComplexCollider);
+                manif.properComplexInteraction = (rbsi.isComplexCollider && rbsj.interactsWithComplexCollider) || (rbsj.isComplexCollider && rbsi.interactsWithComplexCollider);
                 if(!manif.properComplexInteraction) {
-                    manif.doSolveManifold = GetManifold(rbs[i], rbs[j], ref manif, isFirstRoutine, true);
+                    manif.doSolveManifold = GetManifold(rbsi, rbsj, ref manif, isFirstRoutine, true);
                 } else {
-                    manif.doSolveManifold = GetManifold(rbs[i], rbs[j], ref manif, isFirstRoutine, false);
+                    manif.doSolveManifold = GetManifold(rbsi, rbsj, ref manif, isFirstRoutine, false);
                 }
                 manifolds.Add(manif);
             }
@@ -452,8 +455,8 @@ public class PhysicsPixel : MonoBehaviour {
 
 
         // Vector from A to B
-        Bounds2D abox = A.GetBoundFromCollider();
-        Bounds2D bbox = B.GetBoundFromCollider();
+        Bounds2D abox = A.aabb;//A.GetBoundFromCollider();
+        Bounds2D bbox = B.aabb;//B.GetBoundFromCollider();
         Vector2 n = bbox.center - abox.center;
 
         float a_extent = (abox.max.x - abox.min.x) * 0.5f; // Calculate half extents along x axis for each object
@@ -826,7 +829,7 @@ public class PhysicsPixel : MonoBehaviour {
             if(!m.A.isComplexCollider) {
                 m.A.aabb = m.A.GetBoundFromCollider();
             } else {
-                m.A.aabb = m.A.GetBoundFromCollider((Vector2)m.A.mobileChunk.mobileDataChunk.restrictedSize);
+                m.A.aabb = m.A.GetBoundFromCollider(m.A.mobileChunk.mobileDataChunk.restrictedSize);
             }
             
             m.anyBodyMoved = true;
@@ -835,7 +838,7 @@ public class PhysicsPixel : MonoBehaviour {
             if(!m.B.isComplexCollider) {
                 m.B.aabb = m.B.GetBoundFromCollider();
             } else {
-                m.B.aabb = m.B.GetBoundFromCollider((Vector2)m.B.mobileChunk.mobileDataChunk.restrictedSize);
+                m.B.aabb = m.B.GetBoundFromCollider(m.B.mobileChunk.mobileDataChunk.restrictedSize);
             }
 
             m.anyBodyMoved = true;
@@ -1293,17 +1296,17 @@ public class PhysicsPixel : MonoBehaviour {
 
     #region Debug
     public static void DrawBounds (Bounds bounds, Color color) {
-        Debug.DrawLine(new Vector2(bounds.min.x, bounds.min.y), new Vector2(bounds.max.x, bounds.min.y), color);
-        Debug.DrawLine(new Vector2(bounds.min.x, bounds.max.y), new Vector2(bounds.max.x, bounds.max.y), color);
-        Debug.DrawLine(new Vector2(bounds.min.x, bounds.min.y), new Vector2(bounds.min.x, bounds.max.y), color);
-        Debug.DrawLine(new Vector2(bounds.max.x, bounds.min.y), new Vector2(bounds.max.x, bounds.max.y), color);
+        Debug.DrawLine(new Vector3(bounds.min.x, bounds.min.y, -1f), new Vector3(bounds.max.x, bounds.min.y, -1f), color);
+        Debug.DrawLine(new Vector3(bounds.min.x, bounds.max.y, -1f), new Vector3(bounds.max.x, bounds.max.y, 0f), color);
+        Debug.DrawLine(new Vector3(bounds.min.x, bounds.min.y, -1f), new Vector3(bounds.min.x, bounds.max.y, 0f), color);
+        Debug.DrawLine(new Vector3(bounds.max.x, bounds.min.y, -1f), new Vector3(bounds.max.x, bounds.max.y, 0f), color);
     }
 
     public static void DrawBounds (Bounds2D bounds, Color color) {
-        Debug.DrawLine(new Vector2(bounds.min.x, bounds.min.y), new Vector2(bounds.max.x, bounds.min.y), color);
-        Debug.DrawLine(new Vector2(bounds.min.x, bounds.max.y), new Vector2(bounds.max.x, bounds.max.y), color);
-        Debug.DrawLine(new Vector2(bounds.min.x, bounds.min.y), new Vector2(bounds.min.x, bounds.max.y), color);
-        Debug.DrawLine(new Vector2(bounds.max.x, bounds.min.y), new Vector2(bounds.max.x, bounds.max.y), color);
+        Debug.DrawLine(new Vector3(bounds.min.x, bounds.min.y, -1f), new Vector3(bounds.max.x, bounds.min.y, -1f), color);
+        Debug.DrawLine(new Vector3(bounds.min.x, bounds.max.y, -1f), new Vector3(bounds.max.x, bounds.max.y, -1f), color);
+        Debug.DrawLine(new Vector3(bounds.min.x, bounds.min.y, -1f), new Vector3(bounds.min.x, bounds.max.y, -1f), color);
+        Debug.DrawLine(new Vector3(bounds.max.x, bounds.min.y, -1f), new Vector3(bounds.max.x, bounds.max.y, -1f), color);
     }
     #endregion
 }

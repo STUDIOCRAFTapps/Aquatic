@@ -5,5 +5,10 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Weapon Collection", menuName = "Combat/Weapon/Collection")]
 public class WeaponCollection : ScriptableObject {
     new public string name;
-    public BaseWeapon[] weapons;
+
+    public BaseWeapon[] items = null;
+
+    public void BuildDictionary () {
+
+    }
 }

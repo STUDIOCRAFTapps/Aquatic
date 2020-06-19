@@ -4,10 +4,12 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "EntityCollection", menuName = "Entities/Collections/EntityCollection")]
 public class EntityCollection : ScriptableObject {
-    public string id;
+    new public string name;
 
     [HideInInspector] public Dictionary<string, EntityAsset> entitiesByString = new Dictionary<string, EntityAsset>();
     public EntityAsset[] items = null;
+
+    [HideInInspector] public NamespaceAssetGroup parent;
 
     public void BuildDictionary () {
         entitiesByString.Clear();

@@ -114,7 +114,7 @@ public class ChunkCleaner : MonoBehaviour {
         ms.Write((byte)dataChunk.globalIDPalette.Count);
         for(int i = 0; i < dataChunk.globalIDPalette.Count; i++) {
             //This shouldn't create much allocations, it just reference already written strings
-            TileString tileString = TerrainManager.inst.tiles.GetTileStringFromGlobalID(dataChunk.globalIDPalette[i]);
+            TileString tileString = GeneralAsset.inst.GetTileStringFromGlobalID(dataChunk.globalIDPalette[i]);
 
             //Mark the length
             ms.Write((byte)(tileString.nspace.Length + tileString.id.Length + 1));
@@ -164,7 +164,7 @@ public class ChunkCleaner : MonoBehaviour {
                 sb.Append(authorizedCharsString[ms.ReadByte()]);
             }
             tileString.id = sb.ToString();
-            if(TerrainManager.inst.tiles.GetGlobalIDFromTileString(tileString, out int gID)) {
+            if(GeneralAsset.inst.GetGlobalIDFromTileString(tileString, out int gID)) {
                 dataChunk.globalIDPalette.Add(gID);
             } else {
                 Debug.Log(tileString.id);

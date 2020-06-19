@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5603af1e5653b504f849e7cce798ae64, type: 3}
+  m_Name: Solid
+  m_EditorClassIdentifier: 
+  name: Solid Tiles
+  items:
+  - {fileID: 11400000, guid: 10e7ed78bbe6f9a43b99f7b87e6f5c58, type: 2}
+  - {fileID: 11400000, guid: 038a19a5b8d507945b368170b3810c22, type: 2}
+  - {fileID: 11400000, guid: e45f61f83ac901f4aa4d16d82e57f76b, type: 2}
+  - {fileID: 11400000, guid: 58826464c2d1f1d4d81e10aefc111796, type: 2}
+  - {fileID: 11400000, guid: 3ebf05a928dfa404c91a00729a5c6b32, type: 2}
+  - {fileID: 11400000, guid: 97514959fdc8808469653d8f28dc860a, type: 2}
+  - {fileID: 11400000, guid: 90ec12828d7653142a69453f0f46b6ae, type: 2}
+  parent:
+    name: 
+    id: 
+    description: 
+    tileCollections: []
+    entityCollections: []
+    weaponCollections: []

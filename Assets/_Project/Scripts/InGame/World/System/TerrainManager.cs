@@ -13,7 +13,7 @@ public class TerrainManager : MonoBehaviour {
     public Queue<int> mobileChunkToReload;
 
     [Header("Reference")]
-    public TileCollectionGroup tiles;
+    public GeneralAsset generalAsset;
     public Transform mobileRoot;
     public Transform terrainRoot;
 
@@ -43,7 +43,8 @@ public class TerrainManager : MonoBehaviour {
         unusedChunks = new Queue<DataChunk>();
         chunkToReload = new Dictionary<long, Vector2Int>();
         mobileChunkToReload = new Queue<int>();
-        tiles.BuildDictionaries();
+        GeneralAsset.inst = generalAsset;
+        generalAsset.Build();
 
         worldToPixel = pixelPerTile;
         pixelToWorld = 1f / worldToPixel;
@@ -239,12 +240,12 @@ public class TerrainManager : MonoBehaviour {
         if(mdc != null) {
             int oldGID = mdc.GetGlobalID(x, y, layer);
             if(oldGID != 0) {
-                tiles.GetTileAssetFromGlobalID(oldGID).OnBreaked(x, y, layer, mdc);
+                GeneralAsset.inst.GetTileAssetFromGlobalID(oldGID).OnBreaked(x, y, layer, mdc);
             }
 
             mdc.SetGlobalID(x, y, layer, globalID);
             if(globalID != 0) {
-                tiles.GetTileAssetFromGlobalID(globalID).OnPlaced(x, y, layer, mdc);
+                GeneralAsset.inst.GetTileAssetFromGlobalID(globalID).OnPlaced(x, y, layer, mdc);
             }
             RefreshTilesAround(x, y, layer, 3, mdc);
             return true;
@@ -255,12 +256,12 @@ public class TerrainManager : MonoBehaviour {
         if(GetChunkAtPosition(cpos, out DataChunk dataChunk)) {
             int oldGID = dataChunk.GetGlobalID(x - cpos.x * chunkSize, y - cpos.y * chunkSize, layer);
             if(oldGID != 0) {
-                tiles.GetTileAssetFromGlobalID(oldGID).OnBreaked(x, y, layer, mdc);
+                GeneralAsset.inst.GetTileAssetFromGlobalID(oldGID).OnBreaked(x, y, layer, mdc);
             }
 
             dataChunk.SetGlobalID(x - cpos.x * chunkSize, y - cpos.y * chunkSize, layer, globalID);
             if(globalID != 0) {
-                tiles.GetTileAssetFromGlobalID(globalID).OnPlaced(x, y, layer, mdc);
+                GeneralAsset.inst.GetTileAssetFromGlobalID(globalID).OnPlaced(x, y, layer, mdc);
             }
             RefreshTilesAround(x, y, layer);
             return true;
@@ -311,7 +312,7 @@ public class TerrainManager : MonoBehaviour {
         if(mdc != null) {
             int gid = mdc.GetGlobalID(x, y, layer);
             if(gid != 0) {
-                tiles.GetTileAssetFromGlobalID(gid).OnTileRefreshed(new Vector2Int(x, y), layer, mdc);
+                GeneralAsset.inst.GetTileAssetFromGlobalID(gid).OnTileRefreshed(new Vector2Int(x, y), layer, mdc);
             }
             QueueMobileChunkReload(mdc.mobileChunk.uid);
             return true;
@@ -322,7 +323,7 @@ public class TerrainManager : MonoBehaviour {
         if(GetChunkAtPosition(cpos, out DataChunk dataChunk)) {
             int gid = dataChunk.GetGlobalID(x - cpos.x * chunkSize, y - cpos.y * chunkSize, layer);
             if(gid != 0) {
-                tiles.GetTileAssetFromGlobalID(gid).OnTileRefreshed(new Vector2Int(x, y), layer);
+                GeneralAsset.inst.GetTileAssetFromGlobalID(gid).OnTileRefreshed(new Vector2Int(x, y), layer);
             }
             QueueChunkReloadAtTile(x, y, layer);
             return true;

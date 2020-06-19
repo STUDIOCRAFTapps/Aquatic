@@ -14,6 +14,7 @@ public class PixelAnimator : MonoBehaviour {
     float timeOfStartFrame = 0f;
     float timeOfLastFlash = 0f;
     float flashLength = 0f;
+    int flashType = 0;
 
     void Update () {
         if(clip == null) {
@@ -36,10 +37,18 @@ public class PixelAnimator : MonoBehaviour {
 
         if(canFlash) {
             if(Time.time < timeOfLastFlash + flashLength) {
-                if(Time.time < timeOfLastFlash + flashLength * 0.5f) {
-                    targetGraphic.color = PixelAnimationManager.inst.maxFlash;
-                } else {
-                    targetGraphic.color = PixelAnimationManager.inst.minFlash;
+                if(flashType == 0) {
+                    if(Time.time < timeOfLastFlash + flashLength * 0.5f) {
+                        targetGraphic.color = PixelAnimationManager.inst.maxFlash;
+                    } else {
+                        targetGraphic.color = PixelAnimationManager.inst.minFlash;
+                    }
+                } else if(flashType == 1) {
+                    if(Time.time < timeOfLastFlash + flashLength * 0.5f) {
+                        targetGraphic.color = PixelAnimationManager.inst.maxFreezeFlash;
+                    } else {
+                        targetGraphic.color = PixelAnimationManager.inst.minFreezeFlash;
+                    }
                 }
             } else {
                 targetGraphic.color = Color.clear;
@@ -115,9 +124,10 @@ public class PixelAnimator : MonoBehaviour {
         DrawFrame();
     }
 
-    public void PlayHitFlash (float length) {
+    public void PlayHitFlash (float length, int type = 0) {
         flashLength = length;
         timeOfLastFlash = Time.time;
+        flashType = type;
     }
 
     public PixelAnimationClip GetCurrentClip () {

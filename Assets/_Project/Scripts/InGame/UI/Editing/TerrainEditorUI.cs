@@ -136,13 +136,15 @@ public class TerrainEditorUI : MonoBehaviour {
     }
 
     void FillTileInventory () {
-        for(int i = 0; i < TerrainManager.inst.tiles.tileByGlobalID.Count; i++) {
+        for(int i = 0; i < GeneralAsset.inst.GetTileCount(); i++) {
             // Spawn and configure tile asset displays
+            BaseTileAsset bta = GeneralAsset.inst.GetTileAssetFromGlobalID(i + 1);
+
             GameObject newTileAsset = Instantiate(tileAssetPrefab, itemMenuContent);
             tileAssetRect.Add(newTileAsset.GetComponent<TileAssetUIElement>());
-            tileAssetRect[tileAssetRect.Count - 1].image.sprite = TerrainManager.inst.tiles.tileByGlobalID[i].uiSprite;
-            tileAssetRect[tileAssetRect.Count - 1].nameText.text = TerrainManager.inst.tiles.tileByGlobalID[i].fullName;
-            tileAssetRect[tileAssetRect.Count - 1].infoText.text = TerrainManager.inst.tiles.tileByGlobalID[i].GetType().Name;
+            tileAssetRect[tileAssetRect.Count - 1].image.sprite = bta.uiSprite;
+            tileAssetRect[tileAssetRect.Count - 1].nameText.text = bta.fullName;
+            tileAssetRect[tileAssetRect.Count - 1].infoText.text = bta.GetType().Name;
             int index = i;
             tileAssetRect[tileAssetRect.Count - 1].dragButton.onClick.AddListener(() => {
 
@@ -151,7 +153,7 @@ public class TerrainEditorUI : MonoBehaviour {
                 slotDrag.teUI = this;
                 slotDrag.terrainEditorRect = terrainEditorRect;
                 slotDrag.transform.position = Input.mousePosition;
-                slotDrag.icon.sprite = TerrainManager.inst.tiles.tileByGlobalID[index].uiSprite;
+                slotDrag.icon.sprite = GeneralAsset.inst.GetTileAssetFromGlobalID(index + 1).uiSprite;
                 int gid = index + 1;
                 slotDrag.BeginDrag();
 
@@ -163,13 +165,15 @@ public class TerrainEditorUI : MonoBehaviour {
     }
 
     void FillEntityInventory () {
-        for(int i = 0; i < EntityManager.inst.entityCollectionGroup.entitiesByGlobalID.Count; i++) {
+        for(int i = 0; i < GeneralAsset.inst.GetEntityCount(); i++) {
             // Spawn and configure tile asset displays
+            EntityAsset ea = GeneralAsset.inst.GetEntityAssetFromGlobalID(i);
+
             GameObject newTileAsset = Instantiate(tileAssetPrefab, itemMenuContent);
             tileAssetRect.Add(newTileAsset.GetComponent<TileAssetUIElement>());
-            tileAssetRect[tileAssetRect.Count - 1].image.sprite = EntityManager.inst.entityCollectionGroup.entitiesByGlobalID[i].uiSprite;
-            tileAssetRect[tileAssetRect.Count - 1].nameText.text = EntityManager.inst.entityCollectionGroup.entitiesByGlobalID[i].fullName;
-            tileAssetRect[tileAssetRect.Count - 1].infoText.text = EntityManager.inst.entityCollectionGroup.entitiesByGlobalID[i].GetType().Name;
+            tileAssetRect[tileAssetRect.Count - 1].image.sprite = ea.uiSprite;
+            tileAssetRect[tileAssetRect.Count - 1].nameText.text = ea.fullName;
+            tileAssetRect[tileAssetRect.Count - 1].infoText.text = ea.GetType().Name;
             int index = i;
             tileAssetRect[tileAssetRect.Count - 1].dragButton.onClick.AddListener(() => {
 
@@ -178,8 +182,8 @@ public class TerrainEditorUI : MonoBehaviour {
                 slotDrag.teUI = this;
                 slotDrag.terrainEditorRect = terrainEditorRect;
                 slotDrag.transform.position = Input.mousePosition;
-                slotDrag.icon.sprite = EntityManager.inst.entityCollectionGroup.entitiesByGlobalID[index].uiSprite;
-                int gid = index + 1;
+                slotDrag.icon.sprite = GeneralAsset.inst.GetEntityAssetFromGlobalID(index).uiSprite;
+                int gid = index;
                 slotDrag.BeginDrag();
 
                 slotDrag.button.onClick.AddListener(() => {
@@ -232,8 +236,8 @@ public class TerrainEditorUI : MonoBehaviour {
             lastSelectedSlot.button.GetComponent<Image>().sprite = normalSlotDragSprite;
         }
         slotDrag.button.GetComponent<Image>().sprite = selectedSlotDragSprite;
-        layerMenu.value = (int)TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).defaultPlacingLayer;
-        tem.selectedLayer = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).defaultPlacingLayer;
+        layerMenu.value = (int)GeneralAsset.inst.GetTileAssetFromGlobalID(globalID).defaultPlacingLayer;
+        tem.selectedLayer = GeneralAsset.inst.GetTileAssetFromGlobalID(globalID).defaultPlacingLayer;
         tem.selectedMaterialID = globalID;
 
         lastSelectedSlot = slotDrag;

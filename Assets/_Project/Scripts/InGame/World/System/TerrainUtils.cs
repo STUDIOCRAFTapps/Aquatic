@@ -139,6 +139,7 @@ public class CancellableTimer {
     }
 }
 
+[System.Serializable]
 public struct Bounds2D {
     public Vector2 min;
     public Vector2 max;
@@ -172,8 +173,8 @@ public struct Bounds2D {
     }
 
     public bool Overlaps (Bounds2D b) {
-        return (this.min.x < b.max.x && this.max.x > b.min.x &&
-                this.min.y > b.max.y && this.max.y < b.max.y);
+        return (this.min.x <= b.max.x && b.min.x <= this.max.x &&
+                this.min.y <= b.max.y && b.min.y <= this.max.y);
     }
 
     public bool Overlaps (Vector2 p) {

@@ -10,11 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d215f92a8ef3ce84a94a7ebeb5f76f94, type: 3}
-  m_Name: SingleStrike
+  m_Name: SwordFishStrike
   m_EditorClassIdentifier: Assembly-CSharp::BaseAttackStrikeAsset
-  maxHitCount: 1
-  knockbackUponLast: 1
-  damage: 3.5
-  knockbackMultiplier: 1
-  prefab: {fileID: 5834155996997767312, guid: b1ae50a8dbbe608448cd0d0145b00899, type: 3}
-  playParticleOnDeath: -1
+  prefabID: 0
+  data:
+    maxHitCount: 1
+    knockbackUponLast: 1
+    damage: 1.8
+    knockbackMultiplier: 0
+    playParticleOnDeath: -1

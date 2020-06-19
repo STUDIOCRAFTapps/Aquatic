@@ -3,6 +3,7 @@ using UnityEngine;
 
 // Works similarly to the TileCollectionGroup class
 
+    /*
 [CreateAssetMenu(fileName = "EntityCollectionGroup", menuName = "Entities/Collections/EntityCollectionGroup")]
 public class EntityCollectionGroup : ScriptableObject {
     [Header("Collections")]
@@ -12,7 +13,6 @@ public class EntityCollectionGroup : ScriptableObject {
 
     #region Dictionary Building
     public void BuildDictionaries () {
-        collByString = new Dictionary<string, EntityCollection>();
         collByString = new Dictionary<string, EntityCollection>();
         entitiesByGlobalID = new List<EntityAsset>();
         for(int i = 0; i < collections.Count; i++) {
@@ -52,3 +52,4 @@ public class EntityCollectionGroup : ScriptableObject {
         return new EntityString(entitiesByGlobalID[globalID].collection.id, entitiesByGlobalID[globalID].id);
     }
 }
+*/

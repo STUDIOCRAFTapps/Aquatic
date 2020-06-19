@@ -5,11 +5,11 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Normal Weapon", menuName = "Combat/Weapon/Normal")]
 public class NormalWeapon : BaseWeapon {
 
-    public int strikeID = 0;
+    public BaseAttackStrikeAsset baseAttackStrikeAsset;
     public bool doStrikeUseRotation = true;
     public float cooldown = 0.1f;
 
-    public override void OnStartAttack (WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
+    public override void OnStartAttack (ref WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
         float timeDiff = Time.time - data.lastAttackTime;
         data.timeOfPress = Time.time;
 
@@ -17,7 +17,7 @@ public class NormalWeapon : BaseWeapon {
             data.lastAttackTime = Time.time;
 
             CombatManager.inst.SpawnStrike(
-                data.owner, strikeID,
+                data.owner, baseAttackStrikeAsset.GetPrefabID(), baseAttackStrikeAsset.GetData(),
                 pos, angle, dir,
                 Vector2.zero
             );

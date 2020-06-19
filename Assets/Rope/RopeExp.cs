@@ -686,7 +686,7 @@ public class RopeMovingMass {
                 //PhysicsPixel.DrawBounds(new Bounds2D(new Vector2(tileX, tileY), new Vector2(tileX + 1f, tileY + 1f)), Color.green);
                 // If tile is solid...
                 if(TerrainManager.inst.GetGlobalIDAt(tileX, tileY, TerrainLayers.Ground, out int globalID)) {
-                    if(globalID != 0 && TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).hasCollision) {
+                    if(globalID != 0 && GeneralAsset.inst.GetTileAssetFromGlobalID(globalID).hasCollision) {
                         newDeltaY = PhysicsPixel.inst.MinimizeDeltaY(newDeltaY, tileX, tileY, ref bounds);
                     }
                 }
@@ -707,7 +707,7 @@ public class RopeMovingMass {
                 //PhysicsPixel.DrawBounds(new Bounds2D(new Vector2(tileX, tileY), new Vector2(tileX + 1f, tileY + 1f)), Color.green);
                 // If tile is solid...
                 if(TerrainManager.inst.GetGlobalIDAt(tileX, tileY, TerrainLayers.Ground, out int globalID)) {
-                    if(globalID != 0 && TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).hasCollision) {
+                    if(globalID != 0 && GeneralAsset.inst.GetTileAssetFromGlobalID(globalID).hasCollision) {
                         newDeltaX = PhysicsPixel.inst.MinimizeDeltaX(newDeltaX, tileX, tileY, ref bounds);
                     }
                 }

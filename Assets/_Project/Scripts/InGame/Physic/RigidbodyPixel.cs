@@ -122,7 +122,7 @@ public class RigidbodyPixel : MonoBehaviour {
         if(!isComplexCollider) {
             aabb = GetBoundFromCollider();
         } else {
-            aabb = GetBoundFromCollider((Vector2)mobileChunk.mobileDataChunk.restrictedSize);
+            aabb = GetBoundFromCollider(mobileChunk.mobileDataChunk.restrictedSize);
         }
     }
 
@@ -299,7 +299,7 @@ public class RigidbodyPixel : MonoBehaviour {
         if(!isComplexCollider) {
             aabb = GetBoundFromCollider();
         } else {
-            aabb = GetBoundFromCollider((Vector2)mobileChunk.mobileDataChunk.restrictedSize);
+            aabb = GetBoundFromCollider(mobileChunk.mobileDataChunk.restrictedSize);
         }
 
         if(totalVolume > 0f) {
@@ -386,7 +386,7 @@ public class RigidbodyPixel : MonoBehaviour {
     void CheckForClipping () {
         float e = PhysicsPixel.inst.errorHandler;
         float e5 = 0.03125f;
-
+        
         #region Left
         if(lastVel.x < 0f && isCollidingLeft) {
             Vector2 point0 = new Vector2(
@@ -425,10 +425,13 @@ public class RigidbodyPixel : MonoBehaviour {
             );
             bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0, point1));
             bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.up * PhysicsPixel.inst.errorHandler);
+            
+            Debug.Log(solidPoint);
 
             if(solidClip && !solidPoint) {
                 if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Down, clipAmout, out Vector2 point)) {
                     float offset = clipAmout - (point1.y - point.y) + 0.03125f;
+                    
                     bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.up * offset, point1 + Vector2.up * (offset + box.size.y - e)));
                     if(!noFreeSpace) {
                         transform.position += Vector3.up * offset;
@@ -542,7 +545,9 @@ public class RigidbodyPixel : MonoBehaviour {
     }
 
     public Bounds2D GetBoundFromCollider () {
-        return new Bounds2D((Vector2)transform.position - box.size * 0.5f + box.offset, (Vector2)transform.position + box.size * 0.5f + box.offset);
+        Bounds2D b2 = new Bounds2D((Vector2)transform.position - box.size * 0.5f + box.offset, (Vector2)transform.position + box.size * 0.5f + box.offset);
+        PhysicsPixel.DrawBounds(b2, Color.yellow);
+        return b2;
     }
 
     public Bounds2D GetBoundFromCollider (Vector2 trueSize) {

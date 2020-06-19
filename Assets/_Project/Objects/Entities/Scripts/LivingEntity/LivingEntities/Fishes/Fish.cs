@@ -21,14 +21,16 @@ public class FishData : LivingEntityData {
 public class Fish : LivingEntity {
 
     public SpriteRenderer spriteRenderer;
+    public Transform flipRoot;
+    public BoxCollider2D attackBox;
     Vector2 targetDirection;
     float lastAttackTime;
     float targetIdleHeight;
     bool isIdlingLeft = false;
+    public GameObject dizzyParticles;
 
     public override bool LoadData (EntityData entityData) {
         bool hasBaseFailed = base.LoadData(entityData);
-
         if(hasBaseFailed) return hasBaseFailed;
 
         targetIdleHeight = entityData.position.y;
@@ -56,6 +58,7 @@ public class Fish : LivingEntity {
     public override void OnUpdate () {
         if(targetDirection.x != 0f) {
             spriteRenderer.flipX = targetDirection.x > 0f;
+            flipRoot.localScale = new Vector3(targetDirection.x > 0f ? -1f : 1f, 1f, 1f);
         }
 
         base.OnUpdate();
@@ -84,6 +87,11 @@ public class Fish : LivingEntity {
     public override void OnManageAI () {
         PlayerController pc = GameManager.inst.GetNearestPlayer(transform.position);
         if(pc == null) {
+            return;
+        }
+        if(((LivingEntityData)entityData).GetEffect("default:freeze", out GenericEffect effect)) {
+            animator.PlayHitFlash(0.2f, 1);
+            targetDirection = Vector2.zero;
             return;
         }
 
@@ -157,6 +165,13 @@ public class Fish : LivingEntity {
     }
     
     public void OnNextPointReceived (Vector2 nextPoint, bool pathSuccessful) {
+        if(((LivingEntityData)entityData).GetEffect("default:stunned", out GenericEffect effect)) {
+            dizzyParticles.SetActive(true);
+            nextPoint = (Vector2)transform.position + UnityEngine.Random.insideUnitCircle * 2f;
+        } else {
+            dizzyParticles.SetActive(false);
+        }
+
         if(!pathSuccessful) {
             if(((LivingEntityData)entityData).state == 1 || ((LivingEntityData)entityData).state == 2) {
                 animator.PlayClipWithoutRestart("Chill");
@@ -187,6 +202,14 @@ public class Fish : LivingEntity {
         } else if(code == 1) {
             animator.PlayClipWithoutRestart("Chill");
             ((LivingEntityData)entityData).state = 3;
+
+            Bounds2D attackBounds = new Bounds2D(
+                (Vector2)attackBox.transform.position + attackBox.offset - attackBox.size * 0.5f,
+                (Vector2)attackBox.transform.position + attackBox.offset + attackBox.size * 0.5f
+            );
+            CombatManager.inst.AttackPlayers(
+                attackBounds, ((FishAsset)asset).damage
+            );
         }
     }
 

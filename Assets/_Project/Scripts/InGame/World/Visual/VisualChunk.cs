@@ -71,7 +71,7 @@ public class VisualChunk : MonoBehaviour {
 
                     int gid = dataChunk.GetGlobalID(x, y, (TerrainLayers)l);
 
-                    BaseTileAsset tileAsset = (gid != 0)?TerrainManager.inst.tiles.GetTileAssetFromGlobalID(gid):null;
+                    BaseTileAsset tileAsset = (gid != 0)? GeneralAsset.inst.GetTileAssetFromGlobalID(gid):null;
                     if((TerrainLayers)l == TerrainLayers.Ground && nc != null) {
                         Vector2Int tilePos = new Vector2Int(worldX, worldY);
                         bool isSolid = gid != 0 && tileAsset.hasCollision;

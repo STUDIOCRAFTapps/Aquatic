@@ -15,6 +15,7 @@ using UnityEngine;
 
 //HELP: SHOULD THIS BE RUNTIME?
 
+    /*
 [CreateAssetMenu(fileName = "TileCollectionGroup", menuName = "Terrain/Collections/TileCollectionGroup")]
 public class TileCollectionGroup : ScriptableObject {
     [Header("Collections")]
@@ -126,3 +127,4 @@ public class TileCollectionGroup : ScriptableObject {
         return new TileString(tileByGlobalID[globalID - 1].collection.id, tileByGlobalID[globalID - 1].id);
     }
 }
+*/

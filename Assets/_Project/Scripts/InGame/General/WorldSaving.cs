@@ -244,7 +244,6 @@ public class WorldSaving : MonoBehaviour {
 
     public void SavePlayer (PlayerStatus status, int uid) {
         //Serialize and save.
-        Debug.Log(uid);
         using(FileStream fs = new FileStream(GetPlayerDirectory(uid), FileMode.Create))
         using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
         using(StreamWriter sw = new StreamWriter(defs))
@@ -449,7 +448,6 @@ public class WorldSaving : MonoBehaviour {
 
                 playerData = serializer.Deserialize<PlayerStatus>(jr);
                 hasSucceded = true;
-                Debug.Log("succed load");
             }
         }
 
@@ -607,7 +605,7 @@ public class WorldSaving : MonoBehaviour {
         ms.Write((byte)dataChunk.globalIDPalette.Count);
         for(int i = 0; i < dataChunk.globalIDPalette.Count; i++) {
             //This shouldn't create much allocations, it just reference already written strings
-            TileString tileString = TerrainManager.inst.tiles.GetTileStringFromGlobalID(dataChunk.globalIDPalette[i]);
+            TileString tileString = GeneralAsset.inst.GetTileStringFromGlobalID(dataChunk.globalIDPalette[i]);
 
             //Mark the length
             ms.Write((byte)(tileString.nspace.Length + tileString.id.Length + 1));
@@ -658,7 +656,7 @@ public class WorldSaving : MonoBehaviour {
                 sb.Append(authorizedCharsString[ms.ReadByte()]);
             }
             tileString.id = sb.ToString();
-            if(TerrainManager.inst.tiles.GetGlobalIDFromTileString(tileString, out int gID)) {
+            if(GeneralAsset.inst.GetGlobalIDFromTileString(tileString, out int gID)) {
                 dataChunk.globalIDPalette.Add(gID);
             } else {
                 dataChunk.globalIDPalette.Add(-1);

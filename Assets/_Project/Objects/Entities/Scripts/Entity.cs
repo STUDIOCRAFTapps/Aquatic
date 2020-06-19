@@ -29,8 +29,8 @@ public class Entity : MonoBehaviour {
     // Executed when the managers needs the entity to restore a saved state from an entityData (Make sure to call base)
     public virtual bool LoadData (EntityData entityData) {
         this.entityData = entityData;
-        if(EntityManager.inst.entityCollectionGroup.GetGlobalIDFromEntityString(entityData.assetReference, out int globalID)) {
-            asset = EntityManager.inst.entityCollectionGroup.GetTileAssetFromGlobalID(globalID);
+        if(GeneralAsset.inst.GetGlobalIDFromEntityString(entityData.assetReference, out int globalID)) {
+            asset = GeneralAsset.inst.GetEntityAssetFromGlobalID(globalID);
         } else {
             return true;
         }

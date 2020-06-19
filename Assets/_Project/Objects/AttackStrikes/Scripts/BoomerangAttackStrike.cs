@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class BoomerangAttackStrike : AttackStrike {
-
     float speed = 0f;
 
-    public override void Init (PlayerController owner, BaseAttackStrikeAsset asset, Vector2 additionnalAttVel, Vector2 direction) {
-        base.Init(owner, asset, additionnalAttVel, direction);
-        speed = ((BoomerangAttackStrikeAsset)asset).speed;
+    public override void Init (PlayerController owner, BaseAttackStrikeData data, Vector2 additionnalAttVel, Vector2 direction) {
+        base.Init(owner, data, additionnalAttVel, direction);
+        speed = ((BoomerangAttackStrikeData)data).speed;
     }
 
     void Update () {
@@ -16,6 +15,6 @@ public class BoomerangAttackStrike : AttackStrike {
             return;
         }
         transform.position += (Vector3)dir * speed * Time.deltaTime;
-        speed += ((BoomerangAttackStrikeAsset)asset).acceleration * Time.deltaTime;
+        speed += ((BoomerangAttackStrikeData)data).acceleration * Time.deltaTime;
     }
 }

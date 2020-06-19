@@ -73,7 +73,8 @@ public class PlayerController : MonoBehaviour {
 
     public float timeOfLastAutosave;
 
-    const float defaultHealth = 5f;
+    public const float defaultHealth = 60f;
+    public const float healthPerHearts = 12f;
     #endregion
 
     #region MonoBehaviour
@@ -85,7 +86,7 @@ public class PlayerController : MonoBehaviour {
         };
         currentState = playerStates[0];
 
-        hud.BuildHealthContainer(Mathf.CeilToInt(defaultHealth));
+        hud.BuildHealthContainer(Mathf.CeilToInt(defaultHealth / healthPerHearts));
     }
 
     private void OnEnable () {
@@ -128,8 +129,6 @@ public class PlayerController : MonoBehaviour {
     private void Update () {
         status.time = Time.time;
         Animate();
-        
-        UpdateHealthHud();
     }
     #endregion
 
@@ -140,6 +139,7 @@ public class PlayerController : MonoBehaviour {
 
         status.RemoveTimeRelativity();
 
+        GetComponent<InterpolatedTransform>().SetTransformPosition(newStatus.playerPos);
         transform.position = info.status.playerPos;
         rbody.velocity = info.status.prevVel;
         
@@ -162,7 +162,7 @@ public class PlayerController : MonoBehaviour {
                 if(tileGID == 0) {
                     continue;
                 }
-                BaseTileAsset bta = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(tileGID);
+                BaseTileAsset bta = GeneralAsset.inst.GetTileAssetFromGlobalID(tileGID);
                 if(bta.GetType() != typeof(CollectableTileAsset)) {
                     continue;
                 }
@@ -219,8 +219,20 @@ public class PlayerController : MonoBehaviour {
     #endregion
 
     #region Public Function
-    public void DamagePlayer (float healthPoint) {
-        status.health = Mathf.Max(0f, status.health);
+    public void DamagePlayer (Vector2 impactPoint, float healthPoint) {
+        status.health = Mathf.Max(0f, status.health - healthPoint);
+        UpdateHealthHud();
+        ParticleManager.inst.PlayFlytext(impactPoint, Mathf.CeilToInt(healthPoint).ToString(), 0.5f, 2f);
+    }
+
+    public void HealPlayer (float healthPoint) {
+        Debug.Log(healthPoint);
+        status.health = Mathf.Min(defaultHealth, status.health + healthPoint);
+        UpdateHealthHud();
+    }
+
+    public void SetHealth (float healthPoint) {
+        status.health = healthPoint;
         UpdateHealthHud();
     }
 

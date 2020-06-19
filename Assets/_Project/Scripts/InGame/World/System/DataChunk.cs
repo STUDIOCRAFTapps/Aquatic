@@ -141,7 +141,7 @@ public class DataChunk {
                     if(tileData[(TerrainLayers)l][x][y].gid == 0) {
                         continue;
                     }
-                    BaseTileAsset tileAsset = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(GetGlobalID(x, y, (TerrainLayers)l));
+                    BaseTileAsset tileAsset = GeneralAsset.inst.GetTileAssetFromGlobalID(GetGlobalID(x, y, (TerrainLayers)l));
                     tileAsset.OnTileRefreshed(new Vector2Int(x + chunkPosition.x * chunkSize, y + chunkPosition.y * chunkSize), (TerrainLayers)l);
                 }
             }

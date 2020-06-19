@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5603af1e5653b504f849e7cce798ae64, type: 3}
+  m_Name: Decorations
+  m_EditorClassIdentifier: 
+  name: Decorations
+  items:
+  - {fileID: 11400000, guid: 44ac02b2b6ad5234ba66c733bc48c90a, type: 2}
+  - {fileID: 11400000, guid: 85452bb7f9a1e984583e8aba8aa30f36, type: 2}
+  - {fileID: 11400000, guid: b05ab36852969b8409c3cb63c4544230, type: 2}
+  - {fileID: 11400000, guid: a14e24f7899b8834cb619a09f58a4595, type: 2}
+  - {fileID: 11400000, guid: 17a38946b44ee2245915425ef57f03d9, type: 2}
+  parent:
+    name: 
+    id: 
+    description: 
+    tileCollections: []
+    entityCollections: []
+    weaponCollections: []

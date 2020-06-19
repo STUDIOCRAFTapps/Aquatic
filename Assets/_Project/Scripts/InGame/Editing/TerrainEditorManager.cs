@@ -225,7 +225,9 @@ public class TerrainEditorManager : MonoBehaviour {
             }
             destination.z = selectedMC.transform.position.z;
 
-            selectedMC.transform.position = Vector3.Lerp(selectedMC.transform.position, destination, blend);
+            Vector2 newPosition = Vector3.Lerp(selectedMC.transform.position, destination, blend);
+            selectedMC.UpdatePositionData(newPosition);
+            selectedMC.transform.position = newPosition;
             selectedMC.rigidbody.velocity = Vector2.zero;
             selectedMC.rigidbody.disableForAFrame = true;
         }
@@ -462,7 +464,7 @@ public class TerrainEditorManager : MonoBehaviour {
 
         if(selectedEntityTool == 1 && !pointerOverUI) {
             if(Input.GetMouseButtonDown(0)) {
-                Entity spawnEntity = EntityManager.inst.Spawn(worldPos, new EntityString("default", "salmod"));
+                Entity spawnEntity = EntityManager.inst.Spawn(worldPos, selectedEntityID);
                 if(spawnEntity != null) {
                     selectedE = spawnEntity;
                     selectedERigibody = selectedE.GetComponent<RigidbodyPixel>();
@@ -523,7 +525,7 @@ public class TerrainEditorManager : MonoBehaviour {
             previewObject.transform.position = new Vector3(x + 0.5f, y + 0.5f, previewZ);
         }
         if(globalID != 0) {
-            previewObject.GetComponent<SpriteRenderer>().sprite = TerrainManager.inst.tiles.GetTileAssetFromGlobalID(globalID).previewSprite;
+            previewObject.GetComponent<SpriteRenderer>().sprite = GeneralAsset.inst.GetTileAssetFromGlobalID(globalID).previewSprite;
         } else {
             previewObject.GetComponent<SpriteRenderer>().sprite = emptyPreview;
         }

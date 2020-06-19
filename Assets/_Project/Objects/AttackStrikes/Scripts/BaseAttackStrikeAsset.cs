@@ -1,13 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Attack Strike", menuName = "Combat/AttackStrikes/Base")]
-public class BaseAttackStrikeAsset : ScriptableObject {
-    public int maxHitCount = 1;
-    public bool knockbackUponLast = true;
-    public float damage;
-    public float knockbackMultiplier = 1f;
-    public AttackStrike prefab;
-    public int playParticleOnDeath = -1;
+public class BaseAttackStrikeAsset : ScriptableObject, IAttackStrikeAsset {
+    virtual public int GetPrefabID () {
+        return 0;
+    }
+    virtual public BaseAttackStrikeData GetData () {
+        return null;
+    }
 }

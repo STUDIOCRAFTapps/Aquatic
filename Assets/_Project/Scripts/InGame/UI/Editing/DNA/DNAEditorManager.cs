@@ -91,6 +91,10 @@ public class DNAEditorManager : MonoBehaviour {
             currentFieldPath.Add(fi.Name);
 
             if(fi.FieldType.Namespace != "System") {
+                if(fi.FieldType.GetInterface(nameof(IEnumerable)) != null) {
+                    currentFieldPath.RemoveAt(currentFieldPath.Count - 1);
+                    continue;
+                }
                 DNAPropertyBox dpb = CreateNewPropertyBox(fi.Name, indent, PropertyBoxType.Group);
                 allPropertyBoxes.Add(dpb);
                 indent++;

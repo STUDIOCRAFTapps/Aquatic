@@ -5,13 +5,13 @@ using UnityEngine;
 using Newtonsoft.Json;
 
 public class EntityManager : MonoBehaviour {
-
-    public EntityCollectionGroup entityCollectionGroup;
+    
     public float longUpdateFrequency = 0.1f;
 
     public List<Entity> allLoadedEntities;
     public Dictionary<int, Queue<Entity>> unusedEntities;
     public Dictionary<int, Entity> entitiesByUID;
+    public Queue<Entity> terminationRequests;
 
     public static EntityManager inst;
 
@@ -20,11 +20,10 @@ public class EntityManager : MonoBehaviour {
     private void Awake () {
         inst = this;
 
-        entityCollectionGroup.BuildDictionaries();
-
         allLoadedEntities = new List<Entity>();
         unusedEntities = new Dictionary<int, Queue<Entity>>();
         entitiesByUID = new Dictionary<int, Entity>();
+        terminationRequests = new Queue<Entity>();
 
         basicUID = PlayerPrefs.GetInt("entityUID", 0);
     }
@@ -38,6 +37,12 @@ public class EntityManager : MonoBehaviour {
                 entity.timeOfLastLongUpdate = Time.unscaledTime;
                 entity.OnLongUpdate();
             }
+        }
+    }
+
+    public void LateUpdate () {
+        while(terminationRequests.Count > 0) {
+            Internal_Kill(terminationRequests.Dequeue());
         }
     }
 
@@ -68,7 +73,7 @@ public class EntityManager : MonoBehaviour {
     }
 
     public Entity Spawn (Vector2 position, EntityString entity) {
-        return Spawn(position, entityCollectionGroup.collByString[entity.nspace].entitiesByString[entity.id].globalID);
+        return Spawn(position, GeneralAsset.inst.namespaceByString[entity.nspace].entitiesByString[entity.id].globalID);
     }
 
     public Entity Spawn (Vector2 position, int gid) {
@@ -81,14 +86,14 @@ public class EntityManager : MonoBehaviour {
             } 
         }
         if(entity == null) {
-            entity = Instantiate(entityCollectionGroup.entitiesByGlobalID[gid].prefab, transform);
+            entity = Instantiate(GeneralAsset.inst.GetEntityAssetFromGlobalID(gid).prefab, transform);
         }
 
         Type dataType = entity.GetDataType();
         EntityData entityData = (EntityData)Activator.CreateInstance(dataType);
         entityData.position = position;
         entityData.uid = basicUID;
-        entityData.assetReference = new EntityString("default", "salmod");
+        entityData.assetReference = GeneralAsset.inst.GetEntityStringFromGlobalID(gid);
         entity.LoadData(entityData);
 
         entitiesByUID.Add(entityData.uid, entity);
@@ -104,6 +109,10 @@ public class EntityManager : MonoBehaviour {
     }
 
     public void Kill (Entity entity) {
+        terminationRequests.Enqueue(entity);
+    }
+
+    void Internal_Kill (Entity entity) {
         EntityRegionManager.inst.RemoveEntity(entity);
 
         entitiesByUID.Remove(entity.entityData.uid);
@@ -146,7 +155,7 @@ public class EntityManager : MonoBehaviour {
             return;
         }
 
-        if(!entityCollectionGroup.GetGlobalIDFromEntityString(entityData.assetReference, out int gid)) {
+        if(!GeneralAsset.inst.GetGlobalIDFromEntityString(entityData.assetReference, out int gid)) {
             return;
         }
 
@@ -158,7 +167,7 @@ public class EntityManager : MonoBehaviour {
             }
         }
         if(entity == null) {
-            entity = Instantiate(entityCollectionGroup.entitiesByGlobalID[gid].prefab, transform);
+            entity = Instantiate(GeneralAsset.inst.GetEntityAssetFromGlobalID(gid).prefab, transform);
         }
 
         entity.LoadData(entityData);

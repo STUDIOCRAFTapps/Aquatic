@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fa371ea59df0e44f89e874a9f163b42, type: 3}
+  m_Name: GeneralAsset
+  m_EditorClassIdentifier: 
+  assetGroups:
+  - name: Default
+    id: default
+    description: Aquatic Project's base asset group
+    tileCollections:
+    - {fileID: 11400000, guid: 926ac9b420e19e840894a9c2661aa24c, type: 2}
+    - {fileID: 11400000, guid: ed370d0a0cb4b2a44bd36367e5420228, type: 2}
+    - {fileID: 11400000, guid: 07b4423baab69c9479d57da730d718b9, type: 2}
+    - {fileID: 11400000, guid: 4b79d65634e5d3a418cd1a04dd0b0773, type: 2}
+    - {fileID: 11400000, guid: b3ae11f1783813e41890935b4e55c831, type: 2}
+    entityCollections:
+    - {fileID: 11400000, guid: cf86498b3aacf9b4e9532e617f411316, type: 2}
+    weaponCollections:
+    - {fileID: 11400000, guid: d982647258d82b5498e86f572ee167c3, type: 2}
+  maxTextureWidth: 32
+  maxTextureHeight: 32
+  textureFormat: 4
+  textures: {fileID: 0}

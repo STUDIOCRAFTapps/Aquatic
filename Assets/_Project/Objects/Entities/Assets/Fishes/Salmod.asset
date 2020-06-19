@@ -28,3 +28,4 @@ MonoBehaviour:
   maxTargetingDistance: 15
   minAttakInterval: 1
   speed: 60
+  damage: 6

@@ -6,6 +6,8 @@ public class PixelAnimationManager : MonoBehaviour {
     public PixelAnimationGroup[] groups;
     public Color maxFlash;
     public Color minFlash;
+    public Color maxFreezeFlash;
+    public Color minFreezeFlash;
 
     public static PixelAnimationManager inst;
 

@@ -6,16 +6,15 @@ public class CombatManager : MonoBehaviour {
 
     public static CombatManager inst;
 
-    public BaseAttackStrikeAsset[] allAttackStrikeAssets;
-
+    public AttackStrike[] allAttackStrikePrefabs;
 
     public Queue<AttackStrike>[] attackStrikesPool;
 
     void Awake () {
         inst = this;
 
-        attackStrikesPool = new Queue<AttackStrike>[allAttackStrikeAssets.Length];
-        for(int i = 0; i < allAttackStrikeAssets.Length; i++) {
+        attackStrikesPool = new Queue<AttackStrike>[allAttackStrikePrefabs.Length];
+        for(int i = 0; i < allAttackStrikePrefabs.Length; i++) {
             attackStrikesPool[i] = new Queue<AttackStrike>();
         }
     }
@@ -25,18 +24,26 @@ public class CombatManager : MonoBehaviour {
         attackStrikesPool[assetID].Enqueue(attackStrike);
     }
 
-    public void SpawnStrike (PlayerController owner, int assetID, Vector2 pos, float rotation, Vector2 direction, Vector2 additionnalVel) {
+    public void SpawnStrike (PlayerController owner, int prefabID, BaseAttackStrikeData data, Vector2 pos, float rotation, Vector2 direction, Vector2 additionnalVel) {
         AttackStrike newStrike;
-        if(attackStrikesPool[assetID].Count > 0) {
-            newStrike = attackStrikesPool[assetID].Dequeue();
+        if(attackStrikesPool[prefabID].Count > 0) {
+            newStrike = attackStrikesPool[prefabID].Dequeue();
             newStrike.gameObject.SetActive(true);
         } else {
-            newStrike = Instantiate(allAttackStrikeAssets[assetID].prefab, transform);
-            newStrike.assetID = assetID;
+            newStrike = Instantiate(allAttackStrikePrefabs[prefabID], transform);
+            newStrike.assetID = prefabID;
         }
 
-        newStrike.Init(owner, allAttackStrikeAssets[assetID], additionnalVel, direction);
+        newStrike.Init(owner, data, additionnalVel, direction);
         newStrike.transform.position = (Vector3)pos + Vector3.back * 0.25f;
         newStrike.transform.eulerAngles = Vector3.forward * rotation;
+    }
+
+    public void AttackPlayers (Bounds2D bounds, float damage) {
+        foreach(PlayerController pc in GameManager.inst.allPlayers) {
+            if(bounds.Overlaps(pc.rbody.aabb)) {
+                pc.DamagePlayer(bounds.center, damage);
+            }
+        }
     }
 }
