@@ -425,8 +425,6 @@ public class RigidbodyPixel : MonoBehaviour {
             );
             bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0, point1));
             bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.up * PhysicsPixel.inst.errorHandler);
-            
-            Debug.Log(solidPoint);
 
             if(solidClip && !solidPoint) {
                 if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Down, clipAmout, out Vector2 point)) {

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09945e2e5f4e1414b94134a0bda65f54, type: 3}
+  m_Name: WindowFrame
+  m_EditorClassIdentifier: 
+  fullName: Window Frame
+  uiSprite: {fileID: 2598944012299624297, guid: b7128a3d32106424b909508b79e22de0,
+    type: 3}
+  previewSprite: {fileID: -6427587932736972384, guid: b7128a3d32106424b909508b79e22de0,
+    type: 3}
+  id: window_frame
+  defaultPlacingLayer: 2
+  allowsConnection: 1
+  connectsByDefault: 1
+  hasTextures: 1
+  textures:
+  - {fileID: -6427587932736972384, guid: b7128a3d32106424b909508b79e22de0, type: 3}
+  verts:
+  - {x: 0, y: 0, z: 0.126}
+  - {x: 1, y: 0, z: 0.126}
+  - {x: 0, y: 1, z: 0.126}
+  - {x: 1, y: 1, z: 0.126}
+  uvs:
+  - {x: 0, y: 0}
+  - {x: 0.5, y: 0}
+  - {x: 0, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  hasCollision: 0
+  collisionBoxes:
+  - min: {x: 0, y: 0}
+    max: {x: 1, y: 1}
+  mass: 2

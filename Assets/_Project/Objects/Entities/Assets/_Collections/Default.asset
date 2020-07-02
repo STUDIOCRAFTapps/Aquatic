@@ -12,6 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4d95ce8bd71de1429f448dda09bdad2, type: 3}
   m_Name: Default
   m_EditorClassIdentifier: 
-  id: default
+  name: 
   items:
   - {fileID: 11400000, guid: b0d136ddde02d6a44878f7e6df86b277, type: 2}
+  - {fileID: 11400000, guid: 47303284b805ebf4790c90fa2c78b862, type: 2}
+  - {fileID: 11400000, guid: f6592471df604154097ce7829ecb5d36, type: 2}
+  parent:
+    name: Default
+    id: default
+    description: Aquatic Project's base asset group
+    tileCollections:
+    - {fileID: 11400000, guid: 926ac9b420e19e840894a9c2661aa24c, type: 2}
+    - {fileID: 11400000, guid: ed370d0a0cb4b2a44bd36367e5420228, type: 2}
+    - {fileID: 11400000, guid: 07b4423baab69c9479d57da730d718b9, type: 2}
+    - {fileID: 11400000, guid: 4b79d65634e5d3a418cd1a04dd0b0773, type: 2}
+    - {fileID: 11400000, guid: b3ae11f1783813e41890935b4e55c831, type: 2}
+    entityCollections:
+    - {fileID: 11400000}
+    weaponCollections:
+    - {fileID: 11400000, guid: d982647258d82b5498e86f572ee167c3, type: 2}

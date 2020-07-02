@@ -16,6 +16,6 @@ MonoBehaviour:
   data:
     maxHitCount: 1
     knockbackUponLast: 1
-    damage: 3
+    damage: 4
     knockbackMultiplier: 1.2
     playParticleOnDeath: -1

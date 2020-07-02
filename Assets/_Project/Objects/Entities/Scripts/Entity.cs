@@ -99,6 +99,6 @@ public class Entity : MonoBehaviour {
 }
 
 public interface IInteractableEntity {
-    bool OnCheckInteractWithCollider(Collider2D collider);
-    float OnCheckInteractWithRay (Ray2D ray);
+    bool OnCheckInteractWithCollider(Bounds2D colliderBounds);
+    bool OnCheckInteractWithRay (Ray2D ray, out float distance);
 }

@@ -22,10 +22,10 @@ MonoBehaviour:
   offset: {x: 0, y: 0}
   size: {x: 1.875, y: 1.25}
   mass: 9
-  maxHealth: 40
+  maxHealth: 25
   animationGroup: {fileID: 552821699678306382, guid: 4addb3fc5c42fd64abb25b05d0f7e9f9,
     type: 3}
   maxTargetingDistance: 15
   minAttakInterval: 1
-  speed: 60
+  speed: 55
   damage: 6

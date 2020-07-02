@@ -41,7 +41,6 @@ public class AttackStrike : MonoBehaviour, IPixelAnimationCallbackReciever {
                 } else {
                     le.rigidbody.velocity = Vector2.zero;
                 }
-                le.animator.PlayHitFlash(0.2f);
                 le.HitEntity(data.damage);
                 //le.ApplyEffect("default:freeze", 1f, 0);
             }

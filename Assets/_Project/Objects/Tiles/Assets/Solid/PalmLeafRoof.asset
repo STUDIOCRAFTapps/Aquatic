@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0dbd25b5dfbd796458a8b753b279847b, type: 3}
+  m_Name: PalmLeafRoof
+  m_EditorClassIdentifier: 
+  fullName: Palm Leaf Roof
+  uiSprite: {fileID: 5292219197908984152, guid: 4d3a8cbf076e0f540b41dab421789566,
+    type: 3}
+  previewSprite: {fileID: 5489825714439072203, guid: 4d3a8cbf076e0f540b41dab421789566,
+    type: 3}
+  id: palm_leaf_roof
+  defaultPlacingLayer: 0
+  allowsConnection: 0
+  connectsByDefault: 0
+  hasTextures: 1
+  textures:
+  - {fileID: 7523394101486361271, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 6698133515138696664, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -6029659464796350441, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -1674026096010978301, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -5281124304251976431, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 858985318857952381, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 5542467439406923702, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 6655967555956457435, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 6492866087235990668, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 1375525445645714059, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 1616290991907031287, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 1924177684154892419, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 3909401496428802476, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -8382453317781482885, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -2057224166161582550, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -42927021583643508, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -6542688782577236816, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 8343447600048941854, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -5837500185381948795, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -1241554502025864479, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -7150655029417233173, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 4825799981355914289, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 5110969977993655764, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -4124708441100494813, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -8266484748356448295, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 1115132365876992410, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 438034425204810696, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -2547515342778048572, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -8273862570417937988, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 7908494468491120335, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -9093946504497399450, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 5489825714439072203, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -5837523083317075871, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 666643149457589163, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 8474949515392025293, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -2558006660584952541, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 2582912880412021817, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 6661411026839882262, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -3974828010453937907, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 2813237753056206954, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 8736073088305439059, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -2519783204828360782, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -2276196405653449424, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: -5303303628712327163, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 3790312976447154762, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 5922954946691792382, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  - {fileID: 6793573225274301593, guid: 4d3a8cbf076e0f540b41dab421789566, type: 3}
+  verts:
+  - {x: 0, y: -0.25, z: -0.0625}
+  - {x: 1, y: -0.25, z: -0.0625}
+  - {x: 0, y: 0.75, z: -0.0625}
+  - {x: 1, y: 0.75, z: -0.0625}
+  uvs:
+  - {x: 0, y: 0}
+  - {x: 0.5, y: 0}
+  - {x: 0, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  hasCollision: 1
+  collisionBoxes:
+  - min: {x: 0, y: -0.25}
+    max: {x: 1, y: 0.75}
+  mass: 0.2

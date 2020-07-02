@@ -128,7 +128,7 @@ ParticleSystem:
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   looping: 1
-  prewarm: 0
+  prewarm: 1
   playOnAwake: 1
   useUnscaledTime: 0
   autoRandomSeed: 1
@@ -4867,6 +4867,8 @@ GameObject:
   - component: {fileID: 1433221127395768527}
   - component: {fileID: 3428889606896973296}
   - component: {fileID: 3428889606896973297}
+  - component: {fileID: -8447081985894033329}
+  - component: {fileID: -8026972494536518820}
   m_Layer: 8
   m_Name: Fish
   m_TagString: Untagged
@@ -4957,6 +4959,9 @@ MonoBehaviour:
   box: {fileID: 0}
   velocity: {x: 0, y: 0}
   lastVelocity: {x: 0, y: 0}
+  aabb:
+    min: {x: 0, y: 0}
+    max: {x: 0, y: 0}
   inverseMass: 0
   movementDelta: {x: 0, y: 0}
   mobileChunk: {fileID: 0}
@@ -5005,6 +5010,30 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.875, y: 1.25}
   m_EdgeRadius: 0
+--- !u!114 &-8447081985894033329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3428889606896973311}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c8cdc0fa313c3f4dbb798d3434c82af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-8026972494536518820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3428889606896973311}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2567e7cf09f1d484ca48f17eced0e40d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3474217778189179642
 GameObject:
   m_ObjectHideFlags: 0

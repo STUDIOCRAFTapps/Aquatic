@@ -6,16 +6,19 @@ using UnityEngine;
 public class PlayerStateGroup : ScriptableObject {
     public BasePlayerModule[] actionModules;
 
-    public void UpdatePlayerStateGroup (PlayerInfo info) {
-        UpdateAllModules(info);
-    }
-
-    void UpdateAllModules (PlayerInfo info) {
+    public void UpdatePlayerStateGroup (PlayerInfo info, List<WearableModuleDataPair> oneFrameModules) {
         foreach(BasePlayerModule action in actionModules) {
             action.UpdateStatus(info);
         }
+        for(int i = 0; i < oneFrameModules.Count; i++) {
+            oneFrameModules[i].module.UpdateStatusPMW(info, oneFrameModules[i].data);
+        }
+
         foreach(BasePlayerModule action in actionModules) {
             action.UpdateAction(info);
+        }
+        for(int i = 0; i < oneFrameModules.Count; i++) {
+            oneFrameModules[i].module.UpdateActionPMW(info, oneFrameModules[i].data);
         }
     }
 }

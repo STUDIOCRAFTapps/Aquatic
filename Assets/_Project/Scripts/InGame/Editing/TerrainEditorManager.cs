@@ -458,8 +458,13 @@ public class TerrainEditorManager : MonoBehaviour {
 
         //SELECTION
         if(selectedE != null) {
-            chunkSelection.transform.position = selectedE.transform.position + (Vector3)(selectedERigibody.box.offset - (selectedERigibody.box.size * 0.5f));
-            chunkSelectionSprite.size = selectedERigibody.box.size;
+            if(selectedERigibody != null) {
+                chunkSelection.transform.position = selectedE.transform.position + (Vector3)(selectedERigibody.box.offset - (selectedERigibody.box.size * 0.5f));
+                chunkSelectionSprite.size = selectedERigibody.box.size;
+            } else {
+                chunkSelection.transform.position = selectedE.transform.position + (Vector3)(selectedE.asset.loadBoxOffset - (selectedE.asset.loadBoxSize * 0.5f));
+                chunkSelectionSprite.size = selectedE.asset.loadBoxSize;
+            }
         }
 
         if(selectedEntityTool == 1 && !pointerOverUI) {
@@ -468,7 +473,7 @@ public class TerrainEditorManager : MonoBehaviour {
                 if(spawnEntity != null) {
                     selectedE = spawnEntity;
                     selectedERigibody = selectedE.GetComponent<RigidbodyPixel>();
-                    draggingEntityDelta = (Vector2)selectedE.transform.position - worldPos + selectedERigibody.box.offset;
+                    draggingEntityDelta = (Vector2)selectedE.transform.position - worldPos/* + selectedERigibody.box.offset*/;
                     isDraggingEntity = true;
                 }
             }

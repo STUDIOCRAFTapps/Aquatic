@@ -51,7 +51,35 @@ public class EntityManager : MonoBehaviour {
             Entity target = allLoadedEntities[i];
             IInteractableEntity interactEntity = target as IInteractableEntity;
             if(interactEntity != null) {
+                if(interactEntity.OnCheckInteractWithCollider(new Bounds2D(coll.bounds.min, coll.bounds.max))) {
+                    action(target);
+                }
+            }
+        }
+    }
+
+    public void ExecuteOverlapsEntity (Bounds2D coll, Action<Entity> action) {
+        for(int i = allLoadedEntities.Count - 1; i >= 0; i--) {
+            Entity target = allLoadedEntities[i];
+            IInteractableEntity interactEntity = target as IInteractableEntity;
+            if(interactEntity != null) {
                 if(interactEntity.OnCheckInteractWithCollider(coll)) {
+                    action(target);
+                }
+            }
+        }
+    }
+
+    public void ExecuteRaycastEntity (Ray2D ray, float maxDistance, Action<Entity> action) {
+        for(int i = allLoadedEntities.Count - 1; i >= 0; i--) {
+            Entity target = allLoadedEntities[i];
+            IInteractableEntity interactEntity = target as IInteractableEntity;
+            if(interactEntity == null) {
+                continue;
+            }
+            if(interactEntity.OnCheckInteractWithRay(ray, out float distance)) {
+                Debug.DrawLine(ray.origin, ray.origin + ray.direction * distance, Color.red);
+                if(distance <= maxDistance) {
                     action(target);
                 }
             }
@@ -62,8 +90,10 @@ public class EntityManager : MonoBehaviour {
         float minDistance = Mathf.Infinity;
         foreach(Entity target in allLoadedEntities) {
             IInteractableEntity interactEntity = target as IInteractableEntity;
-            if(interactEntity != null) {
-                float dist = interactEntity.OnCheckInteractWithRay(ray);
+            if(interactEntity == null) {
+                continue;
+            }
+            if(interactEntity.OnCheckInteractWithRay(ray, out float dist)) {
                 if(dist < minDistance) {
                     minDistance = dist;
                 }

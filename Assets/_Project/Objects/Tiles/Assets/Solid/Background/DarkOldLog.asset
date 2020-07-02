@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 091d1766b1999e84faaee41bc88e5d5a, type: 3}
+  m_Name: DarkOldLog
+  m_EditorClassIdentifier: 
+  fullName: Dark Old Log
+  uiSprite: {fileID: 6640217958054534981, guid: 39797406b5e44f84e8b9dd4d926442fd,
+    type: 3}
+  previewSprite: {fileID: 2606135872273933223, guid: 39797406b5e44f84e8b9dd4d926442fd,
+    type: 3}
+  id: dark_old_log
+  defaultPlacingLayer: 2
+  allowsConnection: 0
+  connectsByDefault: 0
+  hasTextures: 1
+  textures:
+  - {fileID: 2606135872273933223, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: -4517867531883021220, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: 4707918836056673097, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: 8772424953415429687, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: 3470717064363971504, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: 2065053522956410408, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: 6637818758633215313, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: -322919942129015688, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: 6117741249490466562, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: -8012981527656461767, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: -1660593953571077352, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: 2691007660564560639, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: 3683644584799023835, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: -8829163031214328761, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: -4591905451527899890, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: -4434484226611403622, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: -9057184459589520502, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: -2931137033327962240, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  - {fileID: -6953759699993341884, guid: 39797406b5e44f84e8b9dd4d926442fd, type: 3}
+  verts:
+  - {x: 0, y: 0, z: 0.126}
+  - {x: 1, y: 0, z: 0.126}
+  - {x: 0, y: 1, z: 0.126}
+  - {x: 1, y: 1, z: 0.126}
+  uvs:
+  - {x: 0, y: 0}
+  - {x: 0.5, y: 0}
+  - {x: 0, y: 0.5}
+  - {x: 0.5, y: 0.5}
+  hasCollision: 1
+  collisionBoxes:
+  - min: {x: 0, y: 0}
+    max: {x: 1, y: 1}
+  mass: 2

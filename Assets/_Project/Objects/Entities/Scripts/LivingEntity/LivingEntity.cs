@@ -10,21 +10,6 @@ public class LivingEntityData : EntityData {
     public int state = 0;
 
     public List<GenericEffect> effects;
-
-    public bool GetEffect (string codeName, out GenericEffect effect) {
-        if(effects == null) {
-            effect = null;
-            return false;
-        }
-        foreach(GenericEffect e in effects) {
-            if(e.codeName == codeName) {
-                effect = e;
-                return true;
-            }
-        }
-        effect = null;
-        return false;
-    }
 }
 
 public class LivingEntity : Entity, IPixelAnimationCallbackReciever, IInteractableEntity {
@@ -66,6 +51,7 @@ public class LivingEntity : Entity, IPixelAnimationCallbackReciever, IInteractab
                 effects[i].duration -= Time.fixedDeltaTime;
                 if(effects[i].duration < 0) {
                     effects.RemoveAt(i);
+                    OnEffectUpdate();
                 }
             }
         }
@@ -74,6 +60,7 @@ public class LivingEntity : Entity, IPixelAnimationCallbackReciever, IInteractab
         base.OnFixedUpdate();
     }
 
+    #region Behaviour
     public override void OnLongUpdate () {
         if(!((LivingEntityData)entityData).noAI) {
             OnManageAI();
@@ -85,7 +72,51 @@ public class LivingEntity : Entity, IPixelAnimationCallbackReciever, IInteractab
 
     }
 
+    public virtual void OnRecieveCallback (uint code) {
+
+    }
+    #endregion
+
+    #region Effects
+    // Called only when new effects get applied or run out
+    public virtual void OnEffectUpdate () {
+
+    }
+
+    public bool GetEffect (string codeName, out GenericEffect effect) {
+        if(((LivingEntityData)entityData).effects == null) {
+            effect = null;
+            return false;
+        }
+        foreach(GenericEffect e in ((LivingEntityData)entityData).effects) {
+            if(e.codeName == codeName) {
+                effect = e;
+                return true;
+            }
+        }
+        effect = null;
+        return false;
+    }
+
+    public void ApplyEffect (string codeName, float duration, byte level) {
+        if(GetEffect(codeName, out GenericEffect effect)) {
+            effect.duration = Mathf.Max(effect.duration, duration);
+            effect.level = level > effect.level ? level : effect.level;
+        } else {
+            if(((LivingEntityData)entityData).effects == null) {
+                ((LivingEntityData)entityData).effects = new List<GenericEffect>();
+            }
+            ((LivingEntityData)entityData).effects.Add(new GenericEffect() {
+                codeName = codeName, duration = duration, level = level
+            });
+            OnEffectUpdate();
+        }
+    }
+    #endregion
+
+    #region Interaction
     public virtual bool HitEntity (float damage) {
+        animator.PlayHitFlash(0.2f);
         ((LivingEntityData)entityData).health -= damage;
         ParticleManager.inst.PlayFlytext(transform.position, Mathf.Ceil(damage).ToString(), 0.5f, 2f);
 
@@ -97,46 +128,35 @@ public class LivingEntity : Entity, IPixelAnimationCallbackReciever, IInteractab
         return false;
     }
 
-    public override Type GetDataType () {
-        return typeof(LivingEntityData);
-    }
+    public virtual bool OnCheckInteractWithCollider (Bounds2D colliderBounds) {
+        ref Bounds2D targeter = ref colliderBounds;
+        Bounds2D target = new Bounds2D(rigidbody.box.bounds.min, rigidbody.box.bounds.max);
 
-    public virtual void OnRecieveCallback (uint code) {
-
-    }
-
-    public virtual bool OnCheckInteractWithCollider (Collider2D collider) {
-        Bounds targeter = collider.bounds;
-        targeter.SetMinMax(new Vector3(targeter.min.x, targeter.min.y), new Vector3(targeter.max.x, targeter.max.y));
-        Bounds target = rigidbody.box.bounds;
-        target.SetMinMax(new Vector3(target.min.x, target.min.y), new Vector3(target.max.x, target.max.y));
-
-        if(!targeter.Intersects(target)) {
+        if(!targeter.Overlaps(target)) {
             return false;
         }
-        //Debug.Log(collider.IsTouching(rigidbody.box));
         return true;
     }
 
-    public virtual float OnCheckInteractWithRay (Ray2D ray) {
-        Bounds target = rigidbody.box.bounds;
-        target.SetMinMax(new Vector3(target.min.x, target.min.y), new Vector3(target.max.x, target.max.y));
-        
-        if(target.IntersectRay(new Ray(ray.origin, ray.direction), out float distance)) {
-            return distance;
-        }
-        return Mathf.Infinity;
-    }
+    public virtual bool OnCheckInteractWithRay (Ray2D ray, out float distance) {
+        Bounds2D target = new Bounds2D(rigidbody.box.bounds.min, rigidbody.box.bounds.max);
 
-    public void ApplyEffect (string codeName, float duration, byte level) {
-        if(((LivingEntityData)entityData).GetEffect(codeName, out GenericEffect effect)) {
-            effect.duration = Mathf.Max(effect.duration, duration);
-            effect.level = level > effect.level ? level : effect.level;
-        } else {
-            if(((LivingEntityData)entityData).effects == null) {
-                ((LivingEntityData)entityData).effects = new List<GenericEffect>();
+        Vector2 invDir = new Vector2(ray.direction.x == 0f ? 0f : 1f / ray.direction.x, ray.direction.y == 0f ? 0f : 1f / ray.direction.y);
+        if(target.IntersectRay(ray.origin, invDir, out float dist)) {
+            if(dist < 0f) {
+                distance = Mathf.Infinity;
+                return false;
             }
-            ((LivingEntityData)entityData).effects.Add(new GenericEffect() {codeName = codeName, duration = duration, level = level});
+            distance = dist;
+            return true;
+        } else {
+            distance = Mathf.Infinity;
+            return false;
         }
+    }
+    #endregion
+
+    public override Type GetDataType () {
+        return typeof(LivingEntityData);
     }
 }

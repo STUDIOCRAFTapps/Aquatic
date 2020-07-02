@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public struct WeaponPlayerData {
+public class WeaponPlayerData {
     public PlayerController owner;
     public float timeOfPress;
     public float lastAttackTime;

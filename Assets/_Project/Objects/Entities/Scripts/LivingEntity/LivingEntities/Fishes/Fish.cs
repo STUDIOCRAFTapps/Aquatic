@@ -89,7 +89,7 @@ public class Fish : LivingEntity {
         if(pc == null) {
             return;
         }
-        if(((LivingEntityData)entityData).GetEffect("default:freeze", out GenericEffect effect)) {
+        if(GetEffect("default:freeze", out GenericEffect effect)) {
             animator.PlayHitFlash(0.2f, 1);
             targetDirection = Vector2.zero;
             return;
@@ -163,13 +163,19 @@ public class Fish : LivingEntity {
             }
         }
     }
-    
-    public void OnNextPointReceived (Vector2 nextPoint, bool pathSuccessful) {
-        if(((LivingEntityData)entityData).GetEffect("default:stunned", out GenericEffect effect)) {
+
+    public override void OnEffectUpdate () {
+        base.OnEffectUpdate();
+        if(GetEffect("default:stunned", out GenericEffect effect)) {
             dizzyParticles.SetActive(true);
-            nextPoint = (Vector2)transform.position + UnityEngine.Random.insideUnitCircle * 2f;
         } else {
             dizzyParticles.SetActive(false);
+        }
+    }
+
+    public void OnNextPointReceived (Vector2 nextPoint, bool pathSuccessful) {
+        if(GetEffect("default:stunned", out GenericEffect effect)) {
+            nextPoint = (Vector2)transform.position + UnityEngine.Random.insideUnitCircle * 2f;
         }
 
         if(!pathSuccessful) {

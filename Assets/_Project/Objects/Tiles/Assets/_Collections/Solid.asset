@@ -21,10 +21,21 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3ebf05a928dfa404c91a00729a5c6b32, type: 2}
   - {fileID: 11400000, guid: 97514959fdc8808469653d8f28dc860a, type: 2}
   - {fileID: 11400000, guid: 90ec12828d7653142a69453f0f46b6ae, type: 2}
+  - {fileID: 11400000, guid: cae4c258f81bcae4985705a20b00a381, type: 2}
+  - {fileID: 11400000, guid: 4a86c534fcae869458647d5a061218d4, type: 2}
+  - {fileID: 11400000, guid: 0d95f8fd8bd58714494bcebc937dfe06, type: 2}
+  - {fileID: 11400000, guid: a3af12c7f2eed3b4c8723f2f29b05744, type: 2}
   parent:
-    name: 
-    id: 
-    description: 
-    tileCollections: []
-    entityCollections: []
-    weaponCollections: []
+    name: Default
+    id: default
+    description: Aquatic Project's base asset group
+    tileCollections:
+    - {fileID: 11400000}
+    - {fileID: 11400000, guid: ed370d0a0cb4b2a44bd36367e5420228, type: 2}
+    - {fileID: 11400000, guid: 07b4423baab69c9479d57da730d718b9, type: 2}
+    - {fileID: 11400000, guid: 4b79d65634e5d3a418cd1a04dd0b0773, type: 2}
+    - {fileID: 11400000, guid: b3ae11f1783813e41890935b4e55c831, type: 2}
+    entityCollections:
+    - {fileID: 11400000, guid: cf86498b3aacf9b4e9532e617f411316, type: 2}
+    weaponCollections:
+    - {fileID: 11400000, guid: d982647258d82b5498e86f572ee167c3, type: 2}

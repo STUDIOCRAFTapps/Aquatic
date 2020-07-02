@@ -18,3 +18,4 @@ MonoBehaviour:
   prefab: {fileID: 8868832485712415778, guid: 1004cd52f1578614baea908d1b5c7767, type: 3}
   loadBoxOffset: {x: 0, y: 0}
   loadBoxSize: {x: 1, y: 1}
+  healthPoints: 5

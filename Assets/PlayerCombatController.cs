@@ -50,9 +50,11 @@ public class PlayerCombatController : MonoBehaviour {
 
         if(mainWeapon != null) {
             mainWeaponData = mainWeapon.CreateWeaponPlayerData();
+            mainWeaponData.owner = ctrl;
         }
         if(secondWeapon != null) {
             secondWeaponData = secondWeapon.CreateWeaponPlayerData();
+            secondWeaponData.owner = ctrl;
         }
     }
 

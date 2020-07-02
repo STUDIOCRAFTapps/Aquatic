@@ -42,6 +42,7 @@ public class PlayerStatus {
 public class PlayerInfo {
     public RigidbodyPixel rbody;
     public PlayerStatus status;
+    public PlayerController pc;
 }
 #endregion
 
@@ -68,6 +69,9 @@ public class PlayerController : MonoBehaviour {
     public PhysicsEnvironnementModifiers[] modifiers;
     private PhysicsEnvironnementModifiers cmod;
 
+    [Header("Temp")]
+    public ParticleSystem[] trailParticles;
+
     [System.NonSerialized] public PlayerStatus status;
     [System.NonSerialized] public PlayerInfo info;
 
@@ -75,6 +79,8 @@ public class PlayerController : MonoBehaviour {
 
     public const float defaultHealth = 60f;
     public const float healthPerHearts = 12f;
+
+    List<WearableModuleDataPair> oneFrameModules;
     #endregion
 
     #region MonoBehaviour
@@ -82,11 +88,14 @@ public class PlayerController : MonoBehaviour {
         status = new PlayerStatus();
         info = new PlayerInfo {
             rbody = rbody,
-            status = status
+            status = status,
+            pc = this
         };
         currentState = playerStates[0];
 
         hud.BuildHealthContainer(Mathf.CeilToInt(defaultHealth / healthPerHearts));
+
+        oneFrameModules = new List<WearableModuleDataPair>();
     }
 
     private void OnEnable () {
@@ -98,6 +107,11 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void FixedUpdate () {
+        foreach(ParticleSystem ps in trailParticles) {
+            var emitter = ps.emission;
+            emitter.enabled = false;
+        }
+
         status.playerPos = transform.position;
 
         bool isChunkAbsent = true; 
@@ -111,7 +125,8 @@ public class PlayerController : MonoBehaviour {
 
         if(!isChunkAbsent) {
             CheckModifier();
-            currentState?.UpdatePlayerStateGroup(info);
+            currentState?.UpdatePlayerStateGroup(info, oneFrameModules);
+            oneFrameModules.Clear();
         } else {
             rbody.disableForAFrame = true;
         }
@@ -226,7 +241,6 @@ public class PlayerController : MonoBehaviour {
     }
 
     public void HealPlayer (float healthPoint) {
-        Debug.Log(healthPoint);
         status.health = Mathf.Min(defaultHealth, status.health + healthPoint);
         UpdateHealthHud();
     }
@@ -246,6 +260,15 @@ public class PlayerController : MonoBehaviour {
 
     public Vector2 GetCenterPosition () {
         return (Vector2)transform.position + rbody.box.size.y * Vector2.up * 0.5f;
+    }
+
+    public void RunWearableModule (WearableModule module, PlayerModifierData data) {
+        oneFrameModules.Add(new WearableModuleDataPair(module, data));
+    }
+
+    public void TickTrail (int index) {
+        var emitter = trailParticles[index].emission;
+        emitter.enabled = true;
     }
     #endregion
 
@@ -269,6 +292,16 @@ public class PlayerController : MonoBehaviour {
         }
     }
     #endregion
+}
+
+public class WearableModuleDataPair {
+    public WearableModule module;
+    public PlayerModifierData data;
+
+    public WearableModuleDataPair (WearableModule module, PlayerModifierData data) {
+        this.module = module;
+        this.data = data;
+    }
 }
 
 [System.Serializable]
