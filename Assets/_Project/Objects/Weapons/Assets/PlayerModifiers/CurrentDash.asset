@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   name: Current Dash (Modifier Weapon)
   id: mod_current_dash
-  icon: {fileID: 21300000, guid: 3ad9f95e0d83a4c45b5b6646a15d73ca, type: 3}
+  icon: {fileID: 21300000, guid: 9f6a4d424ccead548b88b4e049e3bc32, type: 3}
   type: 1
-  gid: 3
-  module: {fileID: 11400000, guid: 1778657426aa3654eb8e3d2ed7eab751, type: 2}
-  doUpdateDirection: 0
+  gid: 4
+  module: {fileID: 11400000, guid: 80839430b675d974683f4353984a9387, type: 2}
+  doUpdateDirection: 1

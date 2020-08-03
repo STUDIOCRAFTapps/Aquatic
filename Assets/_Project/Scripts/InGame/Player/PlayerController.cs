@@ -1,12 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MLAPI.Serialization;
 
 #region Player Status
 [System.Serializable]
-public class PlayerStatus {
+public class PlayerStatus : AutoBitWritable {
     public Vector3 playerPos;
     public Vector2 prevVel;
+
+    public int dirX;
 
     public bool isGrounded;
     public float lastGroundedTime;
@@ -55,6 +58,22 @@ public class PlayerController : MonoBehaviour {
     public Collider2D collBox;
     public SpriteRenderer spriteRenderer;
     public PlayerAnimator playerAnimator;
+    public Transform playerCenter;
+    public LocalPlayer localPlayer;
+    public InterpolatedTransform interpolatedTransform;
+
+    public bool isControlledLocally {
+        set {
+            localControl = value;
+            if(localControl) {
+                CameraNavigator.inst.playerCenter = playerCenter;
+            }
+        }
+        get {
+            return localControl;
+        }
+    }
+    bool localControl = true;
 
     [Header("New State System")]
     public PlayerStateGroup[] playerStates;
@@ -93,17 +112,15 @@ public class PlayerController : MonoBehaviour {
         };
         currentState = playerStates[0];
 
-        hud.BuildHealthContainer(Mathf.CeilToInt(defaultHealth / healthPerHearts));
+        hud?.BuildHealthContainer(Mathf.CeilToInt(defaultHealth / healthPerHearts));
 
         oneFrameModules = new List<WearableModuleDataPair>();
     }
 
     private void OnEnable () {
-        if(WorldSaving.inst.LoadPlayerFile(0, out PlayerStatus newStatus)) {
+        /*if(WorldSaving.inst.LoadPlayerFile(0, out PlayerStatus newStatus)) {
             LoadStatus(newStatus);
-        }
-
-        GameManager.inst.allPlayers.Add(this);
+        }*/
     }
 
     private void FixedUpdate () {
@@ -114,6 +131,7 @@ public class PlayerController : MonoBehaviour {
 
         status.playerPos = transform.position;
 
+        // Checks if the chunk where the player is at is absent
         bool isChunkAbsent = true; 
         Vector2Int chunkPos = TerrainManager.inst.WorldToChunk(transform.position);
         long key = Hash.hVec2Int(chunkPos);
@@ -123,6 +141,7 @@ public class PlayerController : MonoBehaviour {
             }
         }
 
+        // Freezes player in absent chunk and update movement modules
         if(!isChunkAbsent) {
             CheckModifier();
             currentState?.UpdatePlayerStateGroup(info, oneFrameModules);
@@ -131,15 +150,12 @@ public class PlayerController : MonoBehaviour {
             rbody.disableForAFrame = true;
         }
 
+        // Overlap check for tiles with interactable property such as collectables (shells and pearls)
         BoundsInt currentTileOverlap = CalculateTileOverlap();
         if(currentTileOverlap != status.prevTileOverlapBounds && GameManager.inst.engineMode == EngineModes.Play) {
             CheckForTileOverlap(currentTileOverlap);
         }
     }
-
-    float timeOfAttack = 0f;
-    //Vector2 attackPressScreenPos;
-    //Vector2 startDir;
 
     private void Update () {
         status.time = Time.time;
@@ -148,14 +164,16 @@ public class PlayerController : MonoBehaviour {
     #endregion
 
     #region Status Loader
-    public void LoadStatus (PlayerStatus newStatus) {
+    public void LoadStatus (PlayerStatus newStatus, bool loadPosition = true) {
         info.status = newStatus;
         status = newStatus;
 
         status.RemoveTimeRelativity();
 
-        GetComponent<InterpolatedTransform>().SetTransformPosition(newStatus.playerPos);
-        transform.position = info.status.playerPos;
+        if(loadPosition) {
+            GetComponent<InterpolatedTransform>().SetTransformPosition(newStatus.playerPos);
+            transform.position = info.status.playerPos;
+        }
         rbody.velocity = info.status.prevVel;
         
         UpdateHealthHud();
@@ -193,13 +211,20 @@ public class PlayerController : MonoBehaviour {
     float waterWaveCooldown = 0;
     public void Animate () {
         int accDirX = 0;
-        if(Input.GetKey(KeyCode.A))
-            accDirX--;
-        if(Input.GetKey(KeyCode.D))
-            accDirX++;
+        if(isControlledLocally) {
+            if(Input.GetKey(KeyCode.A))
+                accDirX--;
+            if(Input.GetKey(KeyCode.D))
+                accDirX++;
 
-        if(accDirX != 0)
+            status.dirX = accDirX;
+        } else {
+            accDirX = status.dirX;
+        }
+
+        if(accDirX != 0) {
             spriteRenderer.flipX = accDirX > 0;
+        }
         
         if(!status.isGrounded) {
             playerAnimator.ChangeState("jump");
@@ -272,7 +297,7 @@ public class PlayerController : MonoBehaviour {
     }
     #endregion
 
-    //WIP SYSTEM
+    //WIP MOVEMENT SYSTEM
     #region Modifier State Switch
     public void SetCurrentModifiers (int stateID) {
         if(currentState != playerStates[stateID]) {

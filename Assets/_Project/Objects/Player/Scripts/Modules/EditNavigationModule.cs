@@ -10,16 +10,17 @@ public class EditNavigationModule : BasePlayerModule {
     public float speed;
 
     public override void UpdateStatus (PlayerInfo info) {
+        
         if(!limitedToEdit || GameManager.inst.engineMode == EngineModes.Edit) {
             int accDirX = 0;
             int accDirY = 0;
-            if(Input.GetKey(KeyCode.A))
+            if(Input.GetKey(KeyCode.A) && info.pc.isControlledLocally)
                 accDirX--;
-            if(Input.GetKey(KeyCode.D))
+            if(Input.GetKey(KeyCode.D) && info.pc.isControlledLocally)
                 accDirX++;
-            if(Input.GetKey(KeyCode.S))
+            if(Input.GetKey(KeyCode.S) && info.pc.isControlledLocally)
                 accDirY--;
-            if(Input.GetKey(KeyCode.W))
+            if(Input.GetKey(KeyCode.W) && info.pc.isControlledLocally)
                 accDirY++;
             info.status.combinedDirection = new Vector2(accDirX, accDirY);
         }

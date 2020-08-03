@@ -113,4 +113,8 @@ public class BaseTileAsset : ScriptableObject {
     public virtual bool DoSpawnPropOnPlayMode () {
         return false;
     }
+
+    public virtual Bounds2D[] GetCollisionBoxes (int x, int y, MobileDataChunk mdc = null) {
+        return collisionBoxes;
+    }
 }

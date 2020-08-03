@@ -19,7 +19,7 @@ public class JumpModule : BasePlayerModule {
     public override void UpdateStatus (PlayerInfo info) {
         // Checks for input and jump cancellation
         info.status.wasOnGoingJump = info.status.onGoingJump;
-        info.status.onGoingJump = Input.GetKey(KeyCode.Space);
+        info.status.onGoingJump = Input.GetKey(KeyCode.Space) && info.pc.isControlledLocally;
         if(info.status.wasOnGoingJump && !info.status.onGoingJump) {
             info.status.canceledJump = true;
         }

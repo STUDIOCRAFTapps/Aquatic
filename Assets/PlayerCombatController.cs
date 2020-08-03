@@ -15,6 +15,8 @@ public class PlayerCombatController : MonoBehaviour {
     WeaponPlayerData mainWeaponData;
     public BaseWeapon secondWeapon;
     WeaponPlayerData secondWeaponData;
+    public BaseWeapon wearableWeapon;
+    WeaponPlayerData wearableWeaponData;
 
     private void Start () {
         OnChangeWeapon();
@@ -22,8 +24,6 @@ public class PlayerCombatController : MonoBehaviour {
         OnChangeEngineMode();
         GameManager.inst.OnChangeEngineMode += OnChangeEngineMode;
     }
-
-
 
     void OnChangeEngineMode () {
         ctrl.SetHealth(PlayerController.defaultHealth);
@@ -35,6 +35,7 @@ public class PlayerCombatController : MonoBehaviour {
         }
     }
 
+    #region Changing Weapon
     public void ChangeMainWeapon (BaseWeapon weapon) {
         mainWeapon = weapon;
         OnChangeWeapon();
@@ -45,19 +46,31 @@ public class PlayerCombatController : MonoBehaviour {
         OnChangeWeapon();
     }
 
+    public void ChangeWearableWeapon (BaseWeapon weapon) {
+        wearableWeapon = weapon;
+        OnChangeWeapon();
+    }
+
     private void OnChangeWeapon () {
         PlayerHUD.inst.OnChangeWeapon(this);
 
         if(mainWeapon != null) {
             mainWeaponData = mainWeapon.CreateWeaponPlayerData();
             mainWeaponData.owner = ctrl;
+            mainWeaponData.attackSlot = AttackSlot.Main;
         }
         if(secondWeapon != null) {
             secondWeaponData = secondWeapon.CreateWeaponPlayerData();
             secondWeaponData.owner = ctrl;
+            secondWeaponData.attackSlot = AttackSlot.Second;
+        }
+        if(wearableWeapon != null) {
+            wearableWeaponData = wearableWeapon.CreateWeaponPlayerData();
+            wearableWeaponData.owner = ctrl;
+            wearableWeaponData.attackSlot = AttackSlot.Wearable;
         }
     }
-
+    #endregion
 
 
     void Update () {
@@ -65,11 +78,17 @@ public class PlayerCombatController : MonoBehaviour {
             return;
         }
 
-        if(Input.GetKey(KeyCode.RightArrow)) {
+        if(Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.RightShift)) {
             PlayerHUD.inst.MainWeaponSelectionSlide(this, mainWeapon, -1);
         }
-        if(Input.GetKey(KeyCode.LeftArrow)) {
+        if(Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.RightShift)) {
             PlayerHUD.inst.MainWeaponSelectionSlide(this, mainWeapon, 1);
+        }
+        if(Input.GetKey(KeyCode.RightArrow) && Input.GetKey(KeyCode.RightShift)) {
+            PlayerHUD.inst.WearableSelectionSlide(this, wearableWeapon, -1);
+        }
+        if(Input.GetKey(KeyCode.LeftArrow) && Input.GetKey(KeyCode.RightShift)) {
+            PlayerHUD.inst.WearableSelectionSlide(this, wearableWeapon, 1);
         }
         if(Input.GetKey(KeyCode.UpArrow)) {
             PlayerHUD.inst.SecondWeaponSelectionSlide(this, secondWeapon, -1);
@@ -87,6 +106,7 @@ public class PlayerCombatController : MonoBehaviour {
         attackIndicator.eulerAngles = Vector3.forward * angle;
         Vector2 truePos = (Vector3)(ctrl.GetHeadPosition() + dir * Mathf.Min(dist + 0.2f, 1.5f));
 
+        mainWeapon.OnUpdateIndicators(ref mainWeaponData);
         if(Input.GetMouseButtonDown(0)) {
             mainWeapon.OnStartAttack(ref mainWeaponData, dir, truePos, angle);
         }
@@ -97,6 +117,7 @@ public class PlayerCombatController : MonoBehaviour {
             mainWeapon.OnReleaseAttack(ref mainWeaponData, dir, truePos, angle);
         }
 
+        secondWeapon.OnUpdateIndicators(ref secondWeaponData);
         if(Input.GetMouseButtonDown(1)) {
             secondWeapon.OnStartAttack(ref secondWeaponData, dir, truePos, angle);
         }
@@ -105,6 +126,17 @@ public class PlayerCombatController : MonoBehaviour {
         }
         if(Input.GetMouseButtonUp(1)) {
             secondWeapon.OnReleaseAttack(ref secondWeaponData, dir, truePos, angle);
+        }
+
+        wearableWeapon.OnUpdateIndicators(ref wearableWeaponData);
+        if(Input.GetKeyDown(KeyCode.Q)) {
+            wearableWeapon.OnStartAttack(ref wearableWeaponData, dir, truePos, angle);
+        }
+        if(Input.GetKey(KeyCode.Q)) {
+            wearableWeapon.OnHoldAttack(ref wearableWeaponData, dir, truePos, angle);
+        }
+        if(Input.GetKeyUp(KeyCode.Q)) {
+            wearableWeapon.OnReleaseAttack(ref wearableWeaponData, dir, truePos, angle);
         }
     }
 }

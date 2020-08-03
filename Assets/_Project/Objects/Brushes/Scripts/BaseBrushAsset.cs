@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using MLAPI;
+using MLAPI.Messaging;
 
 [CreateAssetMenu(fileName = "BaseBrush", menuName = "Terrain/Brushes/BaseBrush")]
 public class BaseBrushAsset : ScriptableObject {

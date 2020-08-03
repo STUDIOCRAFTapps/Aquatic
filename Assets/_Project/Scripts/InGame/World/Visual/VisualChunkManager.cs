@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 public class VisualChunkManager : MonoBehaviour {
 
     #region Header and Init
@@ -14,7 +18,7 @@ public class VisualChunkManager : MonoBehaviour {
     public Material baseMaterial;
     
     Queue<VisualChunk> unusedVisualChunkPool;
-    public Dictionary<long, VisualChunk> visualChunkPool;
+    public Dictionary<long, VisualChunk> visualChunks;
     Queue<MobileChunk> unusedMobileChunkPool;
     public Dictionary<int, MobileChunk> mobileChunkPool;
 
@@ -27,7 +31,7 @@ public class VisualChunkManager : MonoBehaviour {
         
         unusedVisualChunkPool = new Queue<VisualChunk>();
         unusedMobileChunkPool = new Queue<MobileChunk>();
-        visualChunkPool = new Dictionary<long, VisualChunk>();
+        visualChunks = new Dictionary<long, VisualChunk>();
         mobileChunkPool = new Dictionary<int, MobileChunk>();
 
         globalMaterial = new Material(baseMaterial);
@@ -81,23 +85,24 @@ public class VisualChunkManager : MonoBehaviour {
 
     #region Load and Unloads
     public void LoadChunkAt (Vector2Int chunkPosition) {
-        VisualChunk vc = GetNewVisualChunk(chunkPosition);
-
         if(!TerrainManager.inst.GetChunkAtPosition(chunkPosition, out DataChunk dataChunk)) {
-            //Debug.LogError($"A data chunk wasn't found at {chunkPosition}");
-
-            unusedVisualChunkPool.Enqueue(vc);
             return;
         }
+        VisualChunk vc = GetNewVisualChunk(chunkPosition);
         vc.BuildMeshes(dataChunk);
+        vc.name = $"Visual Chunk {chunkPosition.ToString()}";
     }
 
     public void UnloadChunkAt (Vector2Int chunkPosition) {
-        VisualChunk vc = visualChunkPool[Hash.hVec2Int(chunkPosition)];
+        long hash = Hash.hVec2Int(chunkPosition);
+        if(!visualChunks.TryGetValue(hash, out VisualChunk vc)) {
+            Debug.Log("Unload error");
+            return;
+        }
 
         vc.gameObject.SetActive(false);
         PathgridManager.inst.SetNodeChunkAsUnused(chunkPosition);
-        visualChunkPool.Remove(Hash.hVec2Int(chunkPosition));
+        visualChunks.Remove(Hash.hVec2Int(chunkPosition));
         unusedVisualChunkPool.Enqueue(vc);
     }
 
@@ -147,15 +152,15 @@ public class VisualChunkManager : MonoBehaviour {
     VisualChunk GetNewVisualChunk (Vector2Int chunkPosition) {
         VisualChunk unusedChunk;
 
-        if(visualChunkPool.TryGetValue(Hash.hVec2Int(chunkPosition), out VisualChunk visualChunk)) {
+        if(visualChunks.TryGetValue(Hash.hVec2Int(chunkPosition), out VisualChunk visualChunk)) {
             unusedChunk = visualChunk;
         } else if(unusedVisualChunkPool.Count > 0) {
             unusedChunk = unusedVisualChunkPool.Dequeue();
             unusedChunk.gameObject.SetActive(true);
-            visualChunkPool.Add(Hash.hVec2Int(chunkPosition), unusedChunk);
+            visualChunks.Add(Hash.hVec2Int(chunkPosition), unusedChunk);
         } else {
             unusedChunk = Instantiate(chunkPrefab, TerrainManager.inst.terrainRoot).GetComponent<VisualChunk>();
-            visualChunkPool.Add(Hash.hVec2Int(chunkPosition), unusedChunk);
+            visualChunks.Add(Hash.hVec2Int(chunkPosition), unusedChunk);
         }
         
         unusedChunk.Initiate(chunkPosition, true);
@@ -189,13 +194,66 @@ public class VisualChunkManager : MonoBehaviour {
     }
 
     public VisualChunk GetVisualChunkAt (Vector2Int chunkPos) {
-        if(visualChunkPool.TryGetValue(Hash.hVec2Int(chunkPos), out VisualChunk visualChunk)) {
+        if(visualChunks.TryGetValue(Hash.hVec2Int(chunkPos), out VisualChunk visualChunk)) {
             return visualChunk;
         } else {
             return null;
         }
     }
     #endregion
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos () {
+        if(!Application.isPlaying) {
+            return;
+        }
+
+        foreach(KeyValuePair<long, ChunkLoadCounter> kvp in ChunkLoader.inst.loadCounters) {
+            bool isTimerRunning = kvp.Value.timer == null ? false : kvp.Value.timer.isRunning;
+            if(TerrainManager.inst.chunkJobsManager.TryGetValue(kvp.Key, out ChunkJobManager cjm)) {
+                int loadJobCount = 0, unloadJobCount = 0, saveJobCount = 0, runningJobCount = 0;
+                for(int i = 0; i < cjm.jobs.Count; i++) {
+                    if(cjm.jobs[i].loadState == JobState.Loaded) {
+                        loadJobCount++;
+                    } else if(cjm.jobs[i].loadState == JobState.Unloaded) {
+                        unloadJobCount++;
+                    } else if(cjm.jobs[i].loadState == JobState.Saving) {
+                        saveJobCount++;
+                    } else if(cjm.jobs[i].IsRunning()) {
+                        runningJobCount++;
+                    }
+                }
+                Handles.Label((kvp.Value.position + Vector2.up) * 16,
+                    $"LoadC: {kvp.Value.loadCount}\nTimerR?: {isTimerRunning}\nJobsC: {cjm.jobs.Count}" +
+                    $"\nLState? {cjm.targetLoadState == JobState.Loaded}\nL{loadJobCount} U{unloadJobCount} S{saveJobCount}" +
+                    $" R{runningJobCount}");
+            } else {
+                Handles.Label((kvp.Value.position + Vector2.up) * 16, $"LoadC: {kvp.Value.loadCount}\nTimerR?: {isTimerRunning}");
+            }
+        }
+        foreach(KeyValuePair<long, ChunkJobManager> kvp in TerrainManager.inst.chunkJobsManager) {
+            if(!ChunkLoader.inst.loadCounters.ContainsKey(kvp.Key)) {
+                ChunkJobManager cjm = kvp.Value;
+                int loadJobCount = 0, unloadJobCount = 0, saveJobCount = 0, runningJobCount = 0;
+                for(int i = 0; i < cjm.jobs.Count; i++) {
+                    if(cjm.jobs[i].loadState == JobState.Loaded) {
+                        loadJobCount++;
+                    } else if(cjm.jobs[i].loadState == JobState.Unloaded) {
+                        unloadJobCount++;
+                    } else if(cjm.jobs[i].loadState == JobState.Saving) {
+                        saveJobCount++;
+                    } else if(cjm.jobs[i].IsRunning()) {
+                        runningJobCount++;
+                    }
+                }
+                Handles.Label((kvp.Value.position + Vector2.up) * 16,
+                    $"JobsC: {cjm.jobs.Count}" +
+                    $"\nLState? {cjm.targetLoadState == JobState.Loaded}\nL{loadJobCount} U{unloadJobCount} S{saveJobCount}" +
+                    $" R{runningJobCount}");
+            }
+        }
+    }
+#endif
 }
 
 [System.Serializable]

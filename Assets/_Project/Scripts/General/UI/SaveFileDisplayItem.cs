@@ -53,7 +53,12 @@ public class SaveFileDisplayItem : MonoBehaviour {
     }
 
     public void PlaySaveFileData () {
+        string ip = ((RufflesTransport.RufflesTransport)MLAPI.NetworkingManager.Singleton.NetworkConfig.NetworkTransport).ConnectAddress;
+        string port = ((RufflesTransport.RufflesTransport)MLAPI.NetworkingManager.Singleton.NetworkConfig.NetworkTransport).Port.ToString();
+
         WorldSaving.inst.PrepareNewSave(saveFileData.folderName);
         SceneManager.LoadScene("Main", LoadSceneMode.Single);
+
+        NetworkAssistant.inst.StartHost();
     }
 }

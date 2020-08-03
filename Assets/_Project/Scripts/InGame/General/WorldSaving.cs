@@ -2,12 +2,13 @@
 using System.IO.Compression;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using UnityEngine;
 using System;
 using System.Linq;
 using Newtonsoft.Json;
-using UnityEngine.SceneManagement;
+using MLAPI.Serialization.Pooled;
 
 public enum DataLoadMode {
     TryReadonly,
@@ -39,7 +40,6 @@ public class WorldSaving : MonoBehaviour {
     }
 
     // Const
-    public const int bufferSize = 8192;
     public const string savesFolder = "saves";
     public const string editFolder = "edit";
     public const string playFolder = "play";
@@ -74,18 +74,28 @@ public class WorldSaving : MonoBehaviour {
     string regionsReadonlyDatapath;
     string playerDatapath;
 
-    StringBuilder sb;
+    //StringBuilder sb;
     Dictionary<char, byte> charToByte;
     List<string> layerNames;
     JsonSerializerSettings jss;
 
     // Shared Ressources
-    static byte[] buffer = new byte[bufferSize];
+    ConcurrentQueue<byte[]> bufferPool;
+    const int bufferCount = 8;
+    public const int bufferSize = 8192;
+
+    public bool clientMode = false;
 
     void Init () {
+
+        bufferPool = new ConcurrentQueue<byte[]>();
+        for(int i = 0; i < bufferCount; i++) {
+            bufferPool.Enqueue(new byte[bufferSize]);
+        }
+
         s = Path.DirectorySeparatorChar;
         datapath = Application.persistentDataPath;
-        sb = new StringBuilder();
+        //sb = new StringBuilder();
         jss = new JsonSerializerSettings() {
             TypeNameHandling = TypeNameHandling.Auto,
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore
@@ -101,8 +111,13 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public void PrepareNewSave (string folderName) {
+        clientMode = false;
         saveFolderName = folderName;
         ComposeDataPaths();
+    }
+
+    public void PrepareClient () {
+        clientMode = true;
     }
 
     public void OnReloadEngine () {
@@ -157,7 +172,7 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public string GetChunkDirectory (DataChunk dataChunk, bool useReadonlyPath) {
-        sb.Clear();
+        StringBuilder sb = new StringBuilder();
         sb.Append(useReadonlyPath ? chunkReadonlyDatapath : chunkDatapath);
         sb.Append(dataChunk.chunkPosition.x);
         sb.Append(chunkFileSeparator);
@@ -168,7 +183,7 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public string GetMobileChunkDirectory (MobileDataChunk mobileDataChunk, bool useReadonlyPath) {
-        sb.Clear();
+        StringBuilder sb = new StringBuilder();
         sb.Append(useReadonlyPath ? mobileChunkReadonlyDatapath : mobileChunkDatapath);
         sb.Append(mobileDataChunk.mobileChunk.uid);
         sb.Append(mobileChunkDataEnd);
@@ -177,7 +192,7 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public string GetEntityDirectory (int uid, bool useReadonlyPath) {
-        sb.Clear();
+        StringBuilder sb = new StringBuilder();
         sb.Append(useReadonlyPath ? entityReadonlyDatapath : entityDatapath);
         sb.Append(uid);
         sb.Append(entityDataEnd);
@@ -186,7 +201,7 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public string GetRegionDirectory (EntityRegion entityRegion, bool useReadonlyPath) {
-        sb.Clear();
+        StringBuilder sb = new StringBuilder();
         sb.Append(useReadonlyPath ? regionsReadonlyDatapath : regionsDatapath);
         sb.Append(entityRegion.regionPosition.x);
         sb.Append(regionFileSeparator);
@@ -197,7 +212,7 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public string GetPlayerDirectory (int uid) {
-        sb.Clear();
+        StringBuilder sb = new StringBuilder();
         sb.Append(playerDatapath);
         sb.Append(uid);
         sb.Append(entityDataEnd);
@@ -208,19 +223,51 @@ public class WorldSaving : MonoBehaviour {
 
     #region Front-End Functions
     #region Save
-    public void SaveChunk (DataChunk source) {
+    public void SaveChunk (DataChunk source, bool useReadonlyPath) {
+        if(clientMode) {
+            return;
+        }
+
         //Serialize and save.
-        using(FileStream fs = new FileStream(GetChunkDirectory(source, false), FileMode.Create))
+        byte[] buffer = GetByteBuffer();
+        using(FileStream fs = new FileStream(GetChunkDirectory(source, useReadonlyPath), FileMode.Create))
         using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
         using(MemoryStream ms = new MemoryStream(buffer))
         using(BinaryWriter bw = new BinaryWriter(ms)) {
             SerializeToStream(bw, source);
             defs.Write(buffer, 0, (int)ms.Position);
         }
+        ReturnByteBuffer(buffer);
+
+        using(FileStream fs = new FileStream(GetChunkDirectory(source, useReadonlyPath), FileMode.Create))
+        using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
+        using(PooledBitStream stream = PooledBitStream.Get())
+        using(PooledBitWriter bw = PooledBitWriter.Get(stream)) {
+            bw.WriteByte(0);
+            defs.Write(stream.GetBuffer(), 0, (int)stream.Position+1);
+        }
+    }
+
+    public byte[] WriteChunkToByteArray (DataChunk source) {
+        byte[] buffer = new byte[bufferSize];
+
+        using(MemoryStream ms = new MemoryStream(buffer))
+        using(DeflateStream defs = new DeflateStream(ms, CompressionMode.Compress))
+        using(BinaryWriter bw = new BinaryWriter(defs)) {
+            SerializeToStream(bw, source);
+            defs.Write(buffer, 0, (int)ms.Position);
+        }
+
+        return buffer;
     }
 
     public void SaveChunk (MobileDataChunk source) {
+        if(clientMode) {
+            return;
+        }
+
         //Serialize and save.
+        byte[] buffer = GetByteBuffer();
         using(FileStream fs = new FileStream(GetMobileChunkDirectory(source, false), FileMode.Create))
         using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
         using(MemoryStream ms = new MemoryStream(buffer))
@@ -228,9 +275,14 @@ public class WorldSaving : MonoBehaviour {
             SerializeToStream(bw, source);
             defs.Write(buffer, 0, (int)ms.Position);
         }
+        ReturnByteBuffer(buffer);
     }
 
     public void SaveEntity (Entity entity) {
+        if(clientMode) {
+            return;
+        }
+
         //Serialize and save.
         using(FileStream fs = new FileStream(GetEntityDirectory(entity.entityData.uid, false), FileMode.Create))
         using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
@@ -243,6 +295,10 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public void SavePlayer (PlayerStatus status, int uid) {
+        if(clientMode) {
+            return;
+        }
+
         //Serialize and save.
         using(FileStream fs = new FileStream(GetPlayerDirectory(uid), FileMode.Create))
         using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
@@ -254,6 +310,11 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public void SaveRegionFile (EntityRegion entityRegion) {
+        if(clientMode) {
+            return;
+        }
+
+        byte[] buffer = GetByteBuffer();
         using(FileStream fs = new FileStream(GetRegionDirectory(entityRegion, false), FileMode.Create))
         using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
         using(MemoryStream ms = new MemoryStream(buffer))
@@ -261,11 +322,16 @@ public class WorldSaving : MonoBehaviour {
             SerializeRegionToStream(bw, entityRegion);
             defs.Write(buffer, 0, (int)ms.Position);
         }
+        ReturnByteBuffer(buffer);
     }
     #endregion
 
     #region Load
     public bool LoadChunkFile (DataChunk dataChunk, DataLoadMode loadMode) {
+        if(clientMode) {
+            return false;
+        }
+
         // The destination chunk should already have been cleaned and thus, 
         // its position should be correct and it can be passed to the GetChunkDirectory function.
         string chunkPath = string.Empty;
@@ -283,6 +349,7 @@ public class WorldSaving : MonoBehaviour {
             }
         } else {
             try {
+                byte[] buffer = GetByteBuffer();
                 using(FileStream fs = new FileStream(chunkPath, FileMode.Open))
                 using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress))
                 using(MemoryStream ms = new MemoryStream(buffer))
@@ -290,6 +357,7 @@ public class WorldSaving : MonoBehaviour {
                     int rlength = defs.Read(buffer, 0, buffer.Length);
                     hasSucceded = DeserializeFromStream(br, dataChunk);
                 }
+                ReturnByteBuffer(buffer);
             } catch(Exception e) {
                 Debug.Log("Failed to load chunk: " + e.ToString());
                 hasSucceded = false;
@@ -298,7 +366,7 @@ public class WorldSaving : MonoBehaviour {
 
         if(!hasSucceded) {
             Debug.LogError($"A chunk at {dataChunk.chunkPosition} failed to be deserialized. Its file was deleted.");
-            File.Delete(chunkPath);
+            //File.Delete(chunkPath);
         }
 
         if(!hasSucceded && loadMode == DataLoadMode.TryReadonly) {
@@ -308,7 +376,34 @@ public class WorldSaving : MonoBehaviour {
         }
     }
 
+    public bool LoadChunkFromByteArray (DataChunk dataChunk, byte[] buffer) {
+
+        ulong total = 0;
+        for(int x = 0; x < buffer.Length; x++) {
+            total += buffer[x];
+        }
+
+        Debug.Log(total);
+
+        bool hasSucceded = true;
+        byte[] buffer2 = GetByteBuffer();
+        using(MemoryStream ms = new MemoryStream(buffer))
+        using(DeflateStream defs = new DeflateStream(ms, CompressionMode.Decompress)) {
+            int rlength = defs.Read(buffer2, 0, buffer2.Length);
+            using(MemoryStream ms2 = new MemoryStream(buffer2))
+            using(BinaryReader br = new BinaryReader(ms2)) {
+                hasSucceded = DeserializeFromStream(br, dataChunk);
+            }
+        }
+        ReturnByteBuffer(buffer2);
+        return hasSucceded;
+    }
+
     public bool LoadMobileChunkFile (MobileDataChunk dataChunk, DataLoadMode loadMode) {
+        if(clientMode) {
+            return false;
+        }
+
         // The destination chunk should already have been cleaned and thus, 
         // its position should be correct and it can be passed to the GetChunkDirectory function.
         string chunkPath = string.Empty;
@@ -325,6 +420,7 @@ public class WorldSaving : MonoBehaviour {
                 return false;
             }
         } else {
+            byte[] buffer = GetByteBuffer();
             using(FileStream fs = new FileStream(chunkPath, FileMode.Open))
             using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress))
             using(MemoryStream ms = new MemoryStream(buffer))
@@ -332,6 +428,7 @@ public class WorldSaving : MonoBehaviour {
                 int rlength = defs.Read(buffer, 0, buffer.Length);
                 hasSucceded = DeserializeFromStream(br, dataChunk);
             }
+            ReturnByteBuffer(buffer);
         }
         
         if(!hasSucceded) {
@@ -346,7 +443,11 @@ public class WorldSaving : MonoBehaviour {
         }
     }
 
-    public bool LoadEntityFile (int uid, out EntityData entityData, DataLoadMode loadMode) {
+    public bool LoadEntityFile (int uid, int gid, EntityData entityData, DataLoadMode loadMode) {
+        if(clientMode) {
+            return false;
+        }
+
         // The destination chunk should already have been cleaned and thus, 
         // its position should be correct and it can be passed to the GetChunkDirectory function.
         string entityPath = string.Empty;
@@ -358,7 +459,7 @@ public class WorldSaving : MonoBehaviour {
         bool hasSucceded;
         if(!File.Exists(entityPath)) {
             if(loadMode == DataLoadMode.TryReadonly) {
-                return LoadEntityFile(uid, out entityData, DataLoadMode.Readonly);
+                return LoadEntityFile(uid, gid, entityData, DataLoadMode.Readonly);
             } else {
                 entityData = null;
                 return false;
@@ -370,7 +471,9 @@ public class WorldSaving : MonoBehaviour {
             using(JsonReader jr = new JsonTextReader(sr)) {
                 JsonSerializer serializer = JsonSerializer.Create(jss);
 
-                entityData = serializer.Deserialize<EntityDataWrapper>(jr).entityData;
+                EntityDataWrapper edw = new EntityDataWrapper(entityData);
+                serializer.Populate(jr, edw);
+                //entityData = serializer.Deserialize<EntityDataWrapper>(jr).entityData;
                 hasSucceded = true;
             }
         }
@@ -380,7 +483,7 @@ public class WorldSaving : MonoBehaviour {
             File.Delete(entityPath);
         }
         if(!hasSucceded && loadMode == DataLoadMode.TryReadonly) {
-            return LoadEntityFile(uid, out entityData, DataLoadMode.Readonly);
+            return LoadEntityFile(uid, gid, entityData, DataLoadMode.Readonly);
         } else {
             return hasSucceded;
         }
@@ -388,6 +491,9 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public bool LoadRegionFile (EntityRegion entityRegion, DataLoadMode loadMode) {
+        if(clientMode) {
+            return false;
+        }
 
         string regionPath = string.Empty;
         if(loadMode == DataLoadMode.Default || loadMode == DataLoadMode.TryReadonly)
@@ -404,6 +510,7 @@ public class WorldSaving : MonoBehaviour {
             }
         } else {
             try {
+                byte[] buffer = GetByteBuffer();
                 using(FileStream fs = new FileStream(regionPath, FileMode.Open))
                 using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress))
                 using(MemoryStream ms = new MemoryStream(buffer))
@@ -411,6 +518,7 @@ public class WorldSaving : MonoBehaviour {
                     int rlength = defs.Read(buffer, 0, buffer.Length);
                     hasSucceded = DeserializeStreamToRegion(br, entityRegion);
                 }
+                ReturnByteBuffer(buffer);
             } catch(System.Exception e) {
                 Debug.Log("Failed to load chunk: " + e.ToString());
                 hasSucceded = false;
@@ -430,6 +538,11 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public bool LoadPlayerFile (int uid, out PlayerStatus playerData) {
+        if(clientMode) {
+            playerData = null;
+            return false;
+        }
+
         // The destination chunk should already have been cleaned and thus, 
         // its position should be correct and it can be passed to the GetChunkDirectory function.
         string entityPath = GetPlayerDirectory(uid);
@@ -461,6 +574,10 @@ public class WorldSaving : MonoBehaviour {
 
     #region Delete
     public void DeleteChunk (DataChunk target) {
+        if(clientMode) {
+            return;
+        }
+
         string chunkPath = GetChunkDirectory(target, false);
         if(File.Exists(chunkPath)) {
             File.Delete(chunkPath);
@@ -469,6 +586,10 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public void DeleteMobileChunk (MobileDataChunk target) {
+        if(clientMode) {
+            return;
+        }
+
         string chunkPath = GetMobileChunkDirectory(target, false);
         if(File.Exists(chunkPath)) {
             File.Delete(chunkPath);
@@ -477,6 +598,10 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public void DeleteEntity (Entity entity) {
+        if(clientMode) {
+            return;
+        }
+
         string entityPath = GetEntityDirectory(entity.entityData.uid, false);
         if(File.Exists(entityPath)) {
             File.Delete(entityPath);
@@ -534,8 +659,11 @@ public class WorldSaving : MonoBehaviour {
                 for(int i = 0; i < entityRegion.subRegions[x][y].mobileChunkUIDs.Count; i++) {
                     ms.Write(entityRegion.subRegions[x][y].mobileChunkUIDs[i]);
                 }
-                for(int i = 0; i < entityRegion.subRegions[x][y].entitiesUIDs.Count; i++) {
-                    ms.Write(entityRegion.subRegions[x][y].entitiesUIDs[i]);
+                foreach(KeyValuePair<int, EntityUIDAssetPair> kvp in entityRegion.subRegions[x][y].entitiesUIDs) {
+                    ms.Write(kvp.Value.uid);
+                    EntityAsset ea = GeneralAsset.inst.GetEntityAssetFromGlobalID(kvp.Value.gid);
+                    ms.Write(ea.collection.parent.id);
+                    ms.Write(ea.id);
                 }
             }
         }
@@ -545,10 +673,12 @@ public class WorldSaving : MonoBehaviour {
     #region DeserializeFromStream
     bool DeserializeFromStream (BinaryReader ms, DataChunk dataChunk) {
         if(!DeserializePalette(ms, dataChunk)) {
+            Debug.Log("Palette has issues");
             return false;
         }
 
         if(!DeserializeTileData(ms, dataChunk)) {
+            Debug.Log("Tile has issues");
             return false;
         }
 
@@ -590,7 +720,10 @@ public class WorldSaving : MonoBehaviour {
                 }
                 i = 0;
                 for(; i < entitiesInRegion; i++) {
-                    entityRegion.subRegions[x][y].entitiesUIDs.Add(ms.ReadInt32());
+                    int uid = ms.ReadInt32();
+                    if(GeneralAsset.inst.GetGlobalIDFromEntityString(new EntityString(ms.ReadString(), ms.ReadString()), out int gid)) {
+                        entityRegion.subRegions[x][y].entitiesUIDs.Add(uid, new EntityUIDAssetPair(uid, gid));
+                    }
                 }
             }
         }
@@ -627,6 +760,7 @@ public class WorldSaving : MonoBehaviour {
             return false;
         }
 
+        StringBuilder sb = new StringBuilder();
         TileString tileString = new TileString();
 
         for(int i = 0; i < palCount; i++) {
@@ -791,6 +925,20 @@ public class WorldSaving : MonoBehaviour {
         mobileDataChunk.mobileChunk.boxCollider.size = new Vector2(ms.ReadSingle(), ms.ReadSingle());
         mobileDataChunk.restrictedSize = new Vector2Int(ms.ReadInt32(), ms.ReadInt32());
         mobileDataChunk.mobileChunk.rigidbody.velocity = new Vector2(ms.ReadSingle(), ms.ReadSingle());
+    }
+    #endregion
+
+    #region Byte Buffer Pool
+    public byte[] GetByteBuffer () {
+        if(bufferPool.TryDequeue(out byte[] result)) {
+            return result;
+        } else {
+            return new byte[bufferSize];
+        }
+    }
+
+    public void ReturnByteBuffer (byte[] buffer) {
+        bufferPool.Enqueue(buffer);
     }
     #endregion
 }

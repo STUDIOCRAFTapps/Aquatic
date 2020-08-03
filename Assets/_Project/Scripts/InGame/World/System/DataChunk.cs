@@ -1,11 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MLAPI.Serialization;
+using MLAPI.Serialization.Pooled;
+using System.IO;
 
-public class DataChunk {
+public class DataChunk : IBitWritable {
 
     #region Header and Init
     public Vector2Int chunkPosition;
+    const int defaultChunkSize = 16;
     public int chunkSize = 16;
     public Dictionary<TerrainLayers, Tile[][]> tileData;
     public List<int> globalIDPalette;
@@ -13,8 +17,8 @@ public class DataChunk {
 
     bool[] hasLayerBeenEdited;
 
-    public DataChunk(int chunkSize) {
-        this.chunkSize = chunkSize;
+    public DataChunk() {
+        this.chunkSize = defaultChunkSize;
         tileData = new Dictionary<TerrainLayers, Tile[][]>();
         globalIDPalette = new List<int>();
 
@@ -161,6 +165,20 @@ public class DataChunk {
          0,  0,  0,  1, //top
          0,  1,  0,  1, //top-right
     };
+    #endregion
+
+    #region Network Serialization
+    public void Write (Stream stream) {
+        using(PooledBitWriter writer = PooledBitWriter.Get(stream)) {
+            writer.WriteByteArray(WorldSaving.inst.WriteChunkToByteArray(this));
+        }
+    }
+
+    public void Read (Stream stream) {
+        using(PooledBitReader reader = PooledBitReader.Get(stream)) {
+            WorldSaving.inst.LoadChunkFromByteArray(this, reader.ReadByteArray());
+        }
+    }
     #endregion
 }
 

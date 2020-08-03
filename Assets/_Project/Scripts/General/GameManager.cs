@@ -105,7 +105,23 @@ public class GameManager : MonoBehaviour {
         foreach(KeyValuePair<long, DataChunk> kvp in TerrainManager.inst.chunks) {
             if(Time.time - kvp.Value.timeOfLastAutosave > autoSaveTimeLimit) {
                 kvp.Value.timeOfLastAutosave = Time.time;
-                WorldSaving.inst.SaveChunk(kvp.Value);
+
+                TerrainManager.inst.StartNewChunkJobAt(
+                    kvp.Value.chunkPosition,
+                    JobState.Saving,
+                    currentDataLoadMode == DataLoadMode.TryReadonly,
+                    () => { // JOB
+                        WorldSaving.inst.SaveChunk(kvp.Value, currentDataLoadMode == DataLoadMode.TryReadonly);
+                    },
+                    () => { // CALLBACK
+
+                    },
+                    () => { // CALLBACK IF CANCELLED
+
+                    }
+                );
+
+                //WorldSaving.inst.SaveChunk(kvp.Value, currentDataLoadMode == DataLoadMode.TryReadonly);
             }
         }
         foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
@@ -131,7 +147,7 @@ public class GameManager : MonoBehaviour {
 
     public void CompleteSave () {
         foreach(KeyValuePair<long, DataChunk> kvp in TerrainManager.inst.chunks) {
-            WorldSaving.inst.SaveChunk(kvp.Value);
+            WorldSaving.inst.SaveChunk(kvp.Value, currentDataLoadMode == DataLoadMode.TryReadonly);
         }
         foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
             WorldSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);

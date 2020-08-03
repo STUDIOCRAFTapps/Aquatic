@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.IO;
 using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization;
 using UnityEngine.UI;
 using TMPro;
+using MLAPI;
 
 public class SavesMenuManager : MonoBehaviour {
 
@@ -19,6 +21,8 @@ public class SavesMenuManager : MonoBehaviour {
     public Transform[] aikansSelection;
     public Color selectedAikanColor;
     public Color defaultAikanColor;
+
+    public TMP_InputField serverIPField;
 
     public static SavesMenuManager inst;
 
@@ -37,6 +41,17 @@ public class SavesMenuManager : MonoBehaviour {
     string saveFileDirectory;
 
     private void Awake () {
+        bool isNetworkManagerLoaded = false;
+        int countLoaded = SceneManager.sceneCount;
+        for(int i = 0; i < countLoaded; i++) {
+            if(SceneManager.GetSceneAt(i).name == "NetworkManager") {
+                isNetworkManagerLoaded = true;
+            }
+        }
+        if(!isNetworkManagerLoaded) {
+            SceneManager.LoadScene("NetworkManager", LoadSceneMode.Additive);
+        }
+
         inst = this;
 
         s = Path.DirectorySeparatorChar;
@@ -144,6 +159,19 @@ public class SavesMenuManager : MonoBehaviour {
         }
 
         LoadSaveDisplay(newSaveFolderPath);
+    }
+
+    const string ipMatch = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]).){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):[0-9]+$";
+    public void JoinServer () {
+        string serverIP = serverIPField.text;
+        if(System.Text.RegularExpressions.Regex.IsMatch(serverIP, ipMatch)) {
+            string ip = serverIP.Split(':')[0];
+            ushort port = ushort.Parse(serverIP.Split(':')[1]);
+
+            WorldSaving.inst.PrepareClient();
+            SceneManager.LoadScene("Main", LoadSceneMode.Single);
+            NetworkAssistant.inst.StartClient(ip, port);
+        }
     }
     #endregion
 

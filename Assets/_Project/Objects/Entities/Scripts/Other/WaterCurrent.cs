@@ -19,6 +19,11 @@ public class WaterCurrent : Entity {
         return hasBaseFailed;
     }
 
+    public void SetDirection (Vector2 direction) {
+        ((WaterCurrentData)entityData).direction = direction;
+        visualAnchor.eulerAngles = Vector3.forward * Mathf.Atan2(-((WaterCurrentData)entityData).direction.x, ((WaterCurrentData)entityData).direction.y) * Mathf.Rad2Deg;
+    }
+
     public override void OnSpawn () {
         visualAnchor.eulerAngles = Vector3.forward * Mathf.Atan2(-((WaterCurrentData)entityData).direction.x, ((WaterCurrentData)entityData).direction.y) * Mathf.Rad2Deg;
         base.OnSpawn();

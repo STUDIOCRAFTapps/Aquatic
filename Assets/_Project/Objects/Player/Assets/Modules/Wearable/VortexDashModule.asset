@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4409086745b5fe24981cf7167ad758ca, type: 3}
   m_Name: VortexDashModule
   m_EditorClassIdentifier: 
-  maxDashLength: 0.075
+  maxDashLength: 0.2
   dashSpeed: 40
   additionalImpulse: 6
   hitKnockback: 42
+  stunsEnnemies: 1
+  mustBeSubmerged: 1
+  doSummonCurrent: 0
+  summonDistInterval: 0.5
+  maxCooldownTime: 2

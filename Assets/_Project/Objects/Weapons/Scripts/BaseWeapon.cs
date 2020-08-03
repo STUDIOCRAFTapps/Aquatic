@@ -6,6 +6,13 @@ public class WeaponPlayerData {
     public PlayerController owner;
     public float timeOfPress;
     public float lastAttackTime;
+    public AttackSlot attackSlot; 
+}
+
+public enum AttackSlot {
+    Main,
+    Second,
+    Wearable
 }
 
 public abstract class BaseWeapon : ScriptableObject {
@@ -45,6 +52,10 @@ public abstract class BaseWeapon : ScriptableObject {
     /// Called the frame the player releases the attack button
     /// </summary>
     public virtual void OnReleaseAttack (ref WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
+    }
+
+    public virtual void OnUpdateIndicators (ref WeaponPlayerData data) {
+
     }
 
     public virtual WeaponPlayerData CreateWeaponPlayerData () {

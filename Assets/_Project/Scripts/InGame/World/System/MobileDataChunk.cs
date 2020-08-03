@@ -8,7 +8,7 @@ public class MobileDataChunk : DataChunk {
     public MobileChunk mobileChunk;
     public Vector2Int restrictedSize;
 
-    public MobileDataChunk (int chunkSize) : base(chunkSize) {
+    public MobileDataChunk () : base() {
     }
 
     new public void Init (Vector2Int restrictedSize) {

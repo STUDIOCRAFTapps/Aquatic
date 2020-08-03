@@ -5,6 +5,8 @@ using UnityEngine.U2D;
 
 public class CameraNavigator : MonoBehaviour {
 
+    public static CameraNavigator inst;
+
     public BackgroundManager backgroundManager;
     public PixelPerfectCamera pixelPerfect;
 
@@ -30,11 +32,17 @@ public class CameraNavigator : MonoBehaviour {
 
     bool zoomIn = true;
 
-    private void Start () {
+    private void Awake () {
+        inst = this;
+
         initTargetRes = new Vector2Int(pixelPerfect.refResolutionX, pixelPerfect.refResolutionY); 
     }
 
     void Update () {
+        if(!playerCenter) {
+            return;
+        }
+
         float blend = 1f - Mathf.Pow(1f - moveSmooth, Time.deltaTime * 30f);
 
         if(Input.GetKeyDown(KeyCode.F)) {

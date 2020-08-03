@@ -155,8 +155,23 @@ public class RigidbodyPixel : MonoBehaviour {
         velocity *= Mathf.Lerp(1f, (1f - Time.fixedDeltaTime * PhysicsPixel.inst.fluidDrag), submergedPercentage);
     }
 
-    public void SimulateFixedUpdate () {
+    Vector3 transform_position;
+    Vector2 box_size;
+    Vector2 box_offset;
+    public void PreOffThread () { // Meant to be executed in main thread
+        transform_position = transform.position;
+        box_size = box.size;
+        box_offset = box.offset;
+    }
+    public void PostOffThread () { // Meant to be executed in main thread
+        transform.position = transform_position;
+    }
+    public void SimulateFixedUpdate (bool includePrePost, float fixedDeltaTime) { // Meant to be executed in any thread
         if(failedInitialization) return;
+
+        if(includePrePost) {
+            PreOffThread();
+        }
 
         // Apply parent's velocity when leaving the parent
         if(previousParentPlatform != null && parentPlatform == null) {
@@ -185,9 +200,9 @@ public class RigidbodyPixel : MonoBehaviour {
         // Move the rigibody
         lastVel = velocity;
         ApplyExternalCollisionInfo();
-        ApplyVelocity();
+        ApplyVelocity(fixedDeltaTime);
         if(mobileChunk != null) {
-            mobileChunk.UpdatePositionData(transform.position);
+            mobileChunk.UpdatePositionData(transform_position);
         }
 
         if(clipPermision) {
@@ -199,8 +214,11 @@ public class RigidbodyPixel : MonoBehaviour {
         previousParentPlatform = parentPlatform;
         isParentPlaformConn = false;
         parentPlatform = null;
-    }
 
+        if(includePrePost) {
+            PostOffThread();
+        }
+    }
     public void ApplyExternalCollisionInfo () {
         if(hadCollisionDown) {
             isCollidingDown = true;
@@ -256,14 +274,16 @@ public class RigidbodyPixel : MonoBehaviour {
     /// </summary>
     /// <param name="delta">The delta to move by.</param>
     public void MoveByDelta (Vector2 delta) {
-        MoveByDeltaInteral(delta, false);
+        PreOffThread();
+        MoveByDeltaInteral(delta, false, Time.fixedDeltaTime);
+        PostOffThread();
     }
     #endregion
 
     #region Internal Functions
-    private void ApplyVelocity () {
+    private void ApplyVelocity (float fixedDeltaTime) {
         lastVelocity = velocity;
-        Vector2 delta = velocity * Time.fixedDeltaTime;
+        Vector2 delta = velocity * fixedDeltaTime;
         if(delta.x > 0) {
             pVelDir.x = 1f;
         } else if(delta.x < 0) {
@@ -283,23 +303,23 @@ public class RigidbodyPixel : MonoBehaviour {
                 delta += parentPlatform.movementDelta;
             }
         }
-        MoveByDeltaInteral(delta, true);
-        transform.position -= (Vector3)(pVelDir * PhysicsPixel.inst.errorHandler);
+        MoveByDeltaInteral(delta, true, fixedDeltaTime);
+        transform_position -= (Vector3)(pVelDir * PhysicsPixel.inst.errorHandler);
     }
 
-    private void MoveByDeltaInteral (Vector2 delta, bool limitVelocity) {
-        Bounds2D bounds = GetBoundFromCollider();
+    private void MoveByDeltaInteral (Vector2 delta, bool limitVelocity, float fixedDeltaTime) {
+        Bounds2D bounds = GetBoundFromColliderSafe();
         Bounds2D queryBounds = PhysicsPixel.inst.CalculateQueryBounds(bounds, delta);
 
-        totalVolume = box.size.x * box.size.y;
+        totalVolume = box_size.x * box_size.y;
         volume = totalVolume;
         subtractedVolume = totalVolume;
 
-        QueryMinimizeApplyDelta(queryBounds, bounds, delta, limitVelocity);
+        QueryMinimizeApplyDelta(queryBounds, bounds, delta, limitVelocity, fixedDeltaTime);
         if(!isComplexCollider) {
-            aabb = GetBoundFromCollider();
+            aabb = GetBoundFromColliderSafe();
         } else {
-            aabb = GetBoundFromCollider(mobileChunk.mobileDataChunk.restrictedSize);
+            aabb = GetBoundFromColliderSafe(mobileChunk.mobileDataChunk.restrictedSize);
         }
 
         if(totalVolume > 0f) {
@@ -311,7 +331,7 @@ public class RigidbodyPixel : MonoBehaviour {
     #endregion
 
     #region Query and Delta Manipulations
-    private void QueryMinimizeApplyDelta (Bounds2D queryBounds, Bounds2D bounds, Vector2 delta, bool limitVelocity) {
+    private void QueryMinimizeApplyDelta (Bounds2D queryBounds, Bounds2D bounds, Vector2 delta, bool limitVelocity, float fixedDeltaTime) {
         Vector2 newDelta = delta;
         Bounds2D cBounds = bounds;
 
@@ -331,10 +351,10 @@ public class RigidbodyPixel : MonoBehaviour {
                 // Reduce the delta
                 newDelta.y = PhysicsPixel.inst.MinimizeDeltaY(newDelta.y, b, cBounds);
             }
-            transform.position += newDelta.y * Vector3.up;
+            transform_position += newDelta.y * Vector3.up;
 
             // Recalculating current bounds
-            cBounds = GetBoundFromCollider();
+            cBounds = GetBoundFromColliderSafe();
             #endregion
 
             #region Reduce Delta X
@@ -343,11 +363,11 @@ public class RigidbodyPixel : MonoBehaviour {
                 // Reduce the delta
                 newDelta.x = PhysicsPixel.inst.MinimizeDeltaX(newDelta.x, b, cBounds);
             }
-            transform.position += newDelta.x * Vector3.right;
+            transform_position += newDelta.x * Vector3.right;
             #endregion
         } else {
-            transform.position += newDelta.y * Vector3.up;
-            transform.position += newDelta.x * Vector3.right;
+            transform_position += newDelta.y * Vector3.up;
+            transform_position += newDelta.x * Vector3.right;
         }
         movementDelta += newDelta;
 
@@ -364,10 +384,10 @@ public class RigidbodyPixel : MonoBehaviour {
         isCollidingWallRight = isCollidingWallRight || newDelta.x < delta.x;
 
         if(isCollidingDown) {
-            velocity.x *= (1f - Time.fixedDeltaTime * defaultFloorFriction);
+            velocity.x *= (1f - fixedDeltaTime * defaultFloorFriction);
         }
         if(isCollidingLeft || isCollidingRight) {
-            velocity.x *= (1f - Time.fixedDeltaTime * defaultWallFriction);
+            velocity.x *= (1f - fixedDeltaTime * defaultWallFriction);
         }
         if(isCollidingWallDown || isCollidingUp || isCollidingWallLeft || isCollidingWallRight) {
             ignoreProjectileOwnerUntilHitWall = null;
@@ -390,12 +410,12 @@ public class RigidbodyPixel : MonoBehaviour {
         #region Left
         if(lastVel.x < 0f && isCollidingLeft) {
             Vector2 point0 = new Vector2(
-                transform.position.x + box.offset.x - (box.size.x * 0.5f) - e5,
-                transform.position.y + box.offset.y - (box.size.y * 0.5f) + e
+                transform_position.x + box_offset.x - (box_size.x * 0.5f) - e5,
+                transform_position.y + box_offset.y - (box_size.y * 0.5f) + e
             );
             Vector2 point1 = new Vector2(
-                transform.position.x + box.offset.x - (box.size.x * 0.5f) - e5,
-                transform.position.y + box.offset.y - (box.size.y * 0.5f) + clipAmout
+                transform_position.x + box_offset.x - (box_size.x * 0.5f) - e5,
+                transform_position.y + box_offset.y - (box_size.y * 0.5f) + clipAmout
             );
             bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0, point1));
             bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.up * PhysicsPixel.inst.errorHandler);
@@ -403,9 +423,9 @@ public class RigidbodyPixel : MonoBehaviour {
             if(solidClip && !solidPoint) {
                 if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Down, clipAmout, out Vector2 point)) {
                     float offset = clipAmout - (point1.y - point.y) + 0.03125f;
-                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.up * offset, point1 + Vector2.up * (offset + box.size.y - e)));
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.up * offset, point1 + Vector2.up * (offset + box_size.y - e)));
                     if(!noFreeSpace) {
-                        transform.position += Vector3.up * offset;
+                        transform_position += Vector3.up * offset;
                         velocity = lastVel;
                     }
                 }
@@ -416,12 +436,12 @@ public class RigidbodyPixel : MonoBehaviour {
         #region Right
         if(lastVel.x > 0f && isCollidingRight) {
             Vector2 point0 = new Vector2(
-                transform.position.x + box.offset.x + (box.size.x * 0.5f) + e5,
-                transform.position.y + box.offset.y - (box.size.y * 0.5f) + e
+                transform_position.x + box_offset.x + (box_size.x * 0.5f) + e5,
+                transform_position.y + box_offset.y - (box_size.y * 0.5f) + e
             );
             Vector2 point1 = new Vector2(
-                transform.position.x + box.offset.x + (box.size.x * 0.5f) + e5,
-                transform.position.y + box.offset.y - (box.size.y * 0.5f) + clipAmout
+                transform_position.x + box_offset.x + (box_size.x * 0.5f) + e5,
+                transform_position.y + box_offset.y - (box_size.y * 0.5f) + clipAmout
             );
             bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0, point1));
             bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.up * PhysicsPixel.inst.errorHandler);
@@ -430,9 +450,9 @@ public class RigidbodyPixel : MonoBehaviour {
                 if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Down, clipAmout, out Vector2 point)) {
                     float offset = clipAmout - (point1.y - point.y) + 0.03125f;
                     
-                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.up * offset, point1 + Vector2.up * (offset + box.size.y - e)));
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.up * offset, point1 + Vector2.up * (offset + box_size.y - e)));
                     if(!noFreeSpace) {
-                        transform.position += Vector3.up * offset;
+                        transform_position += Vector3.up * offset;
                         velocity = lastVel;
                     }
                 }
@@ -443,21 +463,21 @@ public class RigidbodyPixel : MonoBehaviour {
         #region Top Right
         if(lastVel.y > 5f && isCollidingUp) {
             Vector2 point0 = new Vector2(
-                transform.position.x + box.offset.x + (box.size.x * 0.5f),
-                transform.position.y + box.offset.y + (box.size.y * 0.5f)
+                transform_position.x + box_offset.x + (box_size.x * 0.5f),
+                transform_position.y + box_offset.y + (box_size.y * 0.5f)
             );
             Vector2 point1 = new Vector2(
-                transform.position.x + box.offset.x + (box.size.x * 0.5f) - clipAmout,
-                transform.position.y + box.offset.y + (box.size.y * 0.5f) + e5
+                transform_position.x + box_offset.x + (box_size.x * 0.5f) - clipAmout,
+                transform_position.y + box_offset.y + (box_size.y * 0.5f) + e5
             );
             bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0, point1));
             bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.left * PhysicsPixel.inst.errorHandler);
             if(solidClip && !solidPoint) {
                 if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Right, clipAmout, out Vector2 point)) {
                     float offset = clipAmout - (point.x - point1.x);
-                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.left * offset, point1 + Vector2.left * (offset + box.size.x - e)));
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.left * offset, point1 + Vector2.left * (offset + box_size.x - e)));
                     if(!noFreeSpace) {
-                        transform.position += Vector3.left * offset;
+                        transform_position += Vector3.left * offset;
                         velocity = lastVel;
                     }
                 }
@@ -468,21 +488,21 @@ public class RigidbodyPixel : MonoBehaviour {
         #region Top Left
         if(lastVel.y > 5f && isCollidingUp) {
             Vector2 point0 = new Vector2(
-                transform.position.x + box.offset.x - (box.size.x * 0.5f),
-                transform.position.y + box.offset.y + (box.size.y * 0.5f)
+                transform_position.x + box_offset.x - (box_size.x * 0.5f),
+                transform_position.y + box_offset.y + (box_size.y * 0.5f)
             );
             Vector2 point1 = new Vector2(
-                transform.position.x + box.offset.x - (box.size.x * 0.5f) + clipAmout,
-                transform.position.y + box.offset.y + (box.size.y * 0.5f) + e5
+                transform_position.x + box_offset.x - (box_size.x * 0.5f) + clipAmout,
+                transform_position.y + box_offset.y + (box_size.y * 0.5f) + e5
             );
             bool solidClip = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0, point1));
             bool solidPoint = PhysicsPixel.inst.IsPointSolid(point1 + Vector2.right * PhysicsPixel.inst.errorHandler);
             if(solidClip && !solidPoint) {
                 if(PhysicsPixel.inst.AxisAlignedRaycast(point1, PhysicsPixel.Axis.Left, clipAmout, out Vector2 point)) {
                     float offset = clipAmout - (point1.x - point.x);
-                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.right * offset, point1 + Vector2.right * (offset + box.size.x - e)));
+                    bool noFreeSpace = PhysicsPixel.inst.BoundsCast(new Bounds2D(point0 + Vector2.right * offset, point1 + Vector2.right * (offset + box_size.x - e)));
                     if(!noFreeSpace) {
-                        transform.position += Vector3.right * offset;
+                        transform_position += Vector3.right * offset;
                         velocity = lastVel;
                     }
                 }
@@ -548,8 +568,18 @@ public class RigidbodyPixel : MonoBehaviour {
         return b2;
     }
 
+    public Bounds2D GetBoundFromColliderSafe () {
+        Bounds2D b2 = new Bounds2D((Vector2)transform_position - box_size * 0.5f + box_offset, (Vector2)transform_position + box_size * 0.5f + box_offset);
+        //PhysicsPixel.DrawBounds(b2, Color.yellow);
+        return b2;
+    }
+
     public Bounds2D GetBoundFromCollider (Vector2 trueSize) {
         return new Bounds2D(transform.position, (Vector2)transform.position + trueSize);
+    }
+
+    public Bounds2D GetBoundFromColliderSafe (Vector2 trueSize) {
+        return new Bounds2D(transform_position, (Vector2)transform_position + trueSize);
     }
 
     public Bounds2D GetBoundFromColliderDelta (Vector2 previsionDelta) {

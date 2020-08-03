@@ -41,7 +41,7 @@ public class ChunkCleaner : MonoBehaviour {
 
         layerNames = Enum.GetNames(typeof(TerrainLayers)).ToList();
 
-        DataChunk dataChunk = new DataChunk(16);
+        DataChunk dataChunk = new DataChunk();
         string[] allFiles = Directory.GetFiles(sourceFolder);
         
         foreach(string file in allFiles) {

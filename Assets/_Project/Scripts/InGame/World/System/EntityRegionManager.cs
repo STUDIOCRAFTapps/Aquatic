@@ -4,6 +4,7 @@ using UnityEngine;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using System.Linq;
 
 public class EntityRegionManager : MonoBehaviour {
 
@@ -158,13 +159,13 @@ public class EntityRegionManager : MonoBehaviour {
             return;
         }
 
-        if(entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Contains(entity.entityData.uid)) {
+        if(entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.ContainsKey(entity.entityData.uid)) {
             Debug.Log("Trying to add a entity in a region where it already exist.");
             return;
         }
 
         //Debug.Log("Adding Entity: " + entity.entityData.uid);
-        entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Add(entity.entityData.uid);
+        entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Add(entity.entityData.uid, new EntityUIDAssetPair(entity.entityData.uid, entity.asset.globalID));
     }
 
     public void RemoveMobileChunk (MobileChunk mobileChunk) {
@@ -193,7 +194,7 @@ public class EntityRegionManager : MonoBehaviour {
             return;
         }
 
-        if(!entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Contains(entity.entityData.uid)) {
+        if(!entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.ContainsKey(entity.entityData.uid)) {
             Debug.Log("Trying to remove a entity in a region where it isn't even present.");
             return;
         }
@@ -248,7 +249,7 @@ public class EntityRegionManager : MonoBehaviour {
             return false;
         }
 
-        if(!entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Contains(entity.entityData.uid)) {
+        if(!entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.ContainsKey(entity.entityData.uid)) {
             Debug.Log("Trying to remove a entity in a region where it isn't even present.");
         } else {
             entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Remove(entity.entityData.uid);
@@ -262,14 +263,14 @@ public class EntityRegionManager : MonoBehaviour {
 
             regionPos = TerrainManager.inst.WorldToRegion(previousPosition);
             chunkPos = TerrainManager.inst.WorldToChunk(previousPosition);
-            entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Add(entity.entityData.uid);
+            entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Add(entity.entityData.uid, new EntityUIDAssetPair(entity.entityData.uid, entity.asset.globalID));
             return false;
         }
 
-        if(entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Contains(entity.entityData.uid)) {
+        if(entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.ContainsKey(entity.entityData.uid)) {
             Debug.Log("Trying to add a entity in a region where it already is.");
         } else {
-            entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Add(entity.entityData.uid);
+            entityRegions[regionPos].GetSubRegion(chunkPos).entitiesUIDs.Add(entity.entityData.uid, new EntityUIDAssetPair(entity.entityData.uid, entity.asset.globalID));
         }
 
         return true;
@@ -342,13 +343,14 @@ public class EntityRegion {
                     }
                     TerrainManager.inst.LoadMobileChunkFromUID(uid);
                 }
-                for(int i = subRegions[x][y].entitiesUIDs.Count - 1; i >= 0; i--) {
-                    int uid = subRegions[x][y].entitiesUIDs[i];
-                    subRegions[x][y].entitiesUIDs.RemoveAt(i);
+                foreach(KeyValuePair<int, EntityUIDAssetPair> kvp in subRegions[x][y].entitiesUIDs.ToList()) {
+                    int uid = kvp.Key;
+                    int gid = kvp.Value.gid;
+                    subRegions[x][y].entitiesUIDs.Remove(uid);
                     if(EntityManager.inst.entitiesByUID.ContainsKey(uid)) {
                         continue;
                     }
-                    EntityManager.inst.LoadFromUID(uid); // Should readd it to the subRegion
+                    EntityManager.inst.LoadFromUID(uid, gid); // Should read it to the subRegion Edit: What does that mean?
                 }
             }
         }
@@ -362,9 +364,9 @@ public class EntityRegion {
                         VisualChunkManager.inst.UnloadMobileChunk(VisualChunkManager.inst.mobileChunkPool[subRegions[x][y].mobileChunkUIDs[i]]);
                     }
                 }
-                for(int i = 0; i < subRegions[x][y].entitiesUIDs.Count; i++) {
-                    if(EntityManager.inst.entitiesByUID.ContainsKey(subRegions[x][y].entitiesUIDs[i])) {
-                        EntityManager.inst.UnloadEntity(EntityManager.inst.entitiesByUID[subRegions[x][y].entitiesUIDs[i]]);
+                foreach(KeyValuePair<int, EntityUIDAssetPair> kvp in subRegions[x][y].entitiesUIDs) {
+                    if(EntityManager.inst.entitiesByUID.ContainsKey(kvp.Key)) {
+                        EntityManager.inst.UnloadEntity(EntityManager.inst.entitiesByUID[kvp.Key]);
                     }
                 }
             }
@@ -391,15 +393,25 @@ public class EntityRegion {
 public class SubEntityRegion {
     public Vector2Int chunkPosition;
     public List<int> mobileChunkUIDs;
-    public List<int> entitiesUIDs;
+    public Dictionary<int, EntityUIDAssetPair> entitiesUIDs;
 
     public SubEntityRegion () {
         mobileChunkUIDs = new List<int>();
-        entitiesUIDs = new List<int>();
+        entitiesUIDs = new Dictionary<int, EntityUIDAssetPair>();
     }
 
     public void Clear () {
         mobileChunkUIDs.Clear();
         entitiesUIDs.Clear();
+    }
+}
+
+public struct EntityUIDAssetPair {
+    public int uid;
+    public int gid;
+
+    public EntityUIDAssetPair (int uid, int gid) {
+        this.uid = uid;
+        this.gid = gid;
     }
 }

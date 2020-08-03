@@ -22,6 +22,22 @@ public class EntityData {
 
 public class Entity : MonoBehaviour {
 
+    public InterpolatedTransform interpolatedTransform {
+        get {
+            if(!testedForITransform) {
+                _interpolatedTransform = GetComponent<InterpolatedTransform>();
+
+                testedForITransform = true;
+            }
+            return _interpolatedTransform;
+        }
+        private set {
+            _interpolatedTransform = value;
+        }
+    }
+    InterpolatedTransform _interpolatedTransform;
+    bool testedForITransform = false;
+
     public EntityData entityData { private set; get; }
     public EntityAsset asset { private set; get; }
     [HideInInspector] public float timeOfLastLongUpdate;
@@ -34,8 +50,7 @@ public class Entity : MonoBehaviour {
         } else {
             return true;
         }
-        transform.position = entityData.position;
-        entityData.previousPosition = entityData.position;
+        SetPosition(entityData.position, true);
 
         OnSpawn();
         return false;
@@ -48,9 +63,14 @@ public class Entity : MonoBehaviour {
 
     // Every frame, used mostly for rendering and smooth operations (Make sure to call base). This will still be called in editor mode.
     public virtual void OnUpdate () {
+        
+    }
+
+    // Execute every fixed interval, used mostly for physics (Make sure to call base)
+    public virtual void OnFixedUpdate () {
         entityData.previousPosition = entityData.position;
         entityData.position = transform.position;
-
+        
         if(TerrainManager.inst.WorldToChunk(entityData.previousPosition) != TerrainManager.inst.WorldToChunk(entityData.position)) {
             if(!EntityRegionManager.inst.MoveEntity(this, entityData.previousPosition)) {
                 // Failed moving, region not loaded. Must load and unload region imidiatly
@@ -65,14 +85,9 @@ public class Entity : MonoBehaviour {
             gameObject.SetActive(false);
             EntityRegionManager.inst.outOfBoundsEntities.Add(this);
 
-            entityData.position = entityData.previousPosition;
-            transform.position = entityData.position;
+            //entityData.position = entityData.previousPosition;
+            //SetPosition(entityData.position);
         }
-    }
-
-    // Execute every fixed interval, used mostly for physics (Make sure to call base)
-    public virtual void OnFixedUpdate () {
-        
     }
 
     // Execute every unfrequent fixed interval, used mostly for more heavy operation like player checks (Make sure to call base)
@@ -82,6 +97,18 @@ public class Entity : MonoBehaviour {
 
     public virtual Type GetDataType () {
         return typeof(EntityData);
+    }
+
+    public void SetPosition (Vector3 position, bool changeAllData = false) {
+        if(interpolatedTransform != null) {
+            interpolatedTransform.SetTransformPosition(position);
+        } else {
+            transform.position = position;
+        }
+        if(changeAllData) {
+            entityData.position = position;
+            entityData.previousPosition = position;
+        }
     }
 
     #region Monobehaviour

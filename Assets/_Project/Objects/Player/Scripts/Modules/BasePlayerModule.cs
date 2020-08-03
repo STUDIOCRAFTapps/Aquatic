@@ -16,4 +16,6 @@ public class BasePlayerModule : ScriptableObject {
 public interface WearableModule {
     void UpdateStatusPMW (PlayerInfo info, PlayerModifierData data);
     void UpdateActionPMW (PlayerInfo info, PlayerModifierData data);
+    void OnUpdateIndicators (ref WeaponPlayerData data);
+    void OnEndUsage (ref WeaponPlayerData data);
 }

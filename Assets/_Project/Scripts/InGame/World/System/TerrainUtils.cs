@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using UnityEngine;
 using System;
+using System.Threading;
 
 public enum TerrainLayers {
     Ground,
@@ -98,6 +100,17 @@ public struct ChunkLoadBounds {
         hashCode = hashCode * -1521134295 + EqualityComparer<Vector2Int>.Default.GetHashCode(maximum);
         return hashCode;
     }
+
+    public static ChunkLoadBounds BoundsFromRadius (Vector2Int centerChunkPos, Vector2Int loadRadius) {
+        return new ChunkLoadBounds(
+            new Vector2Int(
+                centerChunkPos.x - loadRadius.x,
+                centerChunkPos.y - loadRadius.y),
+            new Vector2Int(
+                centerChunkPos.x + loadRadius.x + 1,
+                centerChunkPos.y + loadRadius.y + 1)
+        );
+    }
 }
 
 public class ChunkLoadCounter {
@@ -139,7 +152,282 @@ public class CancellableTimer {
     }
 }
 
-[System.Serializable]
+
+#region Job System
+public class ThreadedJobManager {
+    public JobState targetLoadState = JobState.Unloaded;
+    public List<ThreadedJob> jobs;
+
+    public ThreadedJobManager () {
+        jobs = new List<ThreadedJob>(1);
+    }
+
+    public virtual void StartNewJob (JobState newTargetLoadState, bool isReadonly, Action job, Action callback, Action cancelCallback) {
+        if(newTargetLoadState != JobState.Saving) {
+            targetLoadState = newTargetLoadState;
+        }
+    }
+
+    public virtual void ForceLoad () {
+        targetLoadState = JobState.Loaded;
+    }
+
+    public virtual void ForceUnload () {
+        targetLoadState = JobState.Unloaded;
+    }
+
+    public virtual void RemoveJob (ThreadedJob job) {
+        jobs.Remove(job);
+    }
+
+    public virtual void CancelAllJobs () {
+        foreach(ThreadedJob job in jobs) {
+            job.Cancel();
+        }
+    }
+}
+
+public class ChunkJobManager : ThreadedJobManager {
+    public Vector2Int position;
+
+    public ChunkJobManager (Vector2Int position) : base() {
+        this.position = position;
+    }
+    
+    public override void StartNewJob (JobState newTargetLoadState, bool isReadonly, Action job, Action callback, Action cancelCallback) {
+        base.StartNewJob(newTargetLoadState, isReadonly, job, callback, cancelCallback);
+        
+        if(jobs.Count > 0) {
+            ThreadedJob newJob = new ThreadedJob(job, callback, cancelCallback, this, newTargetLoadState, isReadonly);
+
+            // Work out if a cancel is needed.
+            // Don't cancel jobs that do not have the same isReadonly value
+            // Wait for unload to start a load (Before the file is being edited and we should wait for it to not be)
+            // Cancel a load to start an unload
+            // If there's two unload, cancel the new unload
+            // If there's two load, cancel the new load
+            bool onlyOtherReadMode = true;
+            for(int i = 0; i < jobs.Count; i++) {
+                if(jobs[i].isReadonly == isReadonly) {
+                    onlyOtherReadMode = false;
+
+                    if(jobs[i].IsCancelled()) {
+                        continue;
+                    } else if(jobs[i].loadState == JobState.Unloaded && newTargetLoadState == JobState.Loaded) {
+                        jobs.Add(newJob);
+                        jobs[i].SetChainedJob(newJob);
+                        break;
+                    } else if(jobs[i].loadState == JobState.Loaded && newTargetLoadState == JobState.Unloaded) {
+                        jobs[i].Cancel();
+                        jobs.Add(newJob);
+                        newJob.Run();
+                        break;
+                    } else if(jobs[i].loadState == JobState.Saving && newTargetLoadState == JobState.Loaded) {
+                        Debug.LogError("Load request for a chunk being saved?");
+                        break;
+                    } else if(jobs[i].loadState == JobState.Saving && newTargetLoadState == JobState.Unloaded) { // The chunk is already getting saved.
+                        jobs.Add(newJob);
+                        jobs[i].SetChainedJob(newJob);
+                    } else if(jobs[i].loadState == JobState.Loaded && newTargetLoadState == JobState.Saving) { // No need to save if it isn't even loaded
+                        break;
+                    } else if(jobs[i].loadState == JobState.Unloaded && newTargetLoadState == JobState.Saving) { // No need to save if it is unloading, unloading already saves
+                        break;
+                    } else if(jobs[i].loadState == newTargetLoadState) {
+                        break;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            if(onlyOtherReadMode) {
+                Debug.Log("Only in other read mode");
+                jobs.Add(newJob);
+                newJob.Run();
+            }
+        } else {
+            ThreadedJob newJob = new ThreadedJob(job, callback, cancelCallback, this, newTargetLoadState, isReadonly);
+            jobs.Add(newJob);
+            newJob.Run();
+        }
+    }
+
+    public override void ForceUnload () {
+        base.ForceUnload();
+        if(jobs.Count == 0) {
+            TerrainManager.inst.RemoveJobManager(Hash.hVec2Int(position));
+        }
+    }
+
+    public override void RemoveJob (ThreadedJob job) {
+        base.RemoveJob(job);
+        if(jobs.Count == 0 && targetLoadState == JobState.Unloaded) {
+            TerrainManager.inst.RemoveJobManager(Hash.hVec2Int(position));
+        }
+    }
+}
+
+public class EntityJobManager : ThreadedJobManager {
+    public int uid;
+
+    public EntityJobManager (int uid) : base() {
+        this.uid = uid;
+    }
+
+    public override void StartNewJob (JobState newTargetLoadState, bool isReadonly, Action job, Action callback, Action cancelCallback) {
+        base.StartNewJob(newTargetLoadState, isReadonly, job, callback, cancelCallback);
+
+        if(jobs.Count > 0) {
+            ThreadedJob newJob = new ThreadedJob(job, callback, cancelCallback, this, newTargetLoadState, isReadonly);
+
+            bool onlyOtherReadMode = true;
+            for(int i = 0; i < jobs.Count; i++) {
+                if(jobs[i].isReadonly == isReadonly) {
+                    onlyOtherReadMode = false;
+
+                    if(jobs[i].IsCancelled()) {
+                        continue;
+                    } else if(jobs[i].loadState == JobState.Unloaded && newTargetLoadState == JobState.Loaded) {
+                        jobs.Add(newJob);
+                        jobs[i].SetChainedJob(newJob);
+                        break;
+                    } else if(jobs[i].loadState == JobState.Loaded && newTargetLoadState == JobState.Unloaded) {
+                        jobs[i].Cancel();
+                        jobs.Add(newJob);
+                        newJob.Run();
+                        break;
+                    } else if(jobs[i].loadState == JobState.Saving && newTargetLoadState == JobState.Loaded) {
+                        Debug.LogError("Load request for a chunk being saved?");
+                        break;
+                    } else if(jobs[i].loadState == JobState.Saving && newTargetLoadState == JobState.Unloaded) { // The chunk is already getting saved.
+                        jobs.Add(newJob);
+                        jobs[i].SetChainedJob(newJob);
+                    } else if(jobs[i].loadState == JobState.Loaded && newTargetLoadState == JobState.Saving) { // No need to save if it isn't even loaded
+                        break;
+                    } else if(jobs[i].loadState == JobState.Unloaded && newTargetLoadState == JobState.Saving) { // No need to save if it is unloading, unloading already saves
+                        break;
+                    } else if(jobs[i].loadState == newTargetLoadState) {
+                        break;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            if(onlyOtherReadMode) {
+                Debug.Log("Only in other read mode");
+                jobs.Add(newJob);
+                newJob.Run();
+            }
+        } else {
+            ThreadedJob newJob = new ThreadedJob(job, callback, cancelCallback, this, newTargetLoadState, isReadonly);
+            jobs.Add(newJob);
+            newJob.Run();
+        }
+    }
+
+    public override void ForceUnload () {
+        base.ForceUnload();
+        if(jobs.Count == 0) {
+            EntityManager.inst.RemoveJobManager(uid);
+        }
+    }
+
+    public override void RemoveJob (ThreadedJob job) {
+        base.RemoveJob(job);
+        if(jobs.Count == 0 && targetLoadState == JobState.Unloaded) {
+            EntityManager.inst.RemoveJobManager(uid);
+        }
+    }
+
+    public override void CancelAllJobs () {
+        base.CancelAllJobs();
+        EntityManager.inst.RemoveJobManager(uid);
+    }
+}
+
+public class ThreadedJob {
+    public bool isReadonly;
+    public JobState loadState {
+        get; private set;
+    }
+    ThreadedJobManager jobManager;
+    bool cancelFlag = false;
+    bool isRunning = false;
+    bool isComplete = false;
+
+    Action job;
+    Action cancelCallback;
+    Action callback;
+    ThreadedJob executeOnDone;
+
+    public ThreadedJob (Action job, Action callback, Action cancelCallback, ThreadedJobManager jobManager, JobState loadState, bool isReadonly) {
+        this.job = job;
+        this.callback = callback;
+        this.cancelCallback = cancelCallback;
+        this.jobManager = jobManager;
+        this.loadState = loadState;
+        this.isReadonly = isReadonly;
+    }
+
+    public void SetChainedJob (ThreadedJob executeOnDone) {
+        if(isComplete) {
+            Debug.LogError("The chained job will never run.");
+        }
+        this.executeOnDone = executeOnDone;
+    }
+
+    public void Run () {
+        isRunning = true;
+        ThreadPool.QueueUserWorkItem((n) => {
+            try {
+                job?.Invoke();
+            } catch (Exception e) {
+                throw e;
+            }
+            //Thread.Sleep(500);
+            TerrainManager.inst.EnqueueMainThreadCallbacks(() => {
+                isRunning = false;
+                RunCallbacks(cancelFlag);
+            });
+        });
+    }
+
+    public void RunCallbacks (bool doCancel) {
+        cancelFlag = doCancel;
+        isComplete = true;
+        if(cancelFlag) {
+            cancelCallback?.Invoke();
+        } else {
+            callback?.Invoke();
+        }
+        jobManager.RemoveJob(this);
+        executeOnDone?.Run();
+    }
+
+    public void Cancel () {
+        cancelFlag = true;
+        if(!isRunning) {
+            jobManager.RemoveJob(this);
+        }
+    }
+
+    public bool IsCancelled () {
+        return cancelFlag;
+    }
+
+    public bool IsRunning () {
+        return isRunning;
+    }
+}
+
+public enum JobState {
+    Loaded,
+    Unloaded,
+    Saving
+}
+#endregion
+
+
+[Serializable]
 public struct Bounds2D {
     public Vector2 min;
     public Vector2 max;

@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using System.Linq;
 
 public class TerrainEditorManager : MonoBehaviour {
 
     #region Header
-    public TerrainEditorUI tEditUI;
-    public GameObject uiGroup;
-    new public Camera camera;
     public static TerrainEditorManager inst;
+
+    public GameObject uiGroup;
+    public TerrainEditorUI terrainEditor;
+    public DNAEditorManager dnaEditor;
+
+    new public Camera camera;
     public GameObject previewObjectPrefab;
     public Sprite emptyPreview;
     public float previewZ = -5f;
@@ -50,7 +54,6 @@ public class TerrainEditorManager : MonoBehaviour {
     RigidbodyPixel selectedERigibody;
     public bool isDraggingEntity = false;
     public Vector2 draggingEntityDelta;
-    public DNAEditorManager dnaEditor;
 
     public BaseToolAsset[] tools;
     public BaseBrushAsset[] brushes;
@@ -64,9 +67,17 @@ public class TerrainEditorManager : MonoBehaviour {
         if(inst == null) {
             inst = this;
         }
+        uiGroup = MainSceneReference.inst.editorUI;
+        uiGroup.SetActive(false);
+
+        dnaEditor = MainSceneReference.inst.dnaEditorUI;
         dnaEditor.Init();
 
-        uiGroup.SetActive(false);
+        terrainEditor = MainSceneReference.inst.terrainEditorUI;
+        draggingKnobs = MainSceneReference.inst.editorDraggingKnobs;
+        zOrderingUI = MainSceneReference.inst.editorZOrderingUI;
+
+        camera = MainSceneReference.inst.mainCamera;
 
         previewObjectList = new List<GameObject>();
         previewObjectQueue = new Queue<GameObject>();
@@ -430,8 +441,7 @@ public class TerrainEditorManager : MonoBehaviour {
                     destination = (Vector2)Vector2Int.RoundToInt(destination);
                 }
                 destination.z = selectedE.transform.position.z;
-                selectedE.transform.position = destination;
-
+                selectedE.SetPosition(destination);
                 //EntityRegionManager.inst.AddMobileChunk(selectedE);
             }
 
@@ -449,7 +459,7 @@ public class TerrainEditorManager : MonoBehaviour {
             }
             destination.z = selectedE.transform.position.z;
 
-            selectedE.transform.position = Vector3.Lerp(selectedE.transform.position, destination, blend);
+            selectedE.SetPosition(Vector3.Lerp(selectedE.transform.position, destination, blend));
             if(selectedERigibody != null) {
                 selectedERigibody.velocity = Vector2.zero;
                 selectedERigibody.disableForAFrame = true;
@@ -480,7 +490,7 @@ public class TerrainEditorManager : MonoBehaviour {
         }
 
         if(selectedEntityTool == 2 && !pointerOverUI) {
-            if(Input.GetMouseButtonDown(0)) {
+            if(Input.GetMouseButton/*Down*/(0)) {
                 Entity deleteEntity = EntityManager.inst.GetEntityAtPoint(worldPos);
                 if(selectedE == deleteEntity) {
                     selectedE = null;
@@ -642,7 +652,7 @@ public class TerrainEditorManager : MonoBehaviour {
             VisualChunkManager.inst.DeleteMobileChunk(selectedMC);
 
             if(selectedMobileTool != 0) {
-                tEditUI.ToggleMobileMode(0);
+                terrainEditor.ToggleMobileMode(0);
             }
 
             UpdateAllMenu();

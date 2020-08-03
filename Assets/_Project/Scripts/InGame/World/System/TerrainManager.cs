@@ -1,16 +1,23 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using UnityEngine;
+using MLAPI;
+using MLAPI.Messaging;
+using MLAPI.Transports;
 
-public class TerrainManager : MonoBehaviour {
+public class TerrainManager : NetworkedBehaviour {
 
     #region Header and Init
     public static TerrainManager inst;
     public Dictionary<long, DataChunk> chunks;
     public Queue<DataChunk> unusedChunks;
-    public Dictionary<long, Vector2Int> chunkToReload;
     public Queue<int> mobileChunkToReload;
+    ConcurrentQueue<Action> mainThreadCallbacks;
+    public Dictionary<long, Vector2Int> chunkToReload;
+    public Dictionary<long, ChunkJobManager> chunkJobsManager;
 
     [Header("Reference")]
     public GeneralAsset generalAsset;
@@ -39,6 +46,8 @@ public class TerrainManager : MonoBehaviour {
 
         currentMobileIndex = PlayerPrefs.GetInt("currentMobileIndex", 0);
 
+        mainThreadCallbacks = new ConcurrentQueue<Action>();
+        chunkJobsManager = new Dictionary<long, ChunkJobManager>();
         chunks = new Dictionary<long, DataChunk>();
         unusedChunks = new Queue<DataChunk>();
         chunkToReload = new Dictionary<long, Vector2Int>();
@@ -49,6 +58,13 @@ public class TerrainManager : MonoBehaviour {
         worldToPixel = pixelPerTile;
         pixelToWorld = 1f / worldToPixel;
         invChunkSize = 1f / chunkSize;
+    }
+
+    private void Update () {
+        while(mainThreadCallbacks.Count > 0) {
+            mainThreadCallbacks.TryDequeue(out Action result);
+            result();
+        }
     }
 
     private void LateUpdate () {
@@ -78,6 +94,41 @@ public class TerrainManager : MonoBehaviour {
     }
     #endregion
 
+    #region Multithread Chunk Loading
+    public void EnqueueMainThreadCallbacks (Action callback) {
+        mainThreadCallbacks.Enqueue(callback);
+    }
+
+    // The chunks dictionnairy should be used for doing all your reads and writes for tile editing and entities.
+    // Since chunks are loaded in threads, sometimes the chunks may not be present even if they have been requested
+    // by the chunk loader. To know in what state they should be at an exact moment, this function may be called.
+    public JobState GetChunkLoadState (Vector2Int chunkPosition) {
+        long key = Hash.hVec2Int(chunkPosition);
+        if(chunkJobsManager.TryGetValue(key, out ChunkJobManager cjm)) {
+            return cjm.targetLoadState;
+        } else {
+            return JobState.Unloaded;
+        }
+    }
+
+    public void StartNewChunkJobAt (Vector2Int chunkPosition, JobState newLoadState, bool isReadonlyChunk, Action job, Action callback, Action cancelCallback) {
+        long key = Hash.hVec2Int(chunkPosition);
+        if(chunkJobsManager.TryGetValue(key, out ChunkJobManager cjm)) {
+            cjm.StartNewJob(newLoadState, isReadonlyChunk, job, callback, cancelCallback);
+        } else {
+            ChunkJobManager newCjm = new ChunkJobManager(chunkPosition);
+            chunkJobsManager.Add(key, newCjm);
+            newCjm.StartNewJob(newLoadState, isReadonlyChunk, job, callback, cancelCallback);
+        }
+    }
+
+    public void RemoveJobManager (long key) {
+        if(chunkJobsManager.ContainsKey(key)) {
+            chunkJobsManager.Remove(key);
+        }
+    }
+    #endregion
+
     #region Default Chunks
     public bool GetChunkAtPosition (Vector2Int position, out DataChunk dataChunk) {
         if(chunks.TryGetValue(Hash.hVec2Int(position), out DataChunk value)) {
@@ -89,24 +140,42 @@ public class TerrainManager : MonoBehaviour {
         }
     }
 
-    public DataChunk GetNewDataChunk (Vector2Int chunkPosition) {
+    public DataChunk GetNewDataChunk (Vector2Int chunkPosition, bool doAddToChunkDictionnairy) {
         DataChunk dataChunk;
         if(unusedChunks.Count <= 0) {
-            dataChunk = new DataChunk(chunkSize);
+            dataChunk = new DataChunk(/*chunkSize*/);
         } else {
             dataChunk = unusedChunks.Dequeue();
         }
         dataChunk.Init(chunkPosition);
-        chunks.Add(Hash.hVec2Int(chunkPosition), dataChunk);
+        if(doAddToChunkDictionnairy) {
+            AddDataChunkToDictionnairy(dataChunk);
+        }
 
         return dataChunk;
     }
 
-    public void SetDataChunkAsUnused (Vector2Int chunkPosition) {
-        if(chunks.TryGetValue(Hash.hVec2Int(chunkPosition), out DataChunk dataChunk)) {
-            chunks.Remove(Hash.hVec2Int(chunkPosition));
-            unusedChunks.Enqueue(dataChunk);
+    public void AddDataChunkToDictionnairy (DataChunk dataChunk) {
+        chunks.Add(Hash.hVec2Int(dataChunk.chunkPosition), dataChunk);
+    }
+
+    public void SetDataChunkAsUnused (Vector2Int chunkPosition, bool doEnqueueToUnusedQueue) {
+        long key = Hash.hVec2Int(chunkPosition);
+        if(chunks.TryGetValue(key, out DataChunk dataChunk)) {
+            chunks.Remove(key);
+            if(doEnqueueToUnusedQueue) {
+                unusedChunks.Enqueue(dataChunk);
+            }
         }
+    }
+
+    public void EnqueueDataChunkToUnusedQueue (DataChunk dataChunk) {
+        /*long key = Hash.hVec2Int(dataChunk.chunkPosition);
+        if(chunks.ContainsKey(key)) {
+            Debug.Log("This has been needed");
+            chunks.Remove(key);
+        }*/
+        unusedChunks.Enqueue(dataChunk);
     }
 
     public void RefreshSurroundingChunks (Vector2Int chunkPosition) {
@@ -264,6 +333,9 @@ public class TerrainManager : MonoBehaviour {
                 GeneralAsset.inst.GetTileAssetFromGlobalID(globalID).OnPlaced(x, y, layer, mdc);
             }
             RefreshTilesAround(x, y, layer);
+
+            InvokeServerRpc(SetGlobalIDAtServer, x, y, layer, globalID);
+
             return true;
         }
         return false;
@@ -330,6 +402,61 @@ public class TerrainManager : MonoBehaviour {
         }
         return false;
     }
+    #endregion
+
+    #region Network
+    #region Tiles
+    [ServerRPC(RequireOwnership = false)]
+    private void SetGlobalIDAtServer (int x, int y, TerrainLayers layer, int globalID) {
+        if(!IsHost) {
+            Vector2Int cpos = GetChunkPositionAtTile(x, y);
+
+            if(GetChunkAtPosition(cpos, out DataChunk dataChunk)) {
+                int oldGID = dataChunk.GetGlobalID(x - cpos.x * chunkSize, y - cpos.y * chunkSize, layer);
+                if(oldGID != 0) {
+                    GeneralAsset.inst.GetTileAssetFromGlobalID(oldGID).OnBreaked(x, y, layer);
+                }
+
+                dataChunk.SetGlobalID(x - cpos.x * chunkSize, y - cpos.y * chunkSize, layer, globalID);
+                if(globalID != 0) {
+                    GeneralAsset.inst.GetTileAssetFromGlobalID(globalID).OnPlaced(x, y, layer);
+                }
+                RefreshTilesAround(x, y, layer);
+            }
+        }
+
+        InvokeClientRpcOnEveryoneExcept(SetGlobalIDAtClient, ExecutingRpcSender, x, y, layer, globalID);
+    }
+
+    [ClientRPC]
+    private void SetGlobalIDAtClient (int x, int y, TerrainLayers layer, int globalID) {
+        Vector2Int cpos = GetChunkPositionAtTile(x, y);
+
+        if(GetChunkAtPosition(cpos, out DataChunk dataChunk)) {
+            int oldGID = dataChunk.GetGlobalID(x - cpos.x * chunkSize, y - cpos.y * chunkSize, layer);
+            if(oldGID != 0) {
+                GeneralAsset.inst.GetTileAssetFromGlobalID(oldGID).OnBreaked(x, y, layer);
+            }
+
+            dataChunk.SetGlobalID(x - cpos.x * chunkSize, y - cpos.y * chunkSize, layer, globalID);
+            if(globalID != 0) {
+                GeneralAsset.inst.GetTileAssetFromGlobalID(globalID).OnPlaced(x, y, layer);
+            }
+            RefreshTilesAround(x, y, layer);
+        }
+    }
+    #endregion
+
+    #region Default Chunks
+    [ClientRPC]
+    private void GetChunkClient (int chunkPositionX, int chunkPositionY, DataChunk chunk) {
+        ChunkLoader.inst.GetChunkAt(new Vector2Int(chunkPositionX, chunkPositionY), chunk);
+    }
+
+    public void SendChunkToClient (ulong clientID, int chunkPositionX, int chunkPositionY, DataChunk chunk) {
+        InvokeClientRpcOnClient(GetChunkClient, clientID, chunkPositionX, chunkPositionY, chunk, "Chunk");
+    }
+    #endregion'
     #endregion
 
     #region Utils

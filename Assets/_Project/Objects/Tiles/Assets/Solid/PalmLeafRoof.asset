@@ -15,7 +15,7 @@ MonoBehaviour:
   fullName: Palm Leaf Roof
   uiSprite: {fileID: 5292219197908984152, guid: 4d3a8cbf076e0f540b41dab421789566,
     type: 3}
-  previewSprite: {fileID: 5489825714439072203, guid: 4d3a8cbf076e0f540b41dab421789566,
+  previewSprite: {fileID: -42927021583643508, guid: 4d3a8cbf076e0f540b41dab421789566,
     type: 3}
   id: palm_leaf_roof
   defaultPlacingLayer: 0
@@ -81,7 +81,9 @@ MonoBehaviour:
   - {x: 0, y: 0.5}
   - {x: 0.5, y: 0.5}
   hasCollision: 1
-  collisionBoxes:
-  - min: {x: 0, y: -0.25}
-    max: {x: 1, y: 0.75}
+  collisionBoxes: []
   mass: 0.2
+  useTopTileBoxes: 1
+  topCollisionBoxes:
+  - min: {x: 0, y: -0.25}
+    max: {x: 1, y: 0.5}

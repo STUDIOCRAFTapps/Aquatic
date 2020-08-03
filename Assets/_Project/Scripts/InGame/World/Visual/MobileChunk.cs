@@ -29,7 +29,7 @@ public class MobileChunk : MonoBehaviour {
         if(rigidbody == null) {
             rigidbody = GetComponent<RigidbodyPixel>();
         }
-        mobileDataChunk = new MobileDataChunk(TerrainManager.inst.chunkSize);
+        mobileDataChunk = new MobileDataChunk(/*TerrainManager.inst.chunkSize*/);
         mobileDataChunk.mobileChunk = this;
     }
 
@@ -84,8 +84,18 @@ public class MobileChunk : MonoBehaviour {
             gameObject.SetActive(false);
             EntityRegionManager.inst.outOfBoundsMobileChunks.Add(this);
 
-            position = previousPosition;
-            transform.position = position;
+            //position = previousPosition;
+            //transform.position = position;
+        }
+    }
+
+    void FixedUpdate () {
+        if(!TerrainManager.inst.IsMobileChunkInLoadedChunks(this)) {
+            gameObject.SetActive(false);
+            EntityRegionManager.inst.outOfBoundsMobileChunks.Add(this);
+
+            //position = previousPosition;
+            //transform.position = position;
         }
     }
 }

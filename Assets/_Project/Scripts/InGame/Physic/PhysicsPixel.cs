@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using System.Threading.Tasks;
 
 public class PhysicsPixel : MonoBehaviour {
 
@@ -84,10 +85,12 @@ public class PhysicsPixel : MonoBehaviour {
         if(TerrainManager.inst.GetGlobalIDAt(tileX, tileY, TerrainLayers.Ground, out int globalID, mdc)) {
             if(globalID != 0) {
                 bta = GeneralAsset.inst.GetTileAssetFromGlobalID(globalID);
+                Bounds2D[] boxes = bta.GetCollisionBoxes(tileX, tileY, mdc);
+
                 if(!bta.hasCollision) {
                     return false;
                 }
-                if(bta.collisionBoxes.Length == 0) {
+                if(boxes.Length == 0) {
                     return false;
                 }
                 return true;
@@ -110,10 +113,11 @@ public class PhysicsPixel : MonoBehaviour {
         // Seek tiles
         bool isTileSolid = IsTileSolidAt(tileX, tileY, out BaseTileAsset bta);
         if(!isTileSolid) return false;
+        Bounds2D[] boxes = bta.GetCollisionBoxes(tileX, tileY);
 
         // Check for overlaps
-        for(int b = 0; b < bta.collisionBoxes.Length; b++) {
-            if(BoundsIntersectTileBounds(bta.collisionBoxes[b], tileX, tileY, bounds))
+        for(int b = 0; b < boxes.Length; b++) {
+            if(BoundsIntersectTileBounds(boxes[b], tileX, tileY, bounds))
                 return true;
         }
 
@@ -136,11 +140,12 @@ public class PhysicsPixel : MonoBehaviour {
             return false;
 
         Vector2 dirInv = new Vector2(1f/ray.direction.x, 1f/ray.direction.y);
+        Bounds2D[] boxes = bta.GetCollisionBoxes(tileX, tileY);
 
         // Check for overlaps
         bool hasCollided = false;
-        for(int b = 0; b < bta.collisionBoxes.Length; b++) {
-            if(RayIntersectTileBounds(bta.collisionBoxes[b], tileX, tileY, ray.origin, dirInv, out float d)) {
+        for(int b = 0; b < boxes.Length; b++) {
+            if(RayIntersectTileBounds(boxes[b], tileX, tileY, ray.origin, dirInv, out float d)) {
                 hasCollided = true;
                 distance = Mathf.Min(distance, d);
             }
@@ -252,8 +257,10 @@ public class PhysicsPixel : MonoBehaviour {
         for(int i = 0; i < maxIterations; i++) {
             tilePos.Set(initTilePos.x + i * direction.x, initTilePos.y + i * direction.y);
             if(IsTileSolidAt(tilePos.x, tilePos.y, out BaseTileAsset bta)) {
-                for(int b = 0; b < bta.collisionBoxes.Length; b++) {
-                    Bounds2D bnds = GetTileBound(bta.collisionBoxes[b], tilePos.x, tilePos.y);
+                Bounds2D[] boxes = bta.GetCollisionBoxes(tilePos.x, tilePos.y);
+
+                for(int b = 0; b < boxes.Length; b++) {
+                    Bounds2D bnds = GetTileBound(boxes[b], tilePos.x, tilePos.y);
 
                     if(axis == Axis.Left || axis == Axis.Right) {
                         if(!IsPointInRange(bnds.min.y, bnds.max.y, origin.y)) {
@@ -319,11 +326,12 @@ public class PhysicsPixel : MonoBehaviour {
         if(!bta.hasCollision) {
             return false;
         }
-        if(bta.collisionBoxes.Length == 0) {
+        Bounds2D[] boxes = bta.GetCollisionBoxes(tile.x, tile.y);
+        if(boxes.Length == 0) {
             return false;
         }
-        for(int i = 0; i < bta.collisionBoxes.Length; i++) {
-            if(bta.collisionBoxes[i].Overlaps(point - tile)) {
+        for(int i = 0; i < boxes.Length; i++) {
+            if(boxes[i].Overlaps(point - tile)) {
                 return true;
             }
         }
@@ -1041,27 +1049,69 @@ public class PhysicsPixel : MonoBehaviour {
     #endregion
 
     #region Terrain-Entity Collision Management
+    List<RigidbodyPixel> orderedRbs = new List<RigidbodyPixel>(128);
     void ManageAllTerrainCollisions () {
-        foreach(RigidbodyPixel rb in rbs) {
+        orderedRbs.Clear();
+
+        int a = 0, b = 0, c = 0, d = 0;
+        for(int i = 0; i < rbs.Count; i++) {
+            if(rbs[i].disableForAFrame && rbs[i].gameObject.activeSelf) {
+                continue;
+            }
+            rbs[i].PreOffThread();
+
+            if(!rbs[i].IsParented()) {
+                if(!rbs[i].secondExecutionOrder) {
+                    orderedRbs.Insert(a, rbs[i]);
+                    b++; c++; d++;
+                } else {
+                    orderedRbs.Insert(b, rbs[i]);
+                    c++;  d++;
+                }
+            } else {
+                if(!rbs[i].secondExecutionOrder) {
+                    orderedRbs.Insert(c, rbs[i]);
+                    d++;
+                } else {
+                    orderedRbs.Insert(d, rbs[i]);
+                }
+            }
+        }
+        float fixedDeltaTime = Time.fixedDeltaTime;
+        
+        Parallel.ForEach(orderedRbs, (rb) => {
+            rb.SimulateFixedUpdate(false, fixedDeltaTime);
+        });
+
+        foreach(RigidbodyPixel rb in orderedRbs) {
+            rb.PostOffThread();
+        }
+        /*
+         * System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+        sw.Start();
+        Parallel.ForEach(rbs, (rb) => {
             if(!rb.IsParented() && !rb.disableForAFrame && rb.gameObject.activeSelf && !rb.secondExecutionOrder) {
                 rb.SimulateFixedUpdate();
             }
-        }
-        foreach(RigidbodyPixel rb in rbs) {
+        });
+        Parallel.ForEach(rbs, (rb) => {
             if(!rb.IsParented() && !rb.disableForAFrame && rb.gameObject.activeSelf && rb.secondExecutionOrder) {
                 rb.SimulateFixedUpdate();
             }
-        }
-        foreach(RigidbodyPixel rb in rbs) {
+        });
+        Parallel.ForEach(rbs, (rb) => {
             if(rb.IsParented() && !rb.disableForAFrame && rb.gameObject.activeSelf && !rb.secondExecutionOrder) {
                 rb.SimulateFixedUpdate();
             }
-        }
-        foreach(RigidbodyPixel rb in rbs) {
+        });
+        Parallel.ForEach(rbs, (rb) => {
             if(rb.IsParented() && !rb.disableForAFrame && rb.gameObject.activeSelf && rb.secondExecutionOrder) {
                 rb.SimulateFixedUpdate();
             }
-        }
+        });
+        sw.Stop();
+        Debug.Log(sw.ElapsedMilliseconds);
+        */
     }
     #endregion
 
@@ -1178,8 +1228,10 @@ public class PhysicsPixel : MonoBehaviour {
                     continue;
                 }
                 if(IsTileSolidAt(tileX, tileY, out BaseTileAsset bta, mdc)) {
-                    for(int b = 0; b < bta.collisionBoxes.Length; b++) {
-                        sampledCollisions.Add(GetTileBound(bta.collisionBoxes[b], tileX, tileY));
+                    Bounds2D[] boxes = bta.GetCollisionBoxes(tileX, tileY, mdc);
+
+                    for(int b = 0; b < boxes.Length; b++) {
+                        sampledCollisions.Add(GetTileBound(boxes[b], tileX, tileY));
                     }
                 } else {
                     continue;
@@ -1192,8 +1244,10 @@ public class PhysicsPixel : MonoBehaviour {
         for(int tileX = queryTileMin.x; tileX <= queryTileMax.x; tileX++) {
             for(int tileY = queryTileMin.y; tileY <= queryTileMax.y; tileY++) {
                 if(IsTileSolidAt(tileX, tileY, out BaseTileAsset bta)) {
-                    for(int b = 0; b < bta.collisionBoxes.Length; b++) {
-                        sampledCollisions.Add(GetTileBound(bta.collisionBoxes[b], tileX, tileY));
+                    Bounds2D[] boxes = bta.GetCollisionBoxes(tileX, tileY);
+
+                    for(int b = 0; b < boxes.Length; b++) {
+                        sampledCollisions.Add(GetTileBound(boxes[b], tileX, tileY));
                     }
                     continue;
                 }

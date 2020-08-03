@@ -14,7 +14,7 @@ public class PlayerHUD : MonoBehaviour {
     private List<Transform> healthContainerItems = new List<Transform>();
     private List<Image> healthIcons = new List<Image>();
 
-    [Header("Weapons")]
+    [Header("Weapons Selector")]
     public float maxSelectorsVisibleTime = 4f;
     public float selectorsFadeLength = 0.5f;
     public float slideLength = 1f;
@@ -25,6 +25,22 @@ public class PlayerHUD : MonoBehaviour {
     public Image secondWeaponUI;
     public Transform secondContentParent;
     public Image[] secondContentIcons;
+
+    [Header("Weapons Indicator")]
+    public Image mainCooldownFill;
+    public Image secondCooldownFill;
+    public Image wearableCooldownFill;
+    public Image wearableTimeFill;
+
+    [Header("Wearable Selector")]
+    public RectTransform wearablesC;
+    public float wearablesCMaxWidth = 65f;
+    public float wearablesCMinWidth = 32f;
+    public float selectorsWFadeLength = 0.5f;
+    public float maxSelectorsWVisibleTime = 4f;
+    public float slideWLength = 1f;
+    public Image[] wearableContentIcons;
+    public RectTransform wearableContentParent;
 
     private void Awake () {
         inst = this;
@@ -37,7 +53,16 @@ public class PlayerHUD : MonoBehaviour {
         startSelectionsPos = weaponSelections.anchoredPosition;
         weaponSelections.anchoredPosition = Vector2.zero;
     }
-    
+
+    private void Update () {
+        SlideAnimationMain();
+        SlideAnimationSecond();
+        SlideAnimationWearable();
+
+        SelectionTimer();
+        SelectionWTimer();
+    }
+
     private void OnChangeEngineMode () {
         hudRoot.SetActive(GameManager.inst.engineMode == EngineModes.Play);
     }
@@ -85,13 +110,6 @@ public class PlayerHUD : MonoBehaviour {
     float selectorFadeTimer = 0f;
     int selectorFadeDir = 1;
     Vector2 startSelectionsPos;
-
-    private void Update () {
-        SlideAnimationMain();
-        SlideAnimationSecond();
-
-        SelectionTimer();
-    }
 
     void SelectionTimer () {
         if(selectorFadeTimer > 0f) {
@@ -301,6 +319,150 @@ public class PlayerHUD : MonoBehaviour {
                 secondWeaponUI.enabled = true;
             }
         }
+    }
+    #endregion
+
+    #region Wearable Select
+    int selectedWearableIndex = 0;
+    float slideWearableTime;
+    int slideWearableDir;
+    float selectorWTimer = 0f;
+    float selectorWFadeTimer = 0f;
+    int selectorWFadeDir = 1;
+
+    void SelectionWTimer () {
+        if(selectorWFadeTimer > 0f) {
+            if(selectorWFadeDir > 0) {
+                wearablesC.sizeDelta = new Vector2(
+                    Mathf.Lerp(wearablesCMaxWidth, wearablesCMinWidth, selectorWFadeTimer / selectorsWFadeLength),
+                    wearablesC.sizeDelta.y
+                );
+            } else {
+                wearablesC.sizeDelta = new Vector2(
+                    Mathf.Lerp(wearablesCMinWidth, wearablesCMaxWidth, selectorWFadeTimer / selectorsWFadeLength),
+                    wearablesC.sizeDelta.y
+                );
+            }
+            selectorWFadeTimer -= Time.deltaTime;
+            return;
+        } else if(selectorWFadeTimer < 0f) {
+            selectorWFadeTimer = 0f;
+
+            if(selectorWFadeDir > 0) {
+                wearablesC.sizeDelta = new Vector2(wearablesCMaxWidth, wearablesC.sizeDelta.y);
+                selectorWTimer = maxSelectorsVisibleTime;
+            } else {
+                wearablesC.sizeDelta = new Vector2(wearablesCMinWidth, wearablesC.sizeDelta.y);
+            }
+            return;
+        }
+
+        if(selectorWTimer < 0f) {
+
+            selectorWTimer = 0f;
+            HideWSelection();
+        } else if(selectorWTimer > 0f) {
+            selectorWTimer -= Time.deltaTime;
+        }
+    }
+
+    void ShowWSelection (PlayerCombatController cc) {
+        if(selectorWTimer > 0) {
+            selectorWTimer = maxSelectorsWVisibleTime;
+        } else if(selectorWFadeTimer > 0 && selectorWFadeDir == -1) {
+            selectorWFadeTimer = selectorsWFadeLength - selectorWFadeTimer;
+            selectorWFadeDir = 1;
+        } else if(selectorWTimer == 0f && selectorWFadeTimer == 0f) {
+            selectorWFadeTimer = selectorsWFadeLength;
+            selectorWFadeDir = 1;
+
+            SlideWearable(cc, 0);
+        }
+    }
+
+    void HideWSelection () {
+        selectorWFadeTimer = selectorsWFadeLength;
+        selectorWFadeDir = -1;
+    }
+
+    public void WearableSelectionSlide (PlayerCombatController cc, BaseWeapon current, int dir) {
+        ShowWSelection(cc);
+        if(selectorWTimer == 0f) {
+            return;
+        }
+
+        selectedWearableIndex = current.gid;
+        SlideWearable(cc, dir);
+    }
+
+    void SlideWearable (PlayerCombatController cc, int dir) {
+        if(slideWearableTime > 0f && dir != slideWearableDir) {
+            slideWearableTime = slideWLength - slideWearableTime;
+            slideWearableDir = dir;
+
+            selectedWearableIndex = Mod(selectedWearableIndex + dir, GeneralAsset.inst.GetWeaponCount());
+            cc?.ChangeWearableWeapon(GeneralAsset.inst.GetWeaponAssetFromGlobalID(selectedWearableIndex));
+
+        } else if(slideWearableTime <= 0f) {
+            int wc = GeneralAsset.inst.GetWeaponCount();
+
+            selectedWearableIndex = Mod(selectedWearableIndex + dir, GeneralAsset.inst.GetWeaponCount());
+            cc?.ChangeWearableWeapon(GeneralAsset.inst.GetWeaponAssetFromGlobalID(selectedWearableIndex));
+
+            int shift = (dir < 0) ? 1 : 0;
+            wearableContentIcons[0].sprite = GeneralAsset.inst.GetWeaponAssetFromGlobalID(Mod(selectedWearableIndex + 1 + shift, wc)).icon;
+            wearableContentIcons[1].sprite = GeneralAsset.inst.GetWeaponAssetFromGlobalID(Mod(selectedWearableIndex + 0 + shift, wc)).icon;
+            wearableContentIcons[2].sprite = GeneralAsset.inst.GetWeaponAssetFromGlobalID(Mod(selectedWearableIndex - 1 + shift, wc)).icon;
+            wearableContentIcons[3].sprite = GeneralAsset.inst.GetWeaponAssetFromGlobalID(Mod(selectedWearableIndex - 2 + shift, wc)).icon;
+
+            if(dir != 0) {
+                slideWearableTime = slideWLength;
+                slideWearableDir = dir;
+            }
+
+            if(dir > 0) {
+                wearableContentParent.localPosition = new Vector3(-19f, 0f);
+            } else {
+                wearableContentParent.localPosition = new Vector3(0f, 0f);
+            }
+        }
+    }
+
+    void SlideAnimationWearable () {
+        if(slideWearableTime > 0) {
+            float time = (slideWLength - slideWearableTime) / slideWLength;
+            if(slideWearableDir > 0) {
+                wearableContentParent.localPosition = new Vector3(Mathf.Lerp(-19f, 0f, Mathf.SmoothStep(0f, 1f, time)), 0f);
+            } else {
+                wearableContentParent.localPosition = new Vector3(Mathf.Lerp(0f, -19f, Mathf.SmoothStep(0f, 1f, time)), 0f);
+            }
+
+            slideWearableTime -= Time.deltaTime;
+        } else if(slideWearableTime < 0) {
+            slideWearableTime = 0f;
+            wearableContentParent.localPosition = new Vector3(0f, 0f);
+
+            int wc = GeneralAsset.inst.GetWeaponCount();
+            wearableContentIcons[0].sprite = GeneralAsset.inst.GetWeaponAssetFromGlobalID(Mod(selectedWearableIndex + 1, wc)).icon;
+            wearableContentIcons[1].sprite = GeneralAsset.inst.GetWeaponAssetFromGlobalID(Mod(selectedWearableIndex + 0, wc)).icon;
+            wearableContentIcons[2].sprite = GeneralAsset.inst.GetWeaponAssetFromGlobalID(Mod(selectedWearableIndex - 1, wc)).icon;
+            wearableContentIcons[3].sprite = GeneralAsset.inst.GetWeaponAssetFromGlobalID(Mod(selectedWearableIndex - 2, wc)).icon;
+        }
+    }
+    #endregion
+
+    #region Timers
+    public void SetWeaponValue (bool isMain, float cooldown) {
+        if(isMain) {
+            mainCooldownFill.fillAmount = cooldown;
+        } else {
+            secondCooldownFill.fillAmount = cooldown;
+        }
+    }
+
+    public void SetWearableValue (float cooldown, float time) {
+        wearableCooldownFill.fillAmount = cooldown;
+        wearableTimeFill.fillAmount = time;
     }
     #endregion
 }

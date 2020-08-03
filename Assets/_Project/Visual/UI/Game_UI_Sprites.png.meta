@@ -74,6 +74,45 @@ TextureImporter:
   - first:
       213: -9163569878491142122
     second: SecondSelect_Background
+  - first:
+      213: -4496541919863117038
+    second: TimerOutline
+  - first:
+      213: 634738125348708008
+    second: TimerOutline
+  - first:
+      213: 634738125348708008
+    second: TimerBG
+  - first:
+      213: 7152619569081395482
+    second: TimerFiller
+  - first:
+      213: 842518626997152874
+    second: TimerBGL
+  - first:
+      213: 4050244867840047478
+    second: TimerBGD
+  - first:
+      213: -8584499555888294500
+    second: TimerOutlineL
+  - first:
+      213: -2228187867902878995
+    second: TimerOutlineD
+  - first:
+      213: 341139313020682321
+    second: TimerFillerL
+  - first:
+      213: -5148724199455352711
+    second: TimerFillerD
+  - first:
+      213: -8709091354660091802
+    second: WearableUI
+  - first:
+      213: 3705561877701071331
+    second: WearableUI_Slice
+  - first:
+      213: 7192450017222642564
+    second: WearableUI_Mask
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -652,6 +691,258 @@ TextureImporter:
       bones: []
       spriteID: 618e0160fb574d080800000000000000
       internalID: -9163569878491142122
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TimerOutline
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 22
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 2, y: 0, z: 2, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 21be7e492f21991c0800000000000000
+      internalID: -4496541919863117038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TimerBG
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 27
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 2, y: 0, z: 2, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8ae9ec646fa0fc800800000000000000
+      internalID: 634738125348708008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TimerFiller
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 17
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 2, y: 0, z: 2, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a19aa941a95334360800000000000000
+      internalID: 7152619569081395482
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TimerBGL
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 27
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 2, y: 0, z: 2, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a6ca0d63a3a31bb00800000000000000
+      internalID: 842518626997152874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TimerBGD
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 27
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 2, y: 0, z: 2, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 67974f88f3c553830800000000000000
+      internalID: 4050244867840047478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TimerOutlineL
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 22
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 2, y: 0, z: 2, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c9597c4f22bbdd880800000000000000
+      internalID: -8584499555888294500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TimerOutlineD
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 22
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 2, y: 0, z: 2, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dea50d880f2e311e0800000000000000
+      internalID: -2228187867902878995
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TimerFillerL
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 17
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 2, y: 0, z: 2, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 150c483d568fbb400800000000000000
+      internalID: 341139313020682321
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TimerFillerD
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 17
+        width: 5
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 2, y: 0, z: 2, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9789105ae9e0c88b0800000000000000
+      internalID: -5148724199455352711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WearableUI
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 169
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6684f014e87132780800000000000000
+      internalID: -8709091354660091802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WearableUI_Slice
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 145
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 11, y: 0, z: 11, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3e11a9515eccc6330800000000000000
+      internalID: 3705561877701071331
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WearableUI_Mask
+      rect:
+        serializedVersion: 2
+        x: 215
+        y: 169
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 11, y: 0, z: 11, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 48bce45fe27b0d360800000000000000
+      internalID: 7192450017222642564
       vertices: []
       indices: 
       edges: []
