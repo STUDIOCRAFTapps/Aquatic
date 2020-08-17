@@ -24,6 +24,8 @@ public class GeneralAsset : ScriptableObject {
     List<BaseTileAsset> tileByGlobalID;
     List<EntityAsset> entitiesByGlobalID;
     List<BaseWeapon> weaponsByGlobalID;
+    List<BaseToolAsset> toolsByGlobalID;
+    List<BaseBrushAsset> brushesByGlobalID;
     
     public void Build () {
         namespaceByString = new Dictionary<string, NamespaceAssetGroup>();
@@ -35,10 +37,14 @@ public class GeneralAsset : ScriptableObject {
         tileByGlobalID = new List<BaseTileAsset>();
         entitiesByGlobalID = new List<EntityAsset>();
         weaponsByGlobalID = new List<BaseWeapon>();
+        toolsByGlobalID = new List<BaseToolAsset>();
+        brushesByGlobalID = new List<BaseBrushAsset>();
 
         BuildTiles();
         BuildEntities();
         BuildWeapons();
+        BuildTools();
+        BuildBrushes();
     }
 
     public void BuildTiles () {
@@ -113,6 +119,28 @@ public class GeneralAsset : ScriptableObject {
             gid++;
 
         }
+    }
+
+    public void BuildTools () {
+        int gid = 0;
+        foreach(NamespaceAssetGroup nag in assetGroups)
+        foreach(BaseToolAsset bta in nag.tools) {
+            bta.gid = gid;
+            toolsByGlobalID.Add(bta);
+            gid++;
+
+        }
+    }
+
+    public void BuildBrushes () {
+        int gid = 0;
+        foreach(NamespaceAssetGroup nag in assetGroups)
+            foreach(BaseBrushAsset bba in nag.brushes) {
+                bba.gid = gid;
+                brushesByGlobalID.Add(bba);
+                gid++;
+
+            }
     }
     #endregion
 
@@ -207,6 +235,16 @@ public class GeneralAsset : ScriptableObject {
         return weaponsByGlobalID.Count;
     }
     #endregion
+
+    #region Tools & Brushes
+    public BaseToolAsset GetToolAssetFromGlobalID (int globalID) {
+        return toolsByGlobalID[globalID];
+    }
+
+    public BaseBrushAsset GetBrushFromGlobalID (int globalID) {
+        return brushesByGlobalID[globalID];
+    }
+    #endregion
     #endregion
 
     // Build global texture ressources here
@@ -223,6 +261,8 @@ public class NamespaceAssetGroup {
     public TileCollection[] tileCollections;
     public EntityCollection[] entityCollections;
     public WeaponCollection[] weaponCollections;
+    public BaseToolAsset[] tools;
+    public BaseBrushAsset[] brushes;
 
    [HideInInspector] public Dictionary<string, BaseTileAsset> tilesByString;
    [HideInInspector] public Dictionary<string, EntityAsset> entitiesByString;

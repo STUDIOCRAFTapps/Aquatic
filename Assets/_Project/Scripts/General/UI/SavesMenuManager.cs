@@ -171,6 +171,8 @@ public class SavesMenuManager : MonoBehaviour {
             WorldSaving.inst.PrepareClient();
             SceneManager.LoadScene("Main", LoadSceneMode.Single);
             NetworkAssistant.inst.StartClient(ip, port);
+        } else {
+            PromptConfigurator.QueuePromptText("Invalid Adress", "The ip you requested is not valid. Try verifying if the port has the correct \":\" symbol.");
         }
     }
     #endregion

@@ -21,7 +21,7 @@ public class SmoothBrush : BaseBrushAsset {
         }
     }
 
-    public override void UseBrush (int x, int y, TerrainLayers layer, int globalID, int brushIndex, MobileDataChunk mdc) {
+    public override void UseBrush (int x, int y, TerrainLayers layer, int globalID, int brushIndex, MobileDataChunk mdc, bool replicateOnServer = true) {
         int w = bitmasks[brushIndex].GetLength(0);
         int h = bitmasks[brushIndex].GetLength(1);
 
@@ -38,7 +38,7 @@ public class SmoothBrush : BaseBrushAsset {
                 }
             }
         }
-        PasteTemp(x, y, layer, brushIndex, mdc);
+        PasteTemp(x, y, layer, brushIndex, mdc, replicateOnServer);
     }
 
     public override void PreviewBrush (int x, int y, int globalID, int brushIndex, MobileDataChunk mdc) {
@@ -85,7 +85,7 @@ public class SmoothBrush : BaseBrushAsset {
         }
     }
 
-    void PasteTemp (int x, int y, TerrainLayers layer, int brushIndex, MobileDataChunk mdc) {
+    void PasteTemp (int x, int y, TerrainLayers layer, int brushIndex, MobileDataChunk mdc, bool replicateOnServer) {
         int w = bitmasks[brushIndex].GetLength(0);
         int h = bitmasks[brushIndex].GetLength(1);
 
@@ -96,7 +96,14 @@ public class SmoothBrush : BaseBrushAsset {
                 }
                 if(TerrainManager.inst.GetGlobalIDAt(x + px - Mathf.FloorToInt(w * 0.5f), y + py - Mathf.FloorToInt(h * 0.5f), layer, out int checkID, mdc)) {
                     if(checkID != tempGID[brushIndex][px, py]) {
-                        TerrainManager.inst.SetGlobalIDAt(x + px - Mathf.FloorToInt(w * 0.5f), y + py - Mathf.FloorToInt(h * 0.5f), layer, tempGID[brushIndex][px, py], mdc);
+                        TerrainManager.inst.SetGlobalIDAt(
+                            x + px - Mathf.FloorToInt(w * 0.5f), 
+                            y + py - Mathf.FloorToInt(h * 0.5f), 
+                            layer, 
+                            tempGID[brushIndex][px, py], 
+                            mdc,
+                            replicateOnServer
+                        );
                     }
                 }
             }

@@ -31,7 +31,7 @@ public class DashModule : BasePlayerModule, WearableModule {
             info.rbody.velocity += ((DashModifierData)data).dir * additionalImpulse;
         }
 
-        if(pressLength < maxDashLength && (!mustBeSubmerged || info.pc.rbody.submergedPercentage > 0.5f)) {
+        if(pressLength < maxDashLength && (!mustBeSubmerged || info.rbody.submergedPercentage > 0.5f)) {
             float motionFactor = dashSpeed * Time.deltaTime;
             info.rbody.MoveByDelta(((DashModifierData)data).dir * motionFactor);
 

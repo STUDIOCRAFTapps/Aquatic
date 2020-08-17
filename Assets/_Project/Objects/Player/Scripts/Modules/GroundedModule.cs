@@ -13,7 +13,9 @@ public class GroundedModule : BasePlayerModule {
         info.status.isGrounded = info.rbody.isCollidingDown;
         if(info.status.isGrounded && info.rbody.velocity.y <= 0) {
             info.status.isInAirBecauseOfJump = false;
-            info.status.lastGroundedTime = Time.time;
+            info.status.groundedTime += Time.deltaTime;
+        } else {
+            info.status.groundedTime = 0f;
         }
 
         // Update fluid time
@@ -24,10 +26,9 @@ public class GroundedModule : BasePlayerModule {
         }
 
         // Land particle
-        if(!wasGrounded && info.status.isGrounded && info.status.prevVel.y < -20f) {
+        if(!wasGrounded && info.status.isGrounded && info.status.velocity.y < -20f) {
             ParticleManager.inst.PlayFixedParticle(info.rbody.transform.position, 1);
         }
-        info.status.prevVel = info.rbody.velocity;
     }
 
     public override void UpdateAction (PlayerInfo info) {

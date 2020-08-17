@@ -12,16 +12,19 @@ public class BasicNavigationModule : BasePlayerModule {
     public float floatingAcceleration;
 
     public override void UpdateStatus (PlayerInfo info) {
+        if(GameManager.inst.engineMode == EngineModes.Edit) {
+            return;
+        }
+
         info.status.lastCombinedDirection = info.status.combinedDirection;
-        int accDirX = 0;
-        if(Input.GetKey(KeyCode.A) && info.pc.isControlledLocally)
-            accDirX--;
-        if(Input.GetKey(KeyCode.D) && info.pc.isControlledLocally)
-            accDirX++;
-        info.status.combinedDirection = new Vector2(accDirX, 0);
+        info.status.combinedDirection = new Vector2(info.status.dir.x, 0);
     }
 
     public override void UpdateAction (PlayerInfo info) {
+        if(GameManager.inst.engineMode == EngineModes.Edit) {
+            return;
+        }
+
         if(info.status.isGrounded) {
             AccelerateBody(
                 info,

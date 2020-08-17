@@ -15,7 +15,7 @@ public class Plant2WideAsset : BaseTileAsset {
     /// </summary>
     public override void OnPlaced (int x, int y, TerrainLayers layer, MobileDataChunk mdc = null) {
         if(!IsPresenceValid(x, y, layer, mdc)) {
-            TerrainManager.inst.SetGlobalIDAt(x, y, layer, 0, mdc);
+            //TerrainManager.inst.SetGlobalIDAt(x, y, layer, 0, mdc);
             return;
         } else {
             base.OnPlaced(x, y, layer, mdc);

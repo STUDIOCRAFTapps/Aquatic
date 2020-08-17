@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using MLAPI.Serialization;
 
 [CreateAssetMenu(fileName = "DragTool", menuName = "Terrain/Tool/DragTool")]
 public class DragTool : BaseToolAsset {
@@ -19,7 +20,14 @@ public class DragTool : BaseToolAsset {
     }
 
     public override void OnReleased (ToolUseInfo info) {
-        ExecuteIn(GetMin(info.initPos, info.currentPos, reorderMinMax), GetMax(info.initPos, info.currentPos, reorderMinMax), info, (x, y, ninfo) => PlaceTile(x, y, ninfo));
+        TerrainManager.inst.UseToolNetworkRequest(this, (writer) => {
+            writer.WriteInt32(info.initPos.x);
+            writer.WriteInt32(info.initPos.y);
+            writer.WriteInt32(info.currentPos.x);
+            writer.WriteInt32(info.currentPos.y);
+            writer.WriteByte((byte)info.layer);
+            writer.WriteInt32(info.materialID);
+        });
     }
 
     public override void OnSelection (ToolUseInfo info) {
@@ -66,10 +74,10 @@ public class DragTool : BaseToolAsset {
         info.mdc?.RefreshTiles();
     }
 
-    public void PlaceTile (int x, int y, ToolUseInfo info) {
+    public void PlaceTile (int x, int y, ToolUseInfo info, bool replicateOnServer) {
         if(TerrainManager.inst.GetGlobalIDAt(x, y, info.layer, out int globalId, info.mdc)) {
             if(globalId != info.materialID) {
-                TerrainManager.inst.SetGlobalIDAt(x, y, info.layer, info.materialID, info.mdc);
+                TerrainManager.inst.SetGlobalIDAt(x, y, info.layer, info.materialID, info.mdc, replicateOnServer);
             }
         }
     }
@@ -84,6 +92,22 @@ public class DragTool : BaseToolAsset {
 
     public Vector2Int GetMax (Vector2Int v0, Vector2Int v1, bool reorder) {
         return reorder?new Vector2Int(Mathf.Max(v0.x, v1.x), Mathf.Max(v0.y, v1.y)):v1;
+    }
+
+    public override void DecodeAction (BitReader reader) {
+        Vector2Int initPos = new Vector2Int(reader.ReadInt32(), reader.ReadInt32());
+        Vector2Int currentPos = new Vector2Int(reader.ReadInt32(), reader.ReadInt32());
+        TerrainLayers layer = (TerrainLayers)reader.ReadByte();
+        int gid = reader.ReadInt32();
+
+        ToolUseInfo info = new ToolUseInfo() {
+            currentPos = currentPos,
+            initPos = initPos,
+            layer = layer,
+            materialID = gid
+        };
+
+        ExecuteIn(GetMin(initPos, currentPos, reorderMinMax), GetMax(initPos, currentPos, reorderMinMax), info, (x, y, ninfo) => PlaceTile(x, y, ninfo, false));
     }
 }
 

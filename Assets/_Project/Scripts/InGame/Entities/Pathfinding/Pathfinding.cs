@@ -237,7 +237,7 @@ public class NodeDataStructure {
     }
 
     public Node GetNodeFromTilePoint (Vector2Int position) {
-        if(nodes.TryGetValue(Hash.hVec2Int(position), out Node node)) {
+        if(nodes.TryGetValue(Hash.longFrom2D(position), out Node node)) {
             return node;
         } else {
             if(unusedNodes.Count > 0) {
@@ -251,7 +251,7 @@ public class NodeDataStructure {
                 newNode.gCost = 0;
                 newNode.hCost = 0;
                 newNode.readOnly = ron;
-                nodes.Add(Hash.hVec2Int(position), newNode);
+                nodes.Add(Hash.longFrom2D(position), newNode);
                 return newNode;
             } else {
                 return null;

@@ -10,11 +10,10 @@ public class NormalWeapon : BaseWeapon {
     public float cooldown = 0.1f;
 
     public override void OnStartAttack (ref WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
-        float timeDiff = Time.time - data.lastAttackTime;
-        data.timeOfPress = Time.time;
+        data.pressTime = 0f;
         
-        if(timeDiff > cooldown) {
-            data.lastAttackTime = Time.time;
+        if(data.attackTime > cooldown) {
+            data.attackTime = 0f;
 
             CombatManager.inst.SpawnStrike(
                 data.owner, baseAttackStrikeAsset.GetPrefabID(), baseAttackStrikeAsset.GetData(),
@@ -24,8 +23,18 @@ public class NormalWeapon : BaseWeapon {
         }
     }
 
+    public override void OnHoldAttack (ref WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
+        data.pressTime += Time.deltaTime;
+    }
+
+    public override void OnWeaponEquippedUpdate (ref WeaponPlayerData data) {
+        if(data.attackTime < cooldown) {
+            data.attackTime += Time.deltaTime;
+        }
+    }
+
     public override void OnUpdateIndicators (ref WeaponPlayerData data) {
-        float timeDiff = Time.time - data.lastAttackTime;
+        float timeDiff = data.attackTime;
         data.owner.hud?.SetWeaponValue(data.attackSlot == AttackSlot.Main, cooldown == 0f ? 0f : timeDiff / cooldown);
     }
 }

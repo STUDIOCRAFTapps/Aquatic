@@ -11,6 +11,7 @@ public class CameraNavigator : MonoBehaviour {
     public PixelPerfectCamera pixelPerfect;
 
     public Vector2Int largeScreenTarget = Vector2Int.one;
+    public Transform playerCenter;
     new public Camera camera;
     public float pixelPerUnit = 16;
     public float pixelScale = 2;
@@ -18,45 +19,63 @@ public class CameraNavigator : MonoBehaviour {
     public float velocitySmooth = 1f;
     public float velocityFriction = 1f;
 
-    public float ratioDebug = 0f;
-
     public bool playerFollowMode;
-
-    public Transform playerCenter;
 
     Vector3 camOrigin;
     Vector2 screenOrigin;
     Vector2 maintainedVelocity;
-
     Vector2Int initTargetRes;
-
     bool zoomIn = true;
+
+    #region Events
+    public delegate void OnPreRenderHandler ();
+    public event OnPreRenderHandler OnPreRenderEvent;
+
+    public delegate void OnPostRenderHandler ();
+    public event OnPostRenderHandler OnPostRenderEvent;
+
+    private void OnPreCull () {
+        return;
+        OnPreRenderEvent?.Invoke();
+        PreRenderCameraUpdate();
+
+    }
+
+    private void OnPostRender () {
+        OnPostRenderEvent?.Invoke();
+    }
+    #endregion
 
     private void Awake () {
         inst = this;
 
         initTargetRes = new Vector2Int(pixelPerfect.refResolutionX, pixelPerfect.refResolutionY); 
     }
-
-    void Update () {
+    
+    void PreRenderCameraUpdate () {
         if(!playerCenter) {
             return;
         }
 
-        float blend = 1f - Mathf.Pow(1f - moveSmooth, Time.deltaTime * 30f);
-
-        if(Input.GetKeyDown(KeyCode.F)) {
-            backgroundManager.CreateLayers();
-            playerFollowMode = !playerFollowMode;
-        }
-
         if(playerFollowMode) {
             maintainedVelocity = Vector2.zero;
-            transform.position = new Vector3(playerCenter.position.x, playerCenter.position.y, transform.position.z);//Vector3.Lerp(transform.position, new Vector3(playerCenter.position.x, playerCenter.position.y, transform.position.z), blend);
+            transform.position = new Vector3(playerCenter.parent.position.x, playerCenter.parent.position.y, transform.position.z);
 
             zoomIn = true;
         } else {
             zoomIn = false;
+        }
+    }
+
+    private void Update () {
+        if(!playerCenter) {
+            return;
+        }
+        float blend = 1f - Mathf.Pow(1f - moveSmooth, Time.deltaTime * 30f);
+
+        if(Input.GetKeyDown(KeyCode.M)) {
+            backgroundManager.CreateLayers();
+            playerFollowMode = !playerFollowMode;
         }
 
         CalculateResolution();
@@ -76,6 +95,11 @@ public class CameraNavigator : MonoBehaviour {
             transform.position += new Vector3(maintainedVelocity.x, maintainedVelocity.y) * Time.deltaTime;
             maintainedVelocity *= (1f - Time.deltaTime) * velocityFriction;
         }
+    }
+
+    private void LateUpdate () {
+        OnPreRenderEvent?.Invoke();
+        PreRenderCameraUpdate();
     }
 
     public void CalculateResolution () {

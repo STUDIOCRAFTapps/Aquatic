@@ -568,6 +568,13 @@ public class RigidbodyPixel : MonoBehaviour {
         return b2;
     }
 
+    public Bounds2D GetBoundFromColliderFakePosition (Vector3 position) {
+        Bounds2D b2 = new Bounds2D(
+            (Vector2)position - box.size * 0.5f + box.offset + Vector2.one * PhysicsPixel.inst.errorHandler, 
+            (Vector2)position + box.size * 0.5f + box.offset - Vector2.one * PhysicsPixel.inst.errorHandler);
+        return b2;
+    }
+
     public Bounds2D GetBoundFromColliderSafe () {
         Bounds2D b2 = new Bounds2D((Vector2)transform_position - box_size * 0.5f + box_offset, (Vector2)transform_position + box_size * 0.5f + box_offset);
         //PhysicsPixel.DrawBounds(b2, Color.yellow);

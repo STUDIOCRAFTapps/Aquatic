@@ -19,7 +19,7 @@ public class JumpModule : BasePlayerModule {
     public override void UpdateStatus (PlayerInfo info) {
         // Checks for input and jump cancellation
         info.status.wasOnGoingJump = info.status.onGoingJump;
-        info.status.onGoingJump = Input.GetKey(KeyCode.Space) && info.pc.isControlledLocally;
+        info.status.onGoingJump = info.status.jump > 0;
         if(info.status.wasOnGoingJump && !info.status.onGoingJump) {
             info.status.canceledJump = true;
         }
@@ -27,8 +27,8 @@ public class JumpModule : BasePlayerModule {
 
     public override void UpdateAction (PlayerInfo info) {
         // Jump Timers
-        float jumpCooldownTimer = Time.time - info.status.lastJumpTime;
-        float ungroundedCooldownTimer = Time.time - info.status.lastGroundedTime;
+        float jumpCooldownTimer = info.status.jumpTime;
+        float ungroundedCooldownTimer = info.status.groundedTime;
 
         // Jump Checks
         bool jumpOptReq0 = info.status.isGrounded;
@@ -43,12 +43,15 @@ public class JumpModule : BasePlayerModule {
         if(canJump) {
             info.rbody.velocity.y = 0;
             info.rbody.velocity += Vector2.up * (jumpOptReq2 ? outOfFluidJumpForce : (jumpOptReq3 ? outOfFluidGroundJumpForce : initialJumpForce));
-            info.status.lastJumpTime = Time.time;
+            info.status.jumpTime = 0f;
             info.status.isInAirBecauseOfJump = true;
 
             if(jumpOptReq0) {
                 ParticleManager.inst.PlayFixedParticle(info.status.playerPos, 0);
             }
+        }
+        if(info.status.jumpTime < jumpCooldown) {
+            info.status.jumpTime += Time.deltaTime;
         }
 
         // Jump Cancel

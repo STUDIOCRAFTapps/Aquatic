@@ -6,40 +6,39 @@ using MLAPI.Serialization;
 #region Player Status
 [System.Serializable]
 public class PlayerStatus : AutoBitWritable {
+
+    // Base
     public Vector3 playerPos;
-    public Vector2 prevVel;
+    public Vector2 velocity;
+    public float health;
 
-    public int dirX;
+    // Controls
+    public int jump;
+    public Vector2 dir;
+    public Vector2 lookDir;
+    public bool isFlying;
 
+    // Ground status
     public bool isGrounded;
-    public float lastGroundedTime;
+    public float groundedTime;
 
+    // Derrived control (No need to be shared)
     public Vector2 combinedDirection;
     public Vector2 lastCombinedDirection;
     public float propulsionValue;
     public bool wasLastDirNull;
 
+    // Jump status
     public bool onGoingJump;
     public bool wasOnGoingJump;
     public bool canceledJump;
     public bool isInAirBecauseOfJump;
-    public float lastJumpTime;
+    public float jumpTime;
     
+    // Areal/Aquatic derrived control and status
     public float arealPropulsionMomentum;
-
     public float lastSubmergedPercentage;
     public float fluidTime;
-
-    public float time;
-
-    public BoundsInt prevTileOverlapBounds;
-
-    public float health;
-
-    public void RemoveTimeRelativity () {
-        lastJumpTime -= time;
-        lastGroundedTime -= time;
-    }
 }
 
 public class PlayerInfo {
@@ -93,6 +92,7 @@ public class PlayerController : MonoBehaviour {
 
     [System.NonSerialized] public PlayerStatus status;
     [System.NonSerialized] public PlayerInfo info;
+    BoundsInt prevTileOverlapBounds;
 
     public float timeOfLastAutosave;
 
@@ -117,26 +117,37 @@ public class PlayerController : MonoBehaviour {
         oneFrameModules = new List<WearableModuleDataPair>();
     }
 
-    private void OnEnable () {
-        /*if(WorldSaving.inst.LoadPlayerFile(0, out PlayerStatus newStatus)) {
-            LoadStatus(newStatus);
-        }*/
-    }
-
     private void FixedUpdate () {
         foreach(ParticleSystem ps in trailParticles) {
             var emitter = ps.emission;
             emitter.enabled = false;
         }
 
+        if(isControlledLocally) {
+            status.dir.x = 0;
+            status.dir.y = 0;
+            status.jump = 0;
+            if(Input.GetKey(KeyCode.A))
+                status.dir.x--;
+            if(Input.GetKey(KeyCode.D))
+                status.dir.x++;
+            if(Input.GetKey(KeyCode.S))
+                status.dir.y--;
+            if(Input.GetKey(KeyCode.W))
+                status.dir.y++;
+            if(Input.GetKey(KeyCode.Space))
+                status.jump++;
+        }
+
         status.playerPos = transform.position;
+        status.velocity = info.rbody.velocity;
 
         // Checks if the chunk where the player is at is absent
         bool isChunkAbsent = true; 
         Vector2Int chunkPos = TerrainManager.inst.WorldToChunk(transform.position);
-        long key = Hash.hVec2Int(chunkPos);
+        long key = Hash.longFrom2D(chunkPos);
         if(ChunkLoader.inst.loadCounters.TryGetValue(key, out ChunkLoadCounter value)) {
-            if(value.loadCount > 0) {
+            if(value.loaders.Count > 0) {
                 isChunkAbsent = false;
             }
         }
@@ -149,16 +160,33 @@ public class PlayerController : MonoBehaviour {
         } else {
             rbody.disableForAFrame = true;
         }
+        rbody.disableForAFrame = rbody.disableForAFrame || status.isFlying;
 
         // Overlap check for tiles with interactable property such as collectables (shells and pearls)
-        BoundsInt currentTileOverlap = CalculateTileOverlap();
-        if(currentTileOverlap != status.prevTileOverlapBounds && GameManager.inst.engineMode == EngineModes.Play) {
-            CheckForTileOverlap(currentTileOverlap);
+        if(NetworkAssistant.inst.IsServer) {
+            BoundsInt currentTileOverlap = CalculateTileOverlap();
+            if(currentTileOverlap != prevTileOverlapBounds && GameManager.inst.engineMode == EngineModes.Play) {
+                CheckForTileOverlap(currentTileOverlap);
+            }
         }
     }
 
     private void Update () {
-        status.time = Time.time;
+        if(Input.GetKeyDown(KeyCode.F) && isControlledLocally) {
+            if(GameManager.inst.engineMode == EngineModes.Edit) {
+                status.isFlying = true;
+                goto end_of_flytoggle;
+            }
+            if(status.isFlying) {
+                status.isFlying = false;
+                goto end_of_flytoggle;
+            }
+            if(NetworkAssistant.inst.clientPlayerDataCopy.permissions.inGameEditingPermissions > InGameEditingPermissions.None) {
+                status.isFlying = true;
+            }
+        }
+        end_of_flytoggle:
+
         Animate();
     }
     #endregion
@@ -168,13 +196,11 @@ public class PlayerController : MonoBehaviour {
         info.status = newStatus;
         status = newStatus;
 
-        status.RemoveTimeRelativity();
-
         if(loadPosition) {
             GetComponent<InterpolatedTransform>().SetTransformPosition(newStatus.playerPos);
             transform.position = info.status.playerPos;
         }
-        rbody.velocity = info.status.prevVel;
+        rbody.velocity = info.status.velocity;
         
         UpdateHealthHud();
     }
@@ -203,33 +229,21 @@ public class PlayerController : MonoBehaviour {
             }
         }
 
-        status.prevTileOverlapBounds = bounds;
+        prevTileOverlapBounds = bounds;
     }
     #endregion
 
-    #region Visual WIP
+    #region Visuals
     float waterWaveCooldown = 0;
-    public void Animate () {
-        int accDirX = 0;
-        if(isControlledLocally) {
-            if(Input.GetKey(KeyCode.A))
-                accDirX--;
-            if(Input.GetKey(KeyCode.D))
-                accDirX++;
-
-            status.dirX = accDirX;
-        } else {
-            accDirX = status.dirX;
-        }
-
-        if(accDirX != 0) {
-            spriteRenderer.flipX = accDirX > 0;
+    void Animate () {
+        if(status.dir.x != 0) {
+            spriteRenderer.flipX = status.dir.x > 0;
         }
         
         if(!status.isGrounded) {
             playerAnimator.ChangeState("jump");
         } else {
-            if(accDirX == 0) {
+            if(status.dir.x == 0) {
                 playerAnimator.ChangeState("idle");
             } else {
                 playerAnimator.ChangeState("run");
@@ -297,8 +311,7 @@ public class PlayerController : MonoBehaviour {
     }
     #endregion
 
-    //WIP MOVEMENT SYSTEM
-    #region Modifier State Switch
+    #region Modifier State Switch (WIP)
     public void SetCurrentModifiers (int stateID) {
         if(currentState != playerStates[stateID]) {
             status.wasLastDirNull = true;
@@ -310,7 +323,9 @@ public class PlayerController : MonoBehaviour {
     }
 
     void CheckModifier () {
-        if(rbody.submergedPercentage > 0.3f) {
+        if(status.isFlying) {
+            SetCurrentModifiers(2);
+        } else if(rbody.submergedPercentage > 0.3f) {
             SetCurrentModifiers(1);
         } else {
             SetCurrentModifiers(0);
@@ -336,7 +351,7 @@ public class GlobalPlayerSettings {
     public int groundLayerMask = 18;
 }
 
-#region Parameters
+#region Obselete Parameters
 [System.Serializable]
 public class ControllerParameters {
     public float initialJumpForce = 6f;

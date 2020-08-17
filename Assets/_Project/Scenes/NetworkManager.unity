@@ -202,7 +202,11 @@ MonoBehaviour:
   Port: 7777
   Channels:
   - Name: Chunk
-    Type: 5
+    Type: 7
+  - Name: Tile
+    Type: 6
+  - Name: Player
+    Type: 6
   TransportBufferSize: 8192
   LogLevel: 1
   EnableSyncronizationEvent: 0
@@ -316,6 +320,7 @@ MonoBehaviour:
     LoadSceneTimeOut: 120
     EnableMessageBuffering: 1
     MessageBufferTimeout: 20
+    EnableNetworkLogs: 1
     EnableEncryption: 0
     SignKeyExchange: 0
     ServerBase64PfxCertificate: 

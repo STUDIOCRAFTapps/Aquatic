@@ -4,15 +4,19 @@ using UnityEngine;
 using MLAPI.Serialization;
 using MLAPI.Serialization.Pooled;
 using System.IO;
+using System;
 
-public class DataChunk : IBitWritable {
+public class DataChunk : IDisposable {
 
     #region Header and Init
     public Vector2Int chunkPosition;
     const int defaultChunkSize = 16;
     public int chunkSize = 16;
     public Dictionary<TerrainLayers, Tile[][]> tileData;
+
     public List<int> globalIDPalette;
+    public HashSet<int> globalIDHashs;
+
     public float timeOfLastAutosave = 0f;
 
     bool[] hasLayerBeenEdited;
@@ -21,6 +25,7 @@ public class DataChunk : IBitWritable {
         this.chunkSize = defaultChunkSize;
         tileData = new Dictionary<TerrainLayers, Tile[][]>();
         globalIDPalette = new List<int>();
+        globalIDHashs = new HashSet<int>();
 
         for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
             tileData[(TerrainLayers)l] = new Tile[chunkSize][];
@@ -38,6 +43,7 @@ public class DataChunk : IBitWritable {
     virtual public void Init (Vector2Int chunkPosition) {
         this.chunkPosition = chunkPosition;
         globalIDPalette.Clear();
+        globalIDHashs.Clear();
         timeOfLastAutosave = Time.time;
 
         for(int i = 0; i < hasLayerBeenEdited.Length; i++) {
@@ -46,6 +52,9 @@ public class DataChunk : IBitWritable {
     }
 
     public void ClearTiles () {
+        globalIDPalette.Clear();
+        globalIDHashs.Clear();
+
         for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
             hasLayerBeenEdited[l] = false;
             for(int x = 0; x < chunkSize; x++) {
@@ -67,19 +76,56 @@ public class DataChunk : IBitWritable {
         }
     }
 
-    
+    public void RefreshLayerEdit () {
+        globalIDPalette.Clear();
+        globalIDHashs.Clear();
+
+        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
+            if(!HasLayerBeenEdited((TerrainLayers)l)) {
+                continue;
+            }
+
+            bool isAllEmpty = true;
+            for(int x = 0; x < chunkSize; x++) {
+                for(int y = 0; y < chunkSize; y++) {
+                    int gid = tileData[(TerrainLayers)l][x][y].gid;
+
+                    if(gid != 0) {
+                        isAllEmpty = false;
+
+                        if(!globalIDHashs.Contains(gid)) {
+                            globalIDHashs.Add(gid);
+                            globalIDPalette.Add(gid);
+                        }
+                    }
+                }
+            }
+
+            if(isAllEmpty) {
+                hasLayerBeenEdited[l] = false;
+            }
+        }
+    }
+
+    public void ClearLayerEdits () {
+        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
+            hasLayerBeenEdited[l] = false;
+        }
+    }
     #endregion
 
     #region Tile Editing / Reading
 
     public void SetGlobalID (int x, int y, TerrainLayers layer, int gid) {
-        hasLayerBeenEdited[(int)layer] = true;
+        hasLayerBeenEdited[(int)layer] = hasLayerBeenEdited[(int)layer] || gid != 0;
 
-        if(gid != 0 && !globalIDPalette.Contains(gid)) {
-            globalIDPalette.Add(gid);
-            if(globalIDPalette.Count >= 256) {
+        if(gid != 0 && !globalIDHashs.Contains(gid)) {
+            if(globalIDHashs.Count >= 255) {
                 Debug.LogError($"Palette Count exceeded 255 from the DataChunk at {chunkPosition}");
+                return;
             }
+            globalIDPalette.Add(gid);
+            globalIDHashs.Add(gid);
         }
         tileData[layer][x][y].gid = gid;
     }
@@ -117,10 +163,10 @@ public class DataChunk : IBitWritable {
         int min_y = (refreshPatterns[pattern * 4 + 2] == 0) ? 0 : chunkSize - border;
         int max_y = (refreshPatterns[pattern * 4 + 3] == 0) ? chunkSize : border;
 
-        bool isChunkUp = TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition + Vector2Int.up));
-        bool isChunkDown = TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition + Vector2Int.down));
-        bool isChunkLeft = TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition + Vector2Int.left));
-        bool isChunkRight = TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition + Vector2Int.right));
+        bool isChunkUp = TerrainManager.inst.chunks.ContainsKey(Hash.longFrom2D(chunkPosition + Vector2Int.up));
+        bool isChunkDown = TerrainManager.inst.chunks.ContainsKey(Hash.longFrom2D(chunkPosition + Vector2Int.down));
+        bool isChunkLeft = TerrainManager.inst.chunks.ContainsKey(Hash.longFrom2D(chunkPosition + Vector2Int.left));
+        bool isChunkRight = TerrainManager.inst.chunks.ContainsKey(Hash.longFrom2D(chunkPosition + Vector2Int.right));
 
         for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
             for(int x = min_x; x < max_x; x++) {
@@ -167,23 +213,12 @@ public class DataChunk : IBitWritable {
     };
     #endregion
 
-    #region Network Serialization
-    public void Write (Stream stream) {
-        using(PooledBitWriter writer = PooledBitWriter.Get(stream)) {
-            writer.WriteByteArray(WorldSaving.inst.WriteChunkToByteArray(this));
-        }
+    public void Dispose () {
+        TerrainManager.inst.EnqueueDataChunkToUnusedQueue(this);
     }
-
-    public void Read (Stream stream) {
-        using(PooledBitReader reader = PooledBitReader.Get(stream)) {
-            WorldSaving.inst.LoadChunkFromByteArray(this, reader.ReadByteArray());
-        }
-    }
-    #endregion
 }
 
 // Using gid instead of palette indexs if to make everything much much simple in-game at the expense of the saving system
-// which is a good choice imo
 public struct Tile {
     public int gid;
     public ushort bitmask;

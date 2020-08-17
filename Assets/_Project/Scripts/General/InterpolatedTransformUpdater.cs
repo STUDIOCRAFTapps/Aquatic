@@ -2,13 +2,13 @@
 using System.Collections;
 
 public class InterpolatedTransformUpdater : MonoBehaviour {
-    private InterpolatedTransform m_interpolatedTransform;
+    private InterpolatedTransform interpolatedTransform;
 
     void Awake () {
-        m_interpolatedTransform = GetComponent<InterpolatedTransform>();
+        interpolatedTransform = GetComponent<InterpolatedTransform>();
     }
 
     void FixedUpdate () {
-        m_interpolatedTransform.LateFixedUpdate();
+        interpolatedTransform.LateFixedUpdate();
     }
 }

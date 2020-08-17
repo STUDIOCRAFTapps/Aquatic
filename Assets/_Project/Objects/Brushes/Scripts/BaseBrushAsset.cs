@@ -8,6 +8,8 @@ using MLAPI.Messaging;
 [CreateAssetMenu(fileName = "BaseBrush", menuName = "Terrain/Brushes/BaseBrush")]
 public class BaseBrushAsset : ScriptableObject {
 
+    public int gid = -1;
+
     [Header("Presentation")]
     public Sprite[] uiSprites;
     
@@ -35,7 +37,7 @@ public class BaseBrushAsset : ScriptableObject {
         }
     }
 
-    public virtual void UseBrush (int x, int y, TerrainLayers layer, int globalID, int brushIndex, MobileDataChunk mdc = null) {
+    public virtual void UseBrush (int x, int y, TerrainLayers layer, int globalID, int brushIndex, MobileDataChunk mdc = null, bool replicateOnServer = true) {
         int w = bitmasks[brushIndex].GetLength(0);
         int h = bitmasks[brushIndex].GetLength(1);
 
@@ -44,7 +46,7 @@ public class BaseBrushAsset : ScriptableObject {
                 if(bitmasks[brushIndex][px, py] == 1) {
                     if(TerrainManager.inst.GetGlobalIDAt(x + px - Mathf.FloorToInt(w * 0.5f), y + py - Mathf.FloorToInt(h * 0.5f), layer, out int checkID, mdc)) {
                         if(checkID != globalID) {
-                            TerrainManager.inst.SetGlobalIDAt(x + px - Mathf.FloorToInt(w * 0.5f), y + py - Mathf.FloorToInt(h * 0.5f), layer, globalID, mdc);
+                            TerrainManager.inst.SetGlobalIDAt(x + px - Mathf.FloorToInt(w * 0.5f), y + py - Mathf.FloorToInt(h * 0.5f), layer, globalID, mdc, replicateOnServer);
                         }
                     }
                 }
@@ -63,5 +65,12 @@ public class BaseBrushAsset : ScriptableObject {
                 }
             }
         }
+    }
+
+    public int GetMaxRadius (int brushIndex) {
+        int w = bitmasks[brushIndex].GetLength(0);
+        int h = bitmasks[brushIndex].GetLength(1);
+
+        return Mathf.Max(w, h);
     }
 }

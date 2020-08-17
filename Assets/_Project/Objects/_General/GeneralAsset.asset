@@ -26,6 +26,20 @@ MonoBehaviour:
     - {fileID: 11400000, guid: cf86498b3aacf9b4e9532e617f411316, type: 2}
     weaponCollections:
     - {fileID: 11400000, guid: d982647258d82b5498e86f572ee167c3, type: 2}
+    tools:
+    - {fileID: 11400000, guid: 7a4f50e413ff033438b1bacde92c43f0, type: 2}
+    - {fileID: 11400000, guid: a1d9a4da6bc8a534cacd6e4186320c17, type: 2}
+    - {fileID: 11400000, guid: 2e82ff76e5df02745ba4f542d8a0db71, type: 2}
+    - {fileID: 11400000, guid: 9e86f364fa1975641a06622ab7bf062a, type: 2}
+    - {fileID: 11400000, guid: c82d67816583b954c8866e4689aa669a, type: 2}
+    - {fileID: 11400000, guid: 8b754a6d290ab044c83994c876ad1975, type: 2}
+    - {fileID: 11400000, guid: a051e36fcf3282448a0b44eafa883033, type: 2}
+    brushes:
+    - {fileID: 11400000, guid: 28a74a3c76fb44b47a594d883d67148e, type: 2}
+    - {fileID: 11400000, guid: 32078e04362f64948a5f610cbc983b87, type: 2}
+    - {fileID: 11400000, guid: c0b617675a3a4ab419e37bdb117dae35, type: 2}
+    - {fileID: 11400000, guid: 307d9175ca729144fa3600c730bbe226, type: 2}
+    - {fileID: 11400000, guid: d4ca6b7416264c6489962d97f55740ee, type: 2}
   maxTextureWidth: 32
   maxTextureHeight: 32
   textureFormat: 4

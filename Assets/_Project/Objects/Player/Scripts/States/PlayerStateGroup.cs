@@ -13,7 +13,7 @@ public class PlayerStateGroup : ScriptableObject {
         for(int i = 0; i < oneFrameModules.Count; i++) {
             oneFrameModules[i].module.UpdateStatusPMW(info, oneFrameModules[i].data);
         }
-
+        
         foreach(BasePlayerModule action in actionModules) {
             action.UpdateAction(info);
         }

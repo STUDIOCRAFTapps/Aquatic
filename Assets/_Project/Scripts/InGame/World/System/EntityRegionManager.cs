@@ -301,7 +301,7 @@ public class EntityRegion {
                     x + regionPosition.x * TerrainManager.inst.chunksPerRegionSide,
                     y + regionPosition.y * TerrainManager.inst.chunksPerRegionSide);
                 
-                if(TerrainManager.inst.chunks.ContainsKey(Hash.hVec2Int(chunkPosition))) {
+                if(TerrainManager.inst.chunks.ContainsKey(Hash.longFrom2D(chunkPosition))) {
                     return true;
                 }
             }

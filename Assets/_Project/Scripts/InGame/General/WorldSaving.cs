@@ -8,7 +8,9 @@ using UnityEngine;
 using System;
 using System.Linq;
 using Newtonsoft.Json;
+
 using MLAPI.Serialization.Pooled;
+using MLAPI.Serialization;
 
 public enum DataLoadMode {
     TryReadonly,
@@ -229,53 +231,38 @@ public class WorldSaving : MonoBehaviour {
         }
 
         //Serialize and save.
-        byte[] buffer = GetByteBuffer();
-        using(FileStream fs = new FileStream(GetChunkDirectory(source, useReadonlyPath), FileMode.Create))
-        using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
-        using(MemoryStream ms = new MemoryStream(buffer))
-        using(BinaryWriter bw = new BinaryWriter(ms)) {
-            SerializeToStream(bw, source);
-            defs.Write(buffer, 0, (int)ms.Position);
-        }
-        ReturnByteBuffer(buffer);
+        PooledBitStream bitStream = ThreadSafeBitStream.GetStreamSafe();
+        PooledBitWriter bw = ThreadSafeBitStream.GetWriterSafe(bitStream);
+        SerializeToStream(bw, source);
 
-        using(FileStream fs = new FileStream(GetChunkDirectory(source, useReadonlyPath), FileMode.Create))
-        using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
-        using(PooledBitStream stream = PooledBitStream.Get())
-        using(PooledBitWriter bw = PooledBitWriter.Get(stream)) {
-            bw.WriteByte(0);
-            defs.Write(stream.GetBuffer(), 0, (int)stream.Position+1);
+        using(FileStream fs = new FileStream(GetChunkDirectory(source, useReadonlyPath), FileMode.Create)) {
+            fs.Write(bitStream.GetBuffer(), 0, (int)bitStream.Length);
         }
+
+        bw.DisposeWriterSafe();
+        bitStream.DisposeStreamSafe();
     }
 
-    public byte[] WriteChunkToByteArray (DataChunk source) {
-        byte[] buffer = new byte[bufferSize];
-
-        using(MemoryStream ms = new MemoryStream(buffer))
-        using(DeflateStream defs = new DeflateStream(ms, CompressionMode.Compress))
-        using(BinaryWriter bw = new BinaryWriter(defs)) {
-            SerializeToStream(bw, source);
-            defs.Write(buffer, 0, (int)ms.Position);
-        }
-
-        return buffer;
+    public void WriteChunkToNetworkStream (DataChunk dataChunk, PooledBitWriter writer) {
+        SerializeToNetworkStream(writer, dataChunk);
     }
 
-    public void SaveChunk (MobileDataChunk source) {
+    public void SaveMobileChunk (MobileDataChunk dataChunk) {
         if(clientMode) {
             return;
         }
 
         //Serialize and save.
-        byte[] buffer = GetByteBuffer();
-        using(FileStream fs = new FileStream(GetMobileChunkDirectory(source, false), FileMode.Create))
-        using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Compress))
-        using(MemoryStream ms = new MemoryStream(buffer))
-        using(BinaryWriter bw = new BinaryWriter(ms)) {
-            SerializeToStream(bw, source);
-            defs.Write(buffer, 0, (int)ms.Position);
+        PooledBitStream bitStream = ThreadSafeBitStream.GetStreamSafe();
+        PooledBitWriter bw = ThreadSafeBitStream.GetWriterSafe(bitStream);
+        SerializeToStream(bw, dataChunk);
+
+        using(FileStream fs = new FileStream(GetChunkDirectory(dataChunk, false), FileMode.Create)) {
+            fs.Write(bitStream.GetBuffer(), 0, (int)bitStream.Length);
         }
-        ReturnByteBuffer(buffer);
+
+        bw.DisposeWriterSafe();
+        bitStream.DisposeStreamSafe();
     }
 
     public void SaveEntity (Entity entity) {
@@ -349,15 +336,21 @@ public class WorldSaving : MonoBehaviour {
             }
         } else {
             try {
+                PooledBitStream bitStream = ThreadSafeBitStream.GetStreamSafe();
+
                 byte[] buffer = GetByteBuffer();
-                using(FileStream fs = new FileStream(chunkPath, FileMode.Open))
-                using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress))
-                using(MemoryStream ms = new MemoryStream(buffer))
-                using(BinaryReader br = new BinaryReader(ms)) {
-                    int rlength = defs.Read(buffer, 0, buffer.Length);
-                    hasSucceded = DeserializeFromStream(br, dataChunk);
+                using(FileStream fs = new FileStream(chunkPath, FileMode.Open)) {
+                    fs.Read(buffer, 0, (int)fs.Length);
+                    bitStream.Write(buffer, 0, (int)fs.Length);
+                    bitStream.Position = 0;
                 }
                 ReturnByteBuffer(buffer);
+                PooledBitReader bw = ThreadSafeBitStream.GetReaderSafe(bitStream);
+                hasSucceded = DeserializeFromStream(bw, dataChunk);
+
+                bw.DisposeReaderSafe();
+                bitStream.DisposeStreamSafe();
+
             } catch(Exception e) {
                 Debug.Log("Failed to load chunk: " + e.ToString());
                 hasSucceded = false;
@@ -376,26 +369,9 @@ public class WorldSaving : MonoBehaviour {
         }
     }
 
-    public bool LoadChunkFromByteArray (DataChunk dataChunk, byte[] buffer) {
-
-        ulong total = 0;
-        for(int x = 0; x < buffer.Length; x++) {
-            total += buffer[x];
-        }
-
-        Debug.Log(total);
-
-        bool hasSucceded = true;
-        byte[] buffer2 = GetByteBuffer();
-        using(MemoryStream ms = new MemoryStream(buffer))
-        using(DeflateStream defs = new DeflateStream(ms, CompressionMode.Decompress)) {
-            int rlength = defs.Read(buffer2, 0, buffer2.Length);
-            using(MemoryStream ms2 = new MemoryStream(buffer2))
-            using(BinaryReader br = new BinaryReader(ms2)) {
-                hasSucceded = DeserializeFromStream(br, dataChunk);
-            }
-        }
-        ReturnByteBuffer(buffer2);
+    public bool ReadChunkFromNetworkStream (DataChunk dataChunk, PooledBitReader reader) {
+        
+        bool hasSucceded = DeserializeFromNetworkStream(reader, dataChunk);
         return hasSucceded;
     }
 
@@ -420,15 +396,18 @@ public class WorldSaving : MonoBehaviour {
                 return false;
             }
         } else {
+            PooledBitStream bitStream = ThreadSafeBitStream.GetStreamSafe();
+            PooledBitReader bw = ThreadSafeBitStream.GetReaderSafe(bitStream);
+
+            hasSucceded = DeserializeFromStream(bw, dataChunk);
             byte[] buffer = GetByteBuffer();
-            using(FileStream fs = new FileStream(chunkPath, FileMode.Open))
-            using(DeflateStream defs = new DeflateStream(fs, CompressionMode.Decompress))
-            using(MemoryStream ms = new MemoryStream(buffer))
-            using(BinaryReader br = new BinaryReader(ms)) {
-                int rlength = defs.Read(buffer, 0, buffer.Length);
-                hasSucceded = DeserializeFromStream(br, dataChunk);
+            using(FileStream fs = new FileStream(chunkPath, FileMode.Open)) {
+                fs.Write(bitStream.GetBuffer(), 0, (int)fs.Length);
             }
             ReturnByteBuffer(buffer);
+
+            bw.DisposeReaderSafe();
+            bitStream.DisposeStreamSafe();
         }
         
         if(!hasSucceded) {
@@ -636,13 +615,23 @@ public class WorldSaving : MonoBehaviour {
 
     #region Stream Functions
     #region SerializeToStream
-    void SerializeToStream (BinaryWriter ms, DataChunk dataChunk) {
+    void SerializeToStream (BitWriter ms, DataChunk dataChunk) {
+        dataChunk.RefreshLayerEdit();
+
         SerializePalette(ms, dataChunk);
 
         SerializeTileData(ms, dataChunk);
     }
 
-    void SerializeToStream (BinaryWriter ms, MobileDataChunk mobileDataChunk) {
+    void SerializeToNetworkStream (PooledBitWriter ms, DataChunk dataChunk) {
+        dataChunk.RefreshLayerEdit();
+
+        SerializePaletteNetwork(ms, dataChunk);
+
+        SerializeTileDataNetwork(ms, dataChunk);
+    }
+
+    void SerializeToStream (BitWriter ms, MobileDataChunk mobileDataChunk) {
         SerializeMobileInfos(ms, mobileDataChunk);
 
         SerializePalette(ms, mobileDataChunk);
@@ -671,7 +660,7 @@ public class WorldSaving : MonoBehaviour {
     #endregion
 
     #region DeserializeFromStream
-    bool DeserializeFromStream (BinaryReader ms, DataChunk dataChunk) {
+    bool DeserializeFromStream (BitReader ms, DataChunk dataChunk) {
         if(!DeserializePalette(ms, dataChunk)) {
             Debug.Log("Palette has issues");
             return false;
@@ -687,7 +676,23 @@ public class WorldSaving : MonoBehaviour {
         return true;
     }
 
-    bool DeserializeFromStream (BinaryReader ms, MobileDataChunk mobileDataChunk) {
+    bool DeserializeFromNetworkStream (PooledBitReader ms, DataChunk dataChunk) {
+        if(!DeserializePaletteNetwork(ms, dataChunk)) {
+            Debug.Log("Palette has issues");
+            return false;
+        }
+
+        if(!DeserializeTileDataNetwork(ms, dataChunk)) {
+            Debug.Log("Tile has issues");
+            return false;
+        }
+
+        CleanPalette(dataChunk);
+
+        return true;
+    }
+
+    bool DeserializeFromStream (BitReader ms, MobileDataChunk mobileDataChunk) {
         DeserializeMobileInfos(ms, mobileDataChunk);
 
         if(!DeserializePalette(ms, mobileDataChunk)) {
@@ -734,27 +739,34 @@ public class WorldSaving : MonoBehaviour {
     #endregion
 
     #region Palette
-    void SerializePalette (BinaryWriter ms, DataChunk dataChunk) {
-        ms.Write((byte)dataChunk.globalIDPalette.Count);
+    void SerializePalette (BitWriter ms, DataChunk dataChunk) {
+        ms.WriteByte((byte)dataChunk.globalIDPalette.Count);
         for(int i = 0; i < dataChunk.globalIDPalette.Count; i++) {
             //This shouldn't create much allocations, it just reference already written strings
             TileString tileString = GeneralAsset.inst.GetTileStringFromGlobalID(dataChunk.globalIDPalette[i]);
 
             //Mark the length
-            ms.Write((byte)(tileString.nspace.Length + tileString.id.Length + 1));
+            ms.WriteByte((byte)(tileString.nspace.Length + tileString.id.Length + 1));
 
             //Zero allocation method to write the string to the stream; using a reference array (char -> byte).
             for(int l = 0; l < tileString.nspace.Length; l++) {
-                ms.Write(charToByte[tileString.nspace[l]]);
+                ms.WriteByte(charToByte[tileString.nspace[l]]);
             }
-            ms.Write(charToByte[':']);
+            ms.WriteByte(charToByte[':']);
             for(int l = 0; l < tileString.id.Length; l++) {
-                ms.Write(charToByte[tileString.id[l]]);
+                ms.WriteByte(charToByte[tileString.id[l]]);
             }
         }
     }
 
-    bool DeserializePalette (BinaryReader ms, DataChunk dataChunk) {
+    void SerializePaletteNetwork (PooledBitWriter ms, DataChunk dataChunk) {
+        ms.WriteByte((byte)dataChunk.globalIDPalette.Count);
+        for(int i = 0; i < dataChunk.globalIDPalette.Count; i++) {
+            ms.WriteInt32(dataChunk.globalIDPalette[i]); // Client/Server should have the same global IDs. They can be sent directly
+        }
+    }
+
+    bool DeserializePalette (BitReader ms, DataChunk dataChunk) {
         int palCount = ms.ReadByte();
         if(palCount == -1) {
             return false;
@@ -764,14 +776,14 @@ public class WorldSaving : MonoBehaviour {
         TileString tileString = new TileString();
 
         for(int i = 0; i < palCount; i++) {
-            byte readLength = ms.ReadByte();
+            byte readLength = (byte)ms.ReadByte();
             int readIndex = 0;
             byte readByte;
             sb.Clear();
 
             //Read the namespace
             for(; readIndex < readLength; readIndex++) {
-                readByte = ms.ReadByte();
+                readByte = (byte)ms.ReadByte();
                 if(authorizedCharsString[readByte] == ':') {
                     readIndex++;
                     break;
@@ -792,9 +804,24 @@ public class WorldSaving : MonoBehaviour {
             tileString.id = sb.ToString();
             if(GeneralAsset.inst.GetGlobalIDFromTileString(tileString, out int gID)) {
                 dataChunk.globalIDPalette.Add(gID);
+                dataChunk.globalIDHashs.Add(gID);
             } else {
                 dataChunk.globalIDPalette.Add(-1);
             }
+        }
+        return true;
+    }
+
+    bool DeserializePaletteNetwork (PooledBitReader ms, DataChunk dataChunk) {
+        int palCount = ms.ReadByte();
+        if(palCount == -1) {
+            return false;
+        }
+
+        for(int i = 0; i < palCount; i++) {
+            int gid = ms.ReadInt32();
+            dataChunk.globalIDPalette.Add(gid);
+            dataChunk.globalIDHashs.Add(gid);
         }
         return true;
     }
@@ -812,7 +839,120 @@ public class WorldSaving : MonoBehaviour {
     #endregion
 
     #region TileData
-    void SerializeTileData (BinaryWriter ms, DataChunk dataChunk) {
+    void SerializeTileData (BitWriter ms, DataChunk dataChunk) {
+        int layerCount = 0;
+        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
+            if(dataChunk.HasLayerBeenEdited((TerrainLayers)l)) {
+                layerCount++;
+            }
+        }
+        ms.WriteByte((byte)layerCount);
+
+        int chunkSize = dataChunk.chunkSize;
+        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
+            if(!dataChunk.HasLayerBeenEdited((TerrainLayers)l)) {
+                continue;
+            }
+            ms.WritePadBits();
+            ms.WriteString(layerNames[l], true);
+
+            #region Tile RLE Encoding
+            int lenght = 0;
+            int lastIndex = -1;
+            int currentIndex = -1;
+            for(int y = 0; y < dataChunk.chunkSize; y++) {
+                bool inv = (y % 2 == 0);
+                for(int x = inv ? 0 : (dataChunk.chunkSize - 1); inv ? (x < dataChunk.chunkSize) : (x >= 0); x = x + (inv ? 1 : -1)) {  // Zig Zags increase efficiency
+                    currentIndex = (dataChunk.globalIDPalette.IndexOf(dataChunk.GetGlobalID(x, y, (TerrainLayers)l)) + 1);
+
+                    // RLE -- If the tile is continued, extend the lenght.
+                    if(lastIndex == currentIndex) {
+                        lenght++;
+                    } else {
+                        // RLE -- If the lenght is above 1, a long chain has been broken. Write the type bit, the index and lenght.
+                        // RLE -- If the lenght is 1, a one tile chain has been broken. Write the type bit, the index.
+                        // RLE -- If the lenght is 0, the encoding has just started. Continue.
+                        if(lenght > 1) {
+                            ms.WriteBit(true); // True : Long (2 Bytes)
+                            //ms.WriteByte(1); // True : Long (2 Bytes)
+                            ms.WriteByte((byte)lenght);
+                            ms.WriteByte((byte)lastIndex);
+                        } else if(lenght == 1) {
+                            ms.WriteBit(false); // False : Single (1 Bytes)
+                            //ms.WriteByte(0); // False : Single (1 Bytes)
+                            ms.WriteByte((byte)lastIndex);
+                        }
+                        lenght = 1;
+                    }
+                    lastIndex = currentIndex;
+                }
+            }
+
+            // RLE -- On going chains must be stopped on ending
+            if(lenght > 1) {
+                ms.WriteBit(true);
+                //ms.WriteByte(1);
+                ms.WriteByte((byte)lenght);
+                ms.WriteByte((byte)lastIndex);
+            } else if(lenght == 1) {
+                ms.WriteBit(false);
+                //ms.WriteByte(0);
+                ms.WriteByte((byte)lastIndex);
+            }
+            #endregion
+
+            #region Bitmask RLE Encoding
+            lenght = 0;
+            lastIndex = -1;
+            currentIndex = -1;
+            for(int y = 2; y < dataChunk.chunkSize - 2; y++) {
+                for(int x = 2; x < dataChunk.chunkSize - 2; x++) { // Zig Zags are not usefull with bitmask
+                    // Air tile can be skipped without issues.
+                    if(dataChunk.GetGlobalID(x, y, (TerrainLayers)l) == 0) {
+                        continue;
+                    }
+                    currentIndex = dataChunk.GetBitmask(x, y, (TerrainLayers)l);
+
+                    // RLE -- If the tile is continued, extend the lenght.
+                    if(lastIndex == currentIndex) {
+                        lenght++;
+                    } else {
+                        // RLE -- If the lenght is above 1, a long chain has been broken. Write the type bit, the index and lenght.
+                        // RLE -- If the lenght is 1, a one tile chain has been broken. Write the type bit, the index.
+                        // RLE -- If the lenght is 0, the encoding has just started. Continue.
+                        if(lenght > 1) {
+                            ms.WriteBit(true); // True : Long (2 Bytes)
+                            //ms.WriteByte(1); // True : Long (2 Bytes)
+                            ms.WriteByte((byte)lenght);
+                            ms.WriteUInt16((ushort)lastIndex);
+                        } else if(lenght == 1) {
+                            ms.WriteBit(false); // False : Single (1 Bytes)
+                            //ms.WriteByte(0); // False : Single (1 Bytes)
+                            ms.WriteUInt16((ushort)lastIndex);
+                        }
+                        lenght = 1;
+                    }
+                    lastIndex = currentIndex;
+                }
+            }
+
+
+            // RLE -- On going chains must be stopped on ending
+            if(lenght > 1) {
+                ms.WriteBit(true);
+                //ms.WriteByte(1);
+                ms.WriteByte((byte)lenght);
+                ms.WriteUInt16((ushort)lastIndex);
+            } else if(lenght == 1) {
+                ms.WriteBit(false);
+                //ms.WriteByte(0);
+                ms.WriteUInt16((ushort)lastIndex);
+            }
+            #endregion
+        }
+    }
+
+    void SerializeTileDataNetwork (PooledBitWriter ms, DataChunk dataChunk) {
         int layerCount = 0;
         for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
             if(dataChunk.HasLayerBeenEdited((TerrainLayers)l)) {
@@ -820,62 +960,191 @@ public class WorldSaving : MonoBehaviour {
             }
         }
 
-        ms.Write((byte)layerCount);
+        ms.WriteByte((byte)layerCount);
 
+        int chunkSize = dataChunk.chunkSize;
         for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
             if(!dataChunk.HasLayerBeenEdited((TerrainLayers)l)) {
                 continue;
             }
-            ms.Write(layerNames[l]);
+            ms.WriteByte((byte)l); // Client/Server should have matched layers. No need to share actual layer names
 
-            for(int x = 0; x < dataChunk.chunkSize; x++) {
-                for(int y = 0; y < dataChunk.chunkSize; y++) {
-                    // If the index is not found (is air), it'll be -1. To get the corrected palette index, add 1.
-                    // That will simulate air being in the palette at the index 0.
-                    ms.Write((byte)(dataChunk.globalIDPalette.IndexOf(dataChunk.GetGlobalID(x, y, (TerrainLayers)l)) + 1));
+            #region Tile RLE Encoding
+            int lenght = 0;
+            int lastIndex = -1;
+            int currentIndex = -1;
+            for(int y = 0; y < dataChunk.chunkSize; y++) {
+                bool inv = (y % 2 == 0);
+                for(int x = inv ? 0 : (dataChunk.chunkSize - 1); inv ? (x < dataChunk.chunkSize) : (x >= 0); x = x + (inv ? 1 : -1)) {  // Zig Zags increase efficiency
+                    currentIndex = (byte)(dataChunk.globalIDPalette.IndexOf(dataChunk.GetGlobalID(x, y, (TerrainLayers)l)) + 1);
+
+                    // RLE -- If the tile is continued, extend the lenght.
+                    if(lastIndex == currentIndex) {
+                        lenght++;
+                    } else {
+                        // RLE -- If the lenght is above 1, a long chain has been broken. Write the type bit, the index and lenght.
+                        // RLE -- If the lenght is 1, a one tile chain has been broken. Write the type bit, the index.
+                        // RLE -- If the lenght is 0, the encoding has just started. Continue.
+                        if(lenght > 1) {
+                            ms.WriteBit(true); // True : Long (2 Bytes)
+                            ms.WriteByte((byte)lenght);
+                            ms.WriteByte((byte)lastIndex);
+                        } else if(lenght == 1) {
+                            ms.WriteBit(false); // False : Single (1 Bytes)
+                            ms.WriteByte((byte)lastIndex);
+                        }
+                        lenght = 1;
+                    }
+                    lastIndex = currentIndex;
                 }
             }
 
-            for(int x = 0; x < dataChunk.chunkSize; x++) {
-                for(int y = 0; y < dataChunk.chunkSize; y++) {
-                    ms.Write(dataChunk.GetBitmask(x, y, (TerrainLayers)l));
-                }
+            // RLE -- On going chains must be stopped on ending
+            if(lenght > 1) {
+                ms.WriteBit(true);
+                ms.WriteByte((byte)lenght);
+                ms.WriteByte((byte)currentIndex);
+            } else if(lenght == 1) {
+                ms.WriteBit(false);
+                ms.WriteByte((byte)currentIndex);
             }
+            #endregion
         }
     }
 
-    bool DeserializeTileData (BinaryReader ms, DataChunk dataChunk) {
+    bool DeserializeTileData (BitReader ms, DataChunk dataChunk) {
         int layerCount = ms.ReadByte();
+        StringBuilder sb = new StringBuilder();
+
+        dataChunk.ClearLayerEdits();
 
         for(int ll = 0; ll < layerCount; ll++) {
-            string layerName = ms.ReadString();
+            ms.SkipPadBits();
+            string layerName = ms.ReadString(sb, true).ToString();
+            sb.Clear();
             int l = layerNames.IndexOf(layerName);
             if(l < 0) {
                 return false;
             }
 
-            for(int x = 0; x < dataChunk.chunkSize; x++) {
-                for(int y = 0; y < dataChunk.chunkSize; y++) {
-                    byte tileInt = ms.ReadByte();
+            #region Tile RLE Decoding
+            bool isLong = false;
+            int tileIndex = 0;
+            int lenght = 0;
+            for(int y = 0; y < dataChunk.chunkSize; y++) {
+                bool inv = (y % 2 == 0);
+                for(int x = inv ? 0 : (dataChunk.chunkSize - 1); inv ? (x < dataChunk.chunkSize) : (x >= 0); x = x + (inv ? 1 : -1)) {
 
-                    if(tileInt == 0) {
+                    // RLE -- The run has ended. The next batch must be decoded
+                    if(lenght == 0) {
+                        isLong = ms.ReadBit();
+                        //isLong = ms.ReadByte() == 1;
+
+                        if(isLong) {
+                            lenght = ms.ReadByte();
+                            tileIndex = ms.ReadByte();
+                        } else {
+                            tileIndex = ms.ReadByte();
+                            lenght = 1;
+                        }
+                    }
+                    lenght--;
+
+                    if(tileIndex <= 0) {
                         dataChunk.SetGlobalID(x, y, (TerrainLayers)l, 0);
                     } else {
-                        if((tileInt - 1) >= dataChunk.globalIDPalette.Count) {
-                            Debug.LogError("A tile has a palette index greater or equal to the palette.");
+                        if((tileIndex - 1) >= dataChunk.globalIDPalette.Count) {
+                            Debug.LogError("A tile has a palette index greater or equal to the palette length.");
                             dataChunk.SetGlobalID(x, y, (TerrainLayers)l, 0);
-                        } else if(dataChunk.globalIDPalette[tileInt - 1] != -1) {
-                            dataChunk.SetGlobalID(x, y, (TerrainLayers)l, dataChunk.globalIDPalette[tileInt - 1]);
+                        } else if(dataChunk.globalIDPalette[tileIndex - 1] != -1) {
+                            dataChunk.SetGlobalID(x, y, (TerrainLayers)l, dataChunk.globalIDPalette[tileIndex - 1]);
                         } else {
                             dataChunk.SetGlobalID(x, y, (TerrainLayers)l, 0);
                         }
                     }
                 }
             }
+            #endregion
 
-            for(int x = 0; x < dataChunk.chunkSize; x++) {
-                for(int y = 0; y < dataChunk.chunkSize; y++) {
-                    dataChunk.SetBitmask(x, y, (TerrainLayers)l, ms.ReadUInt16());
+            #region Bitmask RLE Decoding
+            lenght = 0;
+            tileIndex = 0;
+            for(int y = 2; y < dataChunk.chunkSize - 2; y++) {
+                for(int x = 2; x < dataChunk.chunkSize - 2; x++) {
+                    if(dataChunk.GetGlobalID(x, y, (TerrainLayers)l) == 0) {
+                        continue;
+                    }
+
+                    if(lenght == 0) {
+                        isLong = ms.ReadBit();
+
+                        if(isLong) {
+                            lenght = ms.ReadByte();
+                            tileIndex = ms.ReadUInt16();
+                        } else {
+                            tileIndex = ms.ReadUInt16();
+                            lenght = 1;
+                        }
+                    }
+                    lenght--;
+
+                    dataChunk.SetBitmask(x, y, (TerrainLayers)l, (ushort)tileIndex);
+                }
+            }
+            #endregion
+        }
+
+        for(int l = 0; l < TerrainManager.inst.layerParameters.Length; l++) {
+            if(!dataChunk.HasLayerBeenEdited((TerrainLayers)l)) {
+                dataChunk.ClearTilesLayer(l);
+            }
+        }
+
+        return true;
+    }
+
+    bool DeserializeTileDataNetwork (PooledBitReader ms, DataChunk dataChunk) {
+        int layerCount = ms.ReadByte();
+
+        for(int ll = 0; ll < layerCount; ll++) {
+            int l = ms.ReadByte();
+            if(l < 0) {
+                return false;
+            }
+
+            bool isLong = false;
+            int tileIndex = 0;
+            int lenght = 0;
+            for(int y = 0; y < dataChunk.chunkSize; y++) {
+                bool inv = (y % 2 == 0);
+                for(int x = inv ? 0 : (dataChunk.chunkSize - 1); inv ? (x < dataChunk.chunkSize) : (x >= 0); x = x + (inv ? 1 : -1)) {
+                    // RLE -- The run has ended. The next batch must be decoded
+                    if(lenght == 0) {
+                        isLong = ms.ReadBit();
+                        //isLong = ms.ReadByte() == 1;
+
+                        if(isLong) {
+                            lenght = ms.ReadByte();
+                            tileIndex = ms.ReadByte();
+                        } else {
+                            tileIndex = ms.ReadByte();
+                            lenght = 1;
+                        }
+                    }
+                    lenght--;
+
+                    if(tileIndex <= 0) {
+                        dataChunk.SetGlobalID(x, y, (TerrainLayers)l, 0);
+                    } else {
+                        if((tileIndex - 1) >= dataChunk.globalIDPalette.Count) {
+                            Debug.LogError("A tile has a palette index greater or equal to the palette length.");
+                            dataChunk.SetGlobalID(x, y, (TerrainLayers)l, 0);
+                        } else if(dataChunk.globalIDPalette[tileIndex - 1] != -1) {
+                            dataChunk.SetGlobalID(x, y, (TerrainLayers)l, dataChunk.globalIDPalette[tileIndex - 1]);
+                        } else {
+                            dataChunk.SetGlobalID(x, y, (TerrainLayers)l, 0);
+                        }
+                    }
                 }
             }
         }
@@ -891,28 +1160,28 @@ public class WorldSaving : MonoBehaviour {
     #endregion
 
     #region MobileChunkInfos
-    void SerializeMobileInfos (BinaryWriter ms, MobileDataChunk mobileDataChunk) {
+    void SerializeMobileInfos (BitWriter ms, MobileDataChunk mobileDataChunk) {
         //Position (x, y, z)
         //Collider (offset.x, offset.y, size.x, size.y)
         //Restricted size (x, y)
 
-        ms.Write(mobileDataChunk.mobileChunk.transform.position.x);
-        ms.Write(mobileDataChunk.mobileChunk.transform.position.y);
-        ms.Write(mobileDataChunk.mobileChunk.transform.position.z);
+        ms.WriteSingle(mobileDataChunk.mobileChunk.transform.position.x);
+        ms.WriteSingle(mobileDataChunk.mobileChunk.transform.position.y);
+        ms.WriteSingle(mobileDataChunk.mobileChunk.transform.position.z);
 
-        ms.Write(mobileDataChunk.mobileChunk.boxCollider.offset.x);
-        ms.Write(mobileDataChunk.mobileChunk.boxCollider.offset.y);
-        ms.Write(mobileDataChunk.mobileChunk.boxCollider.size.x);
-        ms.Write(mobileDataChunk.mobileChunk.boxCollider.size.y);
+        ms.WriteSingle(mobileDataChunk.mobileChunk.boxCollider.offset.x);
+        ms.WriteSingle(mobileDataChunk.mobileChunk.boxCollider.offset.y);
+        ms.WriteSingle(mobileDataChunk.mobileChunk.boxCollider.size.x);
+        ms.WriteSingle(mobileDataChunk.mobileChunk.boxCollider.size.y);
 
-        ms.Write(mobileDataChunk.restrictedSize.x);
-        ms.Write(mobileDataChunk.restrictedSize.y);
+        ms.WriteSingle(mobileDataChunk.restrictedSize.x);
+        ms.WriteSingle(mobileDataChunk.restrictedSize.y);
 
-        ms.Write(mobileDataChunk.mobileChunk.rigidbody.velocity.x);
-        ms.Write(mobileDataChunk.mobileChunk.rigidbody.velocity.y);
+        ms.WriteSingle(mobileDataChunk.mobileChunk.rigidbody.velocity.x);
+        ms.WriteSingle(mobileDataChunk.mobileChunk.rigidbody.velocity.y);
     }
 
-    void DeserializeMobileInfos (BinaryReader ms, MobileDataChunk mobileDataChunk) {
+    void DeserializeMobileInfos (BitReader ms, MobileDataChunk mobileDataChunk) {
         //Position (x, y, z)
         //Collider (offset.x, offset.y, size.x, size.y)
         //Restricted size (x, y)

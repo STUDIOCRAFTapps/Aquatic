@@ -40,6 +40,7 @@ public class TerrainEditorManager : MonoBehaviour {
     bool lockedTool1 = false;
     bool wasEnabled = false;
     Vector2Int initPos;
+    Vector2Int prevPos;
     MobileDataChunk lastMdc;
     bool alreadyBeenPressed = false;
     int tempMat = 1;
@@ -374,6 +375,11 @@ public class TerrainEditorManager : MonoBehaviour {
             selectedMaterialID = tempMat;
         }
 
+        if((Input.GetMouseButton(0) || Input.GetMouseButton(1))) {
+            prevPos = new Vector2Int(int.MinValue, int.MinValue);
+        }
+        info.hasMovedSinceLastFrame = prevPos != info.currentPos;
+
         if(mdc == null && renderingMode == 1) {
             return;
         }
@@ -384,6 +390,7 @@ public class TerrainEditorManager : MonoBehaviour {
         lastMdc = mdc;
 
         info.currentPos = tilePos;
+        prevPos = info.currentPos;
 
         if((Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)) && !alreadyBeenPressed) {
             alreadyBeenPressed = true;
@@ -394,13 +401,11 @@ public class TerrainEditorManager : MonoBehaviour {
         } else if((Input.GetMouseButtonUp(0) && !Input.GetMouseButton(1)) || (Input.GetMouseButtonUp(1) && !Input.GetMouseButton(0))) {
             alreadyBeenPressed = false;
             tools[selectedTool].OnReleased(info);
-        } else if(Input.GetMouseButton(0) || Input.GetMouseButton(1)) {
+        } else if((Input.GetMouseButton(0) || Input.GetMouseButton(1))) {
             tools[selectedTool].OnHold(info);
         } else {
             tools[selectedTool].OnSelection(info);
         }
-
-        
     }
 
     void EntityMode () {
@@ -664,6 +669,7 @@ public class TerrainEditorManager : MonoBehaviour {
 public struct ToolUseInfo {
     public Vector2Int initPos;
     public Vector2Int currentPos;
+    public bool hasMovedSinceLastFrame;
     public TerrainLayers layer;
     public int materialID;
     public BaseBrushAsset brushes;

@@ -14,4 +14,8 @@ public class SaveFileData {
     public ushort goldenShellsTotal;
 
     public byte currentChaptre;
+
+    public byte mainVersionNumber;
+    public byte secondVersionNumber;
+    public byte bugfixVersionNumber;
 }

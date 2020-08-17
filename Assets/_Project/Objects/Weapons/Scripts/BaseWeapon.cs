@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class WeaponPlayerData {
     public PlayerController owner;
-    public float timeOfPress;
-    public float lastAttackTime;
+    public float pressTime;
+    public float attackTime;
     public AttackSlot attackSlot; 
 }
 
@@ -52,6 +52,10 @@ public abstract class BaseWeapon : ScriptableObject {
     /// Called the frame the player releases the attack button
     /// </summary>
     public virtual void OnReleaseAttack (ref WeaponPlayerData data, Vector2 dir, Vector2 pos, float angle) {
+    }
+
+    public virtual void OnWeaponEquippedUpdate (ref WeaponPlayerData data) {
+
     }
 
     public virtual void OnUpdateIndicators (ref WeaponPlayerData data) {

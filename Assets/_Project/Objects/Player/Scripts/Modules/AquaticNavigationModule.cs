@@ -18,27 +18,22 @@ public class AquaticNavigationModule : BasePlayerModule {
 
     // Direction
     public override void UpdateStatus (PlayerInfo info) {
-        int accDirX = 0;
-        int accDirY = 0;
-        if(Input.GetKey(KeyCode.A) && info.pc.isControlledLocally)
-            accDirX--;
-        if(Input.GetKey(KeyCode.D) && info.pc.isControlledLocally)
-            accDirX++;
-        if(Input.GetKey(KeyCode.W) || info.status.onGoingJump && info.pc.isControlledLocally)
-            accDirY++;
-        if(Input.GetKey(KeyCode.S) && !info.status.onGoingJump && info.pc.isControlledLocally)
-            accDirY--;
+        float dirX = info.status.dir.x;
+        float dirY = info.status.dir.y;
+        if(info.status.onGoingJump) {
+            dirY = 1f;
+        }
         
-        if(groundNavigation != null && info.status.isGrounded && !(accDirY > 0)) {
+        if(groundNavigation != null && info.status.isGrounded && !(dirY > 0)) {
             groundNavigation.UpdateStatus(info);
             return;
         }
 
         #region Direction
-        Vector2 targetDir = new Vector2(info.status.isGrounded ? 0 : accDirX, accDirY);
+        Vector2 targetDir = new Vector2(info.status.isGrounded ? 0 : dirX, dirY);
         float blend = 1f - Mathf.Pow(1f - directionSmoothingFactor, Time.deltaTime * directionSmoothingSpeed);
 
-        bool isCurrentDirectionNull = accDirX == 0 && accDirY == 0;
+        bool isCurrentDirectionNull = dirX == 0 && dirY == 0;
 
         if(info.status.wasLastDirNull && !isCurrentDirectionNull) {
             info.status.combinedDirection = Vector2.Lerp(targetDir, info.rbody.velocity.normalized, info.rbody.velocity.magnitude * directionSmoothVelInfluence);
@@ -68,7 +63,7 @@ public class AquaticNavigationModule : BasePlayerModule {
             info.status.combinedDirection = Vector2.right;
         }
 
-        info.status.wasLastDirNull = accDirX == 0 && accDirY == 0;
+        info.status.wasLastDirNull = dirX == 0 && dirY == 0;
         #endregion
 
         #region Propulsion
@@ -77,7 +72,7 @@ public class AquaticNavigationModule : BasePlayerModule {
             (info.rbody.isCollidingDown ? -1f : 0f) + (info.rbody.isCollidingUp ? 1f : 0f)
         );
 
-        if(accDirX != 0f || accDirY != 0f) {
+        if(dirX != 0f || dirY != 0f) {
             if(wallNormal == Vector2.zero) {
                 info.status.propulsionValue += propulsionAcc * Time.deltaTime;
             } else {

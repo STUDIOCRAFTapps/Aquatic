@@ -60,6 +60,7 @@ MonoBehaviour:
   playerStates:
   - {fileID: 11400000, guid: 6ab89d1f16a5ed74b97cb9d46a1cd249, type: 2}
   - {fileID: 11400000, guid: 3eb05373481f0ff4394f2e6000510356, type: 2}
+  - {fileID: 11400000, guid: 74c17c06ccd5d8b4288b240a2826cf86, type: 2}
   currentState: {fileID: 0}
   playerSettings:
     groundHeightCheck: 0.01

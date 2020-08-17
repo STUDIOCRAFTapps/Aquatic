@@ -94,15 +94,14 @@ public class VisualChunkManager : MonoBehaviour {
     }
 
     public void UnloadChunkAt (Vector2Int chunkPosition) {
-        long hash = Hash.hVec2Int(chunkPosition);
+        long hash = Hash.longFrom2D(chunkPosition);
         if(!visualChunks.TryGetValue(hash, out VisualChunk vc)) {
-            Debug.Log("Unload error");
             return;
         }
 
         vc.gameObject.SetActive(false);
         PathgridManager.inst.SetNodeChunkAsUnused(chunkPosition);
-        visualChunks.Remove(Hash.hVec2Int(chunkPosition));
+        visualChunks.Remove(Hash.longFrom2D(chunkPosition));
         unusedVisualChunkPool.Enqueue(vc);
     }
 
@@ -135,7 +134,7 @@ public class VisualChunkManager : MonoBehaviour {
         unusedMobileChunkPool.Enqueue(mc);
 
         if(save) {
-            WorldSaving.inst.SaveChunk(mc.mobileDataChunk);
+            WorldSaving.inst.SaveMobileChunk(mc.mobileDataChunk);
         }
 
         if(removeFromRegions) {
@@ -152,15 +151,15 @@ public class VisualChunkManager : MonoBehaviour {
     VisualChunk GetNewVisualChunk (Vector2Int chunkPosition) {
         VisualChunk unusedChunk;
 
-        if(visualChunks.TryGetValue(Hash.hVec2Int(chunkPosition), out VisualChunk visualChunk)) {
+        if(visualChunks.TryGetValue(Hash.longFrom2D(chunkPosition), out VisualChunk visualChunk)) {
             unusedChunk = visualChunk;
         } else if(unusedVisualChunkPool.Count > 0) {
             unusedChunk = unusedVisualChunkPool.Dequeue();
             unusedChunk.gameObject.SetActive(true);
-            visualChunks.Add(Hash.hVec2Int(chunkPosition), unusedChunk);
+            visualChunks.Add(Hash.longFrom2D(chunkPosition), unusedChunk);
         } else {
             unusedChunk = Instantiate(chunkPrefab, TerrainManager.inst.terrainRoot).GetComponent<VisualChunk>();
-            visualChunks.Add(Hash.hVec2Int(chunkPosition), unusedChunk);
+            visualChunks.Add(Hash.longFrom2D(chunkPosition), unusedChunk);
         }
         
         unusedChunk.Initiate(chunkPosition, true);
@@ -194,7 +193,7 @@ public class VisualChunkManager : MonoBehaviour {
     }
 
     public VisualChunk GetVisualChunkAt (Vector2Int chunkPos) {
-        if(visualChunks.TryGetValue(Hash.hVec2Int(chunkPos), out VisualChunk visualChunk)) {
+        if(visualChunks.TryGetValue(Hash.longFrom2D(chunkPos), out VisualChunk visualChunk)) {
             return visualChunk;
         } else {
             return null;
@@ -224,11 +223,11 @@ public class VisualChunkManager : MonoBehaviour {
                     }
                 }
                 Handles.Label((kvp.Value.position + Vector2.up) * 16,
-                    $"LoadC: {kvp.Value.loadCount}\nTimerR?: {isTimerRunning}\nJobsC: {cjm.jobs.Count}" +
+                    $"LoadC: {kvp.Value.loaders.Count}\nTimerR?: {isTimerRunning}\nJobsC: {cjm.jobs.Count}" +
                     $"\nLState? {cjm.targetLoadState == JobState.Loaded}\nL{loadJobCount} U{unloadJobCount} S{saveJobCount}" +
                     $" R{runningJobCount}");
             } else {
-                Handles.Label((kvp.Value.position + Vector2.up) * 16, $"LoadC: {kvp.Value.loadCount}\nTimerR?: {isTimerRunning}");
+                Handles.Label((kvp.Value.position + Vector2.up) * 16, $"LoadC: {kvp.Value.loaders.Count}\nTimerR?: {isTimerRunning}");
             }
         }
         foreach(KeyValuePair<long, ChunkJobManager> kvp in TerrainManager.inst.chunkJobsManager) {

@@ -174,7 +174,7 @@ public class EntityManager : MonoBehaviour {
         Debug.Log("Change shitty uid system, you know what you know how");
         
         StartNewChunkJobAt(
-            basicUID, 
+            uid, 
             JobState.Loaded, 
             GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly,
             null, null, null
@@ -192,7 +192,7 @@ public class EntityManager : MonoBehaviour {
         EntityData entityData = GetNewEntityData(gid);
 
         StartNewChunkJobAt(
-            basicUID,
+            uid,
             JobState.Loaded,
             GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly,
             () => { // JOB
@@ -250,7 +250,7 @@ public class EntityManager : MonoBehaviour {
         
         entity.gameObject.SetActive(false);
         StartNewChunkJobAt(
-            basicUID,
+            entity.entityData.uid,
             JobState.Unloaded,
             GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly,
             () => { // JOB
@@ -276,7 +276,7 @@ public class EntityManager : MonoBehaviour {
 
     public void SaveEntity (Entity entity) {
         StartNewChunkJobAt(
-            basicUID,
+            entity.entityData.uid,
             JobState.Saving,
             GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly,
             () => { // JOB

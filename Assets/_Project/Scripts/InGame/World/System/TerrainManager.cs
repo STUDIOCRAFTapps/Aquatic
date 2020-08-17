@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -7,6 +8,8 @@ using UnityEngine;
 using MLAPI;
 using MLAPI.Messaging;
 using MLAPI.Transports;
+using MLAPI.Serialization.Pooled;
+using MLAPI.Serialization;
 
 public class TerrainManager : NetworkedBehaviour {
 
@@ -16,8 +19,9 @@ public class TerrainManager : NetworkedBehaviour {
     public Queue<DataChunk> unusedChunks;
     public Queue<int> mobileChunkToReload;
     ConcurrentQueue<Action> mainThreadCallbacks;
-    public Dictionary<long, Vector2Int> chunkToReload;
-    public Dictionary<long, ChunkJobManager> chunkJobsManager;
+
+    public Dictionary<long, ChunkJobManager> chunkJobsManager = new Dictionary<long, ChunkJobManager>();
+    public Dictionary<long, Vector2Int> chunkToReloadVisual;
 
     [Header("Reference")]
     public GeneralAsset generalAsset;
@@ -47,10 +51,10 @@ public class TerrainManager : NetworkedBehaviour {
         currentMobileIndex = PlayerPrefs.GetInt("currentMobileIndex", 0);
 
         mainThreadCallbacks = new ConcurrentQueue<Action>();
-        chunkJobsManager = new Dictionary<long, ChunkJobManager>();
+        
         chunks = new Dictionary<long, DataChunk>();
         unusedChunks = new Queue<DataChunk>();
-        chunkToReload = new Dictionary<long, Vector2Int>();
+        chunkToReloadVisual = new Dictionary<long, Vector2Int>();
         mobileChunkToReload = new Queue<int>();
         GeneralAsset.inst = generalAsset;
         generalAsset.Build();
@@ -69,10 +73,10 @@ public class TerrainManager : NetworkedBehaviour {
 
     private void LateUpdate () {
         if(VisualChunkManager.inst != null) {
-            foreach(KeyValuePair<long, Vector2Int> kvp in chunkToReload) {
+            foreach(KeyValuePair<long, Vector2Int> kvp in chunkToReloadVisual) {
                 VisualChunkManager.inst?.LoadChunkAt(kvp.Value);
             }
-            chunkToReload.Clear();
+            chunkToReloadVisual.Clear();
             while(mobileChunkToReload?.Count > 0) {
                 if(VisualChunkManager.inst != null) {
                     int key = mobileChunkToReload.Dequeue();
@@ -103,7 +107,7 @@ public class TerrainManager : NetworkedBehaviour {
     // Since chunks are loaded in threads, sometimes the chunks may not be present even if they have been requested
     // by the chunk loader. To know in what state they should be at an exact moment, this function may be called.
     public JobState GetChunkLoadState (Vector2Int chunkPosition) {
-        long key = Hash.hVec2Int(chunkPosition);
+        long key = Hash.longFrom2D(chunkPosition);
         if(chunkJobsManager.TryGetValue(key, out ChunkJobManager cjm)) {
             return cjm.targetLoadState;
         } else {
@@ -112,7 +116,7 @@ public class TerrainManager : NetworkedBehaviour {
     }
 
     public void StartNewChunkJobAt (Vector2Int chunkPosition, JobState newLoadState, bool isReadonlyChunk, Action job, Action callback, Action cancelCallback) {
-        long key = Hash.hVec2Int(chunkPosition);
+        long key = Hash.longFrom2D(chunkPosition);
         if(chunkJobsManager.TryGetValue(key, out ChunkJobManager cjm)) {
             cjm.StartNewJob(newLoadState, isReadonlyChunk, job, callback, cancelCallback);
         } else {
@@ -122,16 +126,30 @@ public class TerrainManager : NetworkedBehaviour {
         }
     }
 
+    public void RemoveJobManager (Vector2Int chunkPosition) {
+        RemoveJobManager(Hash.longFrom2D(chunkPosition));
+    }
+
     public void RemoveJobManager (long key) {
         if(chunkJobsManager.ContainsKey(key)) {
             chunkJobsManager.Remove(key);
+        }
+    }
+
+    public void ForceUnloadJobManager (Vector2Int chunkPosition) {
+        ForceUnloadJobManager(Hash.longFrom2D(chunkPosition));
+    }
+
+    public void ForceUnloadJobManager (long key) {
+        if(chunkJobsManager.TryGetValue(key, out ChunkJobManager cjm)) {
+            cjm.ForceUnload();
         }
     }
     #endregion
 
     #region Default Chunks
     public bool GetChunkAtPosition (Vector2Int position, out DataChunk dataChunk) {
-        if(chunks.TryGetValue(Hash.hVec2Int(position), out DataChunk value)) {
+        if(chunks.TryGetValue(Hash.longFrom2D(position), out DataChunk value)) {
             dataChunk = value;
             return true;
         } else {
@@ -156,34 +174,39 @@ public class TerrainManager : NetworkedBehaviour {
     }
 
     public void AddDataChunkToDictionnairy (DataChunk dataChunk) {
-        chunks.Add(Hash.hVec2Int(dataChunk.chunkPosition), dataChunk);
+        chunks.Add(Hash.longFrom2D(dataChunk.chunkPosition), dataChunk);
     }
 
-    public void SetDataChunkAsUnused (Vector2Int chunkPosition, bool doEnqueueToUnusedQueue) {
-        long key = Hash.hVec2Int(chunkPosition);
+    public void RemoveDataChunkFromDictionnairy (Vector2Int chunkPosition, bool doEnqueueToUnusedQueue) {
+        long key = Hash.longFrom2D(chunkPosition);
         if(chunks.TryGetValue(key, out DataChunk dataChunk)) {
             chunks.Remove(key);
-            if(doEnqueueToUnusedQueue) {
-                unusedChunks.Enqueue(dataChunk);
-            }
+        }
+        if(doEnqueueToUnusedQueue) {
+            EnqueueDataChunkToUnusedQueue(dataChunk);
         }
     }
 
     public void EnqueueDataChunkToUnusedQueue (DataChunk dataChunk) {
-        /*long key = Hash.hVec2Int(dataChunk.chunkPosition);
+        // This should NOT be needed but I will leave it there for the time being
+        long key = Hash.longFrom2D(dataChunk.chunkPosition);
         if(chunks.ContainsKey(key)) {
-            Debug.Log("This has been needed");
             chunks.Remove(key);
-        }*/
+        }
+        
         unusedChunks.Enqueue(dataChunk);
     }
 
-    public void RefreshSurroundingChunks (Vector2Int chunkPosition) {
+    public void RefreshSurroundingChunks (Vector2Int chunkPosition, bool cropMiddleForCenter = true) {
         int index = 0;
         for(int y = -1; y < 2; y++) {
             for(int x = -1; x < 2; x++) {
-                if(chunks.TryGetValue(Hash.hVec2Int(chunkPosition + new Vector2Int(x, y)), out DataChunk value)) {
-                    value.RefreshTiles(index);
+                if(chunks.TryGetValue(Hash.longFrom2D(chunkPosition + new Vector2Int(x, y)), out DataChunk value)) {
+                    if(x == 0 && y == 0 && cropMiddleForCenter) {
+                        value.RefreshTiles(index, false);
+                    } else {
+                        value.RefreshTiles(index);
+                    }
                 }
                 index++;
             }
@@ -192,12 +215,23 @@ public class TerrainManager : NetworkedBehaviour {
 
     public void QueueChunkReloadAtTile (int x, int y, TerrainLayers layer) {
         Vector2Int cpos = GetChunkPositionAtTile(x, y);
+        long hashKey = Hash.longFrom2D(cpos);
+        if(chunkToReloadVisual.ContainsKey(hashKey)) {
+            return;
+        }
+
+        long key = Hash.hVec2Int(cpos.x, cpos.y);
+        bool valid = 
+            !NetworkAssistant.inst.IsServer ||
+            (ChunkLoader.inst.loadCounters.ContainsKey(key) &&
+            ChunkLoader.inst.loadCounters[key].loaders.Contains(NetworkAssistant.inst.ClientID));
+
+        if(!valid) {
+            return;
+        }
 
         if(GetChunkAtPosition(cpos, out DataChunk dataChunk)) {
-            long hashKey = Hash.hVec2Int(cpos);
-            if(!chunkToReload.ContainsKey(hashKey)) {
-                chunkToReload.Add(hashKey, cpos);
-            }
+            chunkToReloadVisual.Add(hashKey, cpos);
         }
     }
     #endregion
@@ -305,7 +339,11 @@ public class TerrainManager : NetworkedBehaviour {
         return false;
     }
 
-    public bool SetGlobalIDAt (int x, int y, TerrainLayers layer, int globalID, MobileDataChunk mdc = null) {
+    public bool SetGlobalIDAt (int x, int y, TerrainLayers layer, int globalID, MobileDataChunk mdc = null, bool replicateOnClients = true) {
+        if(NetworkAssistant.inst.IsServer && replicateOnClients) {
+            return false;
+        }
+
         if(mdc != null) {
             int oldGID = mdc.GetGlobalID(x, y, layer);
             if(oldGID != 0) {
@@ -334,7 +372,10 @@ public class TerrainManager : NetworkedBehaviour {
             }
             RefreshTilesAround(x, y, layer);
 
-            InvokeServerRpc(SetGlobalIDAtServer, x, y, layer, globalID);
+            if(replicateOnClients) {
+                InvokeClientRpcOnEveryone(SetGlobalIDAtClient, x, y, layer, globalID);
+
+            }
 
             return true;
         }
@@ -408,6 +449,14 @@ public class TerrainManager : NetworkedBehaviour {
     #region Tiles
     [ServerRPC(RequireOwnership = false)]
     private void SetGlobalIDAtServer (int x, int y, TerrainLayers layer, int globalID) {
+        if(NetworkAssistant.inst.serverPlayerData[ExecutingRpcSender].permissions.editingPermissions != EditingPermissions.EditAllowed) {
+            return;
+        }
+        if(NetworkAssistant.inst.serverPlayerData[ExecutingRpcSender].permissions.inGameEditingPermissions != InGameEditingPermissions.FlyEdit && 
+            GameManager.inst.engineMode == EngineModes.Play) {
+            return;
+        }
+
         if(!IsHost) {
             Vector2Int cpos = GetChunkPositionAtTile(x, y);
 
@@ -447,16 +496,96 @@ public class TerrainManager : NetworkedBehaviour {
     }
     #endregion
 
+    #region Tools
+    public void UseToolNetworkRequest (BaseToolAsset bta, Action<BitWriter> encodeAction) {
+        if(!NetworkAssistant.inst.IsClient) {
+            return;
+        }
+
+        //Note: Tool's action should now only be executed once the server validates the action, except for brush action with a diameter of 3 or less (< 9 tile edits)
+        if(NetworkAssistant.inst.clientPlayerDataCopy.permissions.editingPermissions != EditingPermissions.EditAllowed) {
+            return;
+        }
+        if(NetworkAssistant.inst.clientPlayerDataCopy.permissions.inGameEditingPermissions != InGameEditingPermissions.FlyEdit &&
+            GameManager.inst.engineMode == EngineModes.Play) {
+            return;
+        }
+
+        using(PooledBitStream stream = PooledBitStream.Get()) {
+            using(PooledBitWriter writer = PooledBitWriter.Get(stream)) {
+                writer.WriteInt32(bta.gid);
+                encodeAction(writer);
+                stream.Position = 0;
+                InvokeServerRpcPerformance(UseToolServer, stream, "Tile");
+            }
+        }
+    }
+
+    [ServerRPC(RequireOwnership = false)]
+    void UseToolServer (ulong clientId, Stream stream) {
+        if(NetworkAssistant.inst.serverPlayerData[ExecutingRpcSender].permissions.editingPermissions != EditingPermissions.EditAllowed) {
+            return;
+        }
+        if(NetworkAssistant.inst.serverPlayerData[ExecutingRpcSender].permissions.inGameEditingPermissions != InGameEditingPermissions.FlyEdit &&
+            GameManager.inst.engineMode == EngineModes.Play) {
+            return;
+        }
+
+        InvokeClientRpcOnEveryonePerformance(UseToolClient, stream, "Tile");
+    }
+
+    [ClientRPC()]
+    void UseToolClient (ulong clientId, Stream stream) {
+        using(PooledBitReader reader = PooledBitReader.Get(stream)) {
+            GeneralAsset.inst.GetToolAssetFromGlobalID(reader.ReadInt32()).DecodeAction(reader);
+        }
+    }
+    #endregion
+
     #region Default Chunks
     [ClientRPC]
     private void GetChunkClient (int chunkPositionX, int chunkPositionY, DataChunk chunk) {
-        ChunkLoader.inst.GetChunkAt(new Vector2Int(chunkPositionX, chunkPositionY), chunk);
+        ChunkLoader.inst.GetChunkFromServerAt(new Vector2Int(chunkPositionX, chunkPositionY), chunk);
+    }
+
+    [ClientRPC]
+    private void GetChunkClient (ulong clientId, Stream stream) {
+        using(PooledBitReader reader = PooledBitReader.Get(stream)) {
+            int chunkPositionX = reader.ReadInt32();
+            int chunkPositionY = reader.ReadInt32();
+            Vector2Int chunkPosition = new Vector2Int(chunkPositionX, chunkPositionY);
+            DataChunk dataChunk = GetNewDataChunk(chunkPosition, false);
+            WorldSaving.inst.ReadChunkFromNetworkStream(dataChunk, reader);
+
+            ChunkLoader.inst.GetChunkFromServerAt(new Vector2Int(chunkPositionX, chunkPositionY), dataChunk);
+        }
     }
 
     public void SendChunkToClient (ulong clientID, int chunkPositionX, int chunkPositionY, DataChunk chunk) {
-        InvokeClientRpcOnClient(GetChunkClient, clientID, chunkPositionX, chunkPositionY, chunk, "Chunk");
+        if(ChunkLoader.inst.loadCounters.TryGetValue(Hash.hVec2Int(chunkPositionX, chunkPositionY), out ChunkLoadCounter clc)) {
+            if(clc.lastSendTime.ContainsKey(clientID)) {
+                if(NetworkAssistant.inst.Time - clc.lastSendTime[clientID] < unloadTimer - 0.2f) {
+                    // Sending too soond
+
+                    return;
+                }
+
+                clc.lastSendTime[clientID] = NetworkAssistant.inst.Time;
+            } else {
+                clc.lastSendTime.Add(clientID, NetworkAssistant.inst.Time);
+            }
+        }
+
+        using(PooledBitStream stream = PooledBitStream.Get())
+        using(PooledBitWriter writer = PooledBitWriter.Get(stream)) {
+            writer.WriteInt32(chunkPositionX);
+            writer.WriteInt32(chunkPositionY);
+            WorldSaving.inst.WriteChunkToNetworkStream(chunk, writer);
+
+            InvokeClientRpcOnClientPerformance(GetChunkClient, clientID, stream, "Chunk");
+        }
     }
-    #endregion'
+    #endregion
     #endregion
 
     #region Utils

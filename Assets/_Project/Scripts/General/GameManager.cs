@@ -51,17 +51,22 @@ public class GameManager : MonoBehaviour {
     public EngineModes engineMode {
         get => _engineMode;
         set {
-            ChunkLoader.inst.UnloadAll(_engineMode == EngineModes.Edit);
-            if(value == EngineModes.Edit) {
-                CompleteEntitySave();
+            if(NetworkAssistant.inst.IsServer) {
+                ChunkLoader.inst.UnloadAll(_engineMode == EngineModes.Edit);
+                if(value == EngineModes.Edit) {
+                    CompleteEntitySave();
+                }
             }
             _engineMode = value;
-            if(_engineMode == EngineModes.Play) {
-                WorldSaving.inst.ClearPlayFolders();
-            }
+            if(NetworkAssistant.inst.IsServer) {
+                if(_engineMode == EngineModes.Play) {
+                    WorldSaving.inst.ClearPlayFolders();
+                }
 
-            WorldSaving.inst.OnReloadEngine();
-            ChunkLoader.inst.ReloadAll();
+                WorldSaving.inst.OnReloadEngine();
+                ChunkLoader.inst.LoadAll();
+            }
+            SetPlayersFlyMode(_engineMode == EngineModes.Edit);
 
             OnChangeEngineMode?.Invoke();
         }
@@ -83,6 +88,7 @@ public class GameManager : MonoBehaviour {
     }
     #endregion
 
+    #region Players
     public PlayerController GetNearestPlayer (Vector2 position) {
         int nearestPlayerIndex = -1;
         float smallestDistance = float.PositiveInfinity;
@@ -99,6 +105,15 @@ public class GameManager : MonoBehaviour {
         }
         return allPlayers[nearestPlayerIndex];
     }
+
+    void SetPlayersFlyMode (bool flyMode) {
+        foreach(PlayerController pc in allPlayers) {
+            if(pc.isControlledLocally) {
+                pc.status.isFlying = flyMode;
+            }
+        }
+    }
+    #endregion
 
     #region Saving
     public void AutoSaves () {
@@ -127,7 +142,7 @@ public class GameManager : MonoBehaviour {
         foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
             if(Time.time - kvp.Value.timeOfLastAutosave > autoSaveTimeLimit) {
                 kvp.Value.timeOfLastAutosave = Time.time;
-                WorldSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
+                WorldSaving.inst.SaveMobileChunk(kvp.Value.mobileDataChunk);
             }
         }
         foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
@@ -146,11 +161,14 @@ public class GameManager : MonoBehaviour {
     }
 
     public void CompleteSave () {
+        if(TerrainManager.inst == null) {
+            return;
+        }
         foreach(KeyValuePair<long, DataChunk> kvp in TerrainManager.inst.chunks) {
             WorldSaving.inst.SaveChunk(kvp.Value, currentDataLoadMode == DataLoadMode.TryReadonly);
         }
         foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
-            WorldSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
+            WorldSaving.inst.SaveMobileChunk(kvp.Value.mobileDataChunk);
         }
         foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
             EntityManager.inst.SaveEntity(kvp.Value);
@@ -166,7 +184,7 @@ public class GameManager : MonoBehaviour {
             EntityManager.inst.SaveEntity(kvp.Value);
         }
         foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
-            WorldSaving.inst.SaveChunk(kvp.Value.mobileDataChunk);
+            WorldSaving.inst.SaveMobileChunk(kvp.Value.mobileDataChunk);
         }
     }
     #endregion

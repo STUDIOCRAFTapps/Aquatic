@@ -115,11 +115,14 @@ public struct ChunkLoadBounds {
 
 public class ChunkLoadCounter {
     public Vector2Int position;
-    public int loadCount;
+    public HashSet<ulong> loaders;
+    public Dictionary<ulong, float> lastSendTime;
     public CancellableTimer timer;
 
     public ChunkLoadCounter (Vector2Int position) {
         this.position = position;
+        loaders = new HashSet<ulong>();
+        lastSendTime = new Dictionary<ulong, float>();
     }
 }
 
@@ -174,6 +177,7 @@ public class ThreadedJobManager {
 
     public virtual void ForceUnload () {
         targetLoadState = JobState.Unloaded;
+        CancelAllJobs();
     }
 
     public virtual void RemoveJob (ThreadedJob job) {
@@ -254,14 +258,14 @@ public class ChunkJobManager : ThreadedJobManager {
     public override void ForceUnload () {
         base.ForceUnload();
         if(jobs.Count == 0) {
-            TerrainManager.inst.RemoveJobManager(Hash.hVec2Int(position));
+            TerrainManager.inst.RemoveJobManager(position);
         }
     }
 
     public override void RemoveJob (ThreadedJob job) {
         base.RemoveJob(job);
         if(jobs.Count == 0 && targetLoadState == JobState.Unloaded) {
-            TerrainManager.inst.RemoveJobManager(Hash.hVec2Int(position));
+            TerrainManager.inst.RemoveJobManager(Hash.longFrom2D(position));
         }
     }
 }

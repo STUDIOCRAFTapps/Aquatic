@@ -18,7 +18,7 @@ public class PathgridManager : MonoBehaviour {
 
     #region NodeChunk
     public ReadOnlyNodeChunk GetNodeChunkAt (Vector2Int position) {
-        if(nodeChunks.TryGetValue(Hash.hVec2Int(position), out ReadOnlyNodeChunk chunk)) {
+        if(nodeChunks.TryGetValue(Hash.longFrom2D(position), out ReadOnlyNodeChunk chunk)) {
             return chunk;
         } else {
             ReadOnlyNodeChunk newNodeChunk = null;
@@ -28,13 +28,13 @@ public class PathgridManager : MonoBehaviour {
             } else {
                 newNodeChunk = new ReadOnlyNodeChunk(TerrainManager.inst.chunkSize);
             }
-            nodeChunks.Add(Hash.hVec2Int(position), newNodeChunk);
+            nodeChunks.Add(Hash.longFrom2D(position), newNodeChunk);
             return newNodeChunk;
         }
     }
 
     public ReadOnlyNodeChunk GetNodeChunkIfExists (Vector2Int position) {
-        if(nodeChunks.TryGetValue(Hash.hVec2Int(position), out ReadOnlyNodeChunk chunk)) {
+        if(nodeChunks.TryGetValue(Hash.longFrom2D(position), out ReadOnlyNodeChunk chunk)) {
             return chunk;
         } else {
             return null;
@@ -42,9 +42,9 @@ public class PathgridManager : MonoBehaviour {
     }
 
     public void SetNodeChunkAsUnused (Vector2Int position) {
-        if(nodeChunks.TryGetValue(Hash.hVec2Int(position), out ReadOnlyNodeChunk chunk)) {
+        if(nodeChunks.TryGetValue(Hash.longFrom2D(position), out ReadOnlyNodeChunk chunk)) {
             unusedNodeChunks.Enqueue(chunk);
-            nodeChunks.Remove(Hash.hVec2Int(position));
+            nodeChunks.Remove(Hash.longFrom2D(position));
         } else {
             Debug.Log("NodeChunk at " + position + " should've been removed but it doesn't even exist");
         }
