@@ -106,6 +106,12 @@ public class ChunkLoader : MonoBehaviour {
             chunkStateTasks.Add(key, new ChunkStateTask(chunkPosition));
         }
 
+        if(state == JobState.Loaded) {
+            Debug.Log("Load: " + chunkPosition);
+        } else {
+            Debug.Log("Unload: " + chunkPosition);
+        }
+
         chunkStateTasks[key].SetObjective(clientID, state);
     }
     #endregion
@@ -227,7 +233,7 @@ public class ChunkLoader : MonoBehaviour {
         }
 
         if(!loadCounters[key].loaders.Remove(clientID)) {
-            Debug.Log("Removing client failed.");
+            Debug.LogWarning($"Removing client failed. {chunkPosition}");
         }
 
         //THIS IS A VALID STATE
@@ -582,20 +588,12 @@ public class ChunkStateTask {
 
         if(clientTaskObjective == JobState.Loaded) {
             // When adding a new load task request, the unload request for the same client, if present, must be removed
-            if(!loadClientsID.Contains(clientID)) {
-                loadClientsID.Add(clientID);
-            }
-            if(unloadClientsID.Contains(clientID)) {
-                unloadClientsID.Remove(clientID);
-            }
+            loadClientsID.Add(clientID);
+            unloadClientsID.Remove(clientID);
         } else if(clientTaskObjective == JobState.Unloaded) {
             // When adding a new unload task request, the load request for the same client, if present, must be removed
-            if(!unloadClientsID.Contains(clientID)) {
-                unloadClientsID.Add(clientID);
-            }
-            if(loadClientsID.Contains(clientID)) {
-                loadClientsID.Remove(clientID);
-            }
+            unloadClientsID.Add(clientID);
+            loadClientsID.Remove(clientID);
         }
     }
 

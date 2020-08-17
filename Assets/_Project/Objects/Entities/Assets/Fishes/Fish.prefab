@@ -4867,7 +4867,6 @@ GameObject:
   - component: {fileID: 1433221127395768527}
   - component: {fileID: 3428889606896973296}
   - component: {fileID: 3428889606896973297}
-  - component: {fileID: -8447081985894033329}
   - component: {fileID: -8026972494536518820}
   m_Layer: 8
   m_Name: Fish
@@ -5010,18 +5009,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.875, y: 1.25}
   m_EdgeRadius: 0
---- !u!114 &-8447081985894033329
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3428889606896973311}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8c8cdc0fa313c3f4dbb798d3434c82af, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &-8026972494536518820
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5034,6 +5021,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2567e7cf09f1d484ca48f17eced0e40d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  disableInterpolation: 0
 --- !u!1 &3474217778189179642
 GameObject:
   m_ObjectHideFlags: 0

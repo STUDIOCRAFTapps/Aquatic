@@ -1,26 +1,28 @@
 ﻿using UnityEngine;
 
-[RequireComponent(typeof(InterpolatedTransformUpdater))]
 public class InterpolatedTransform : MonoBehaviour {
 
-    public bool useNetworkControl = false;
+    #region Monobehaviour and References
+    public bool disableInterpolation = false;
     
     private Vector3 currentOffset;
     private TransformData[] lastTransforms;
     private int newTransformIndex;
 
     public void Start () {
-        CameraNavigator.inst.OnPreRenderEvent += PreRender;
-        CameraNavigator.inst.OnPostRenderEvent += PostRender;
+        CameraNavigator.inst.OnApplyLerpEvent += ApplyLerp;
+        CameraNavigator.inst.OnRevertLerpEvent += RevertLerp;
     }
 
     private void OnDestroy () {
         if(CameraNavigator.inst != null) {
-            CameraNavigator.inst.OnPreRenderEvent -= PreRender;
-            CameraNavigator.inst.OnPostRenderEvent -= PostRender;
+            CameraNavigator.inst.OnApplyLerpEvent -= ApplyLerp;
+            CameraNavigator.inst.OnRevertLerpEvent -= RevertLerp;
         }
     }
+    #endregion
 
+    #region Set Values
     public void SetTransformPosition (Vector3 position) {
         transform.localPosition = position;
         lastTransforms[0].position = position;
@@ -46,16 +48,17 @@ public class InterpolatedTransform : MonoBehaviour {
     void OnEnable () {
         ClearAndResampleData();
     }
+    #endregion
 
-    private void PreRender () {
-        if(useNetworkControl) {
+    private void ApplyLerp () {
+        if(disableInterpolation) {
             return;
         }
 
         TransformData newestTransform = lastTransforms[newTransformIndex];
         TransformData olderTransform = lastTransforms[OldTransformIndex()];
 
-        if(useNetworkControl) {
+        if(disableInterpolation) {
             return;
         }
         transform.localPosition = Vector3.Lerp(
@@ -74,15 +77,15 @@ public class InterpolatedTransform : MonoBehaviour {
         transform.localPosition += currentOffset;
     }
 
-    private void PostRender () {
-        if(useNetworkControl) {
+    private void RevertLerp () {
+        if(disableInterpolation) {
             return;
         }
         ApplyData(lastTransforms[newTransformIndex]);
     }
 
-    public void LateFixedUpdate () {
-        if(useNetworkControl) {
+    void FixedUpdate () {
+        if(disableInterpolation) {
             return;
         }
 
@@ -91,11 +94,11 @@ public class InterpolatedTransform : MonoBehaviour {
         lastTransforms[newTransformIndex] = SampleData();
     }
 
+    #region Transform Data
     private int OldTransformIndex () {
         return 1 - newTransformIndex;
     }
 
-    #region Transform Data
     private TransformData SampleData () {
         return new TransformData(
             transform.localPosition,

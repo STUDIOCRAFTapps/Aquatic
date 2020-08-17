@@ -85,13 +85,13 @@ public class LocalPlayer : NetworkedBehaviour {
             PlayerPermissions perms = NetworkAssistant.inst.serverPlayerData[ExecutingRpcSender].permissions;
 
             // If inside wall while playing, revert position
-            if(GameManager.inst.engineMode == EngineModes.Play) {
+            if(GameManager.inst.engineMode == EngineModes.Play && perms.inGameEditingPermissions == InGameEditingPermissions.None) {
                 if(PhysicsPixel.inst.BoundsCast(player.rbody.GetBoundFromColliderFakePosition(status.playerPos))) {
                     status.playerPos = player.status.playerPos;
                     status.velocity = player.status.velocity;
                     rollbackPlayer = true;
                 }
-                if(status.isFlying && perms.inGameEditingPermissions == InGameEditingPermissions.None) {
+                if(status.isFlying) {
                     status.playerPos = player.status.playerPos;
                     status.velocity = player.status.velocity;
                     status.isFlying = false;

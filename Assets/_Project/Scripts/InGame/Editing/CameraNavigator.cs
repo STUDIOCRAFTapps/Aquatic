@@ -28,21 +28,20 @@ public class CameraNavigator : MonoBehaviour {
     bool zoomIn = true;
 
     #region Events
-    public delegate void OnPreRenderHandler ();
-    public event OnPreRenderHandler OnPreRenderEvent;
+    public delegate void OnApplyLerp ();
+    public event OnApplyLerp OnApplyLerpEvent;
 
-    public delegate void OnPostRenderHandler ();
-    public event OnPostRenderHandler OnPostRenderEvent;
+    public delegate void OnPostApplyLerp ();
+    public event OnPostApplyLerp OnPostApplyLerpEvent;
 
-    private void OnPreCull () {
-        return;
-        OnPreRenderEvent?.Invoke();
-        PreRenderCameraUpdate();
+    public delegate void OnRevertLerpHandler ();
+    public event OnRevertLerpHandler OnRevertLerpEvent;
 
-    }
+    public delegate void OnPostRevertLerpHandler ();
+    public event OnPostRevertLerpHandler OnPostRevertLerpEvent;
 
     private void OnPostRender () {
-        OnPostRenderEvent?.Invoke();
+        OnRevertLerpEvent?.Invoke();
     }
     #endregion
 
@@ -50,21 +49,6 @@ public class CameraNavigator : MonoBehaviour {
         inst = this;
 
         initTargetRes = new Vector2Int(pixelPerfect.refResolutionX, pixelPerfect.refResolutionY); 
-    }
-    
-    void PreRenderCameraUpdate () {
-        if(!playerCenter) {
-            return;
-        }
-
-        if(playerFollowMode) {
-            maintainedVelocity = Vector2.zero;
-            transform.position = new Vector3(playerCenter.parent.position.x, playerCenter.parent.position.y, transform.position.z);
-
-            zoomIn = true;
-        } else {
-            zoomIn = false;
-        }
     }
 
     private void Update () {
@@ -97,9 +81,24 @@ public class CameraNavigator : MonoBehaviour {
         }
     }
 
+    void PostLerpCameraUpdate () {
+        if(!playerCenter) {
+            return;
+        }
+
+        if(playerFollowMode) {
+            maintainedVelocity = Vector2.zero;
+            transform.position = new Vector3(playerCenter.parent.position.x, playerCenter.parent.position.y, transform.position.z);
+
+            zoomIn = true;
+        } else {
+            zoomIn = false;
+        }
+    }
+
     private void LateUpdate () {
-        OnPreRenderEvent?.Invoke();
-        PreRenderCameraUpdate();
+        OnApplyLerpEvent?.Invoke();
+        PostLerpCameraUpdate();
     }
 
     public void CalculateResolution () {
