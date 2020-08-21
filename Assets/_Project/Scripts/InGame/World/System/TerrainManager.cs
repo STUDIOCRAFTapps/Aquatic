@@ -19,8 +19,9 @@ public class TerrainManager : NetworkedBehaviour {
     public Queue<DataChunk> unusedChunks;
     public Queue<int> mobileChunkToReload;
     ConcurrentQueue<Action> mainThreadCallbacks;
+    ConcurrentQueue<ThreadedJob> jobsToRun;
 
-    public Dictionary<long, ChunkJobManager> chunkJobsManager = new Dictionary<long, ChunkJobManager>();
+    public Dictionary<long, ChunkJobManager> chunkJobsManager;
     public Dictionary<long, Vector2Int> chunkToReloadVisual;
 
     [Header("Reference")]
@@ -51,10 +52,12 @@ public class TerrainManager : NetworkedBehaviour {
         currentMobileIndex = PlayerPrefs.GetInt("currentMobileIndex", 0);
 
         mainThreadCallbacks = new ConcurrentQueue<Action>();
+        jobsToRun = new ConcurrentQueue<ThreadedJob>();
         
         chunks = new Dictionary<long, DataChunk>();
         unusedChunks = new Queue<DataChunk>();
         chunkToReloadVisual = new Dictionary<long, Vector2Int>();
+        chunkJobsManager = new Dictionary<long, ChunkJobManager>();
         mobileChunkToReload = new Queue<int>();
         GeneralAsset.inst = generalAsset;
         generalAsset.Build();
@@ -64,10 +67,21 @@ public class TerrainManager : NetworkedBehaviour {
         invChunkSize = 1f / chunkSize;
     }
 
+    const int jobsPerFrame = 2;
     private void Update () {
         while(mainThreadCallbacks.Count > 0) {
             mainThreadCallbacks.TryDequeue(out Action result);
             result();
+        }
+
+        int jobCount = 0;
+        while(jobsToRun.Count > 0) {
+            if(jobCount > jobsPerFrame) {
+                break;
+            }
+            jobsToRun.TryDequeue(out ThreadedJob job);
+            job.Run();
+            jobCount++;
         }
     }
 
@@ -103,6 +117,10 @@ public class TerrainManager : NetworkedBehaviour {
         mainThreadCallbacks.Enqueue(callback);
     }
 
+    public void EnqueueJobToRun (ThreadedJob job) {
+        jobsToRun.Enqueue(job);
+    }
+
     // The chunks dictionnairy should be used for doing all your reads and writes for tile editing and entities.
     // Since chunks are loaded in threads, sometimes the chunks may not be present even if they have been requested
     // by the chunk loader. To know in what state they should be at an exact moment, this function may be called.
@@ -115,14 +133,14 @@ public class TerrainManager : NetworkedBehaviour {
         }
     }
 
-    public void StartNewChunkJobAt (Vector2Int chunkPosition, JobState newLoadState, bool isReadonlyChunk, Action job, Action callback, Action cancelCallback) {
+    public void StartNewChunkJobAt (Vector2Int chunkPosition, JobState newLoadState, bool isReadonlyChunk, Action job, Action callback, Action cancelCallback, bool runImidialty) {
         long key = Hash.longFrom2D(chunkPosition);
         if(chunkJobsManager.TryGetValue(key, out ChunkJobManager cjm)) {
-            cjm.StartNewJob(newLoadState, isReadonlyChunk, job, callback, cancelCallback);
+            cjm.StartNewJob(newLoadState, isReadonlyChunk, job, callback, cancelCallback, runImidialty);
         } else {
             ChunkJobManager newCjm = new ChunkJobManager(chunkPosition);
             chunkJobsManager.Add(key, newCjm);
-            newCjm.StartNewJob(newLoadState, isReadonlyChunk, job, callback, cancelCallback);
+            newCjm.StartNewJob(newLoadState, isReadonlyChunk, job, callback, cancelCallback, runImidialty);
         }
     }
 
@@ -339,10 +357,7 @@ public class TerrainManager : NetworkedBehaviour {
         return false;
     }
 
-    public bool SetGlobalIDAt (int x, int y, TerrainLayers layer, int globalID, MobileDataChunk mdc = null, bool replicateOnClients = true) {
-        if(NetworkAssistant.inst.IsServer && replicateOnClients) {
-            return false;
-        }
+    public bool SetGlobalIDAt (int x, int y, TerrainLayers layer, int globalID, MobileDataChunk mdc = null, bool replicateOnClients = false) {
 
         if(mdc != null) {
             int oldGID = mdc.GetGlobalID(x, y, layer);
@@ -372,9 +387,8 @@ public class TerrainManager : NetworkedBehaviour {
             }
             RefreshTilesAround(x, y, layer);
 
-            if(replicateOnClients) {
+            if(NetworkAssistant.inst.IsServer && replicateOnClients) {
                 InvokeClientRpcOnEveryone(SetGlobalIDAtClient, x, y, layer, globalID);
-
             }
 
             return true;

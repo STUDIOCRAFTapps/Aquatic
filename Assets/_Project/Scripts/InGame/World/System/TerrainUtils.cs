@@ -72,7 +72,7 @@ public struct ChunkLoadBounds {
     }
 
     public override string ToString ()
-        => $"{minimum}, {maximum}";
+        => $"({minimum}, {maximum})";
 
     public bool IsAreaNull ()
         => ((maximum.x - minimum.x) * (maximum.y - minimum.y)) <= 0f;
@@ -165,7 +165,7 @@ public class ThreadedJobManager {
         jobs = new List<ThreadedJob>(1);
     }
 
-    public virtual void StartNewJob (JobState newTargetLoadState, bool isReadonly, Action job, Action callback, Action cancelCallback) {
+    public virtual void StartNewJob (JobState newTargetLoadState, bool isReadonly, Action job, Action callback, Action cancelCallback, bool runImidialty) {
         if(newTargetLoadState != JobState.Saving) {
             targetLoadState = newTargetLoadState;
         }
@@ -198,8 +198,8 @@ public class ChunkJobManager : ThreadedJobManager {
         this.position = position;
     }
     
-    public override void StartNewJob (JobState newTargetLoadState, bool isReadonly, Action job, Action callback, Action cancelCallback) {
-        base.StartNewJob(newTargetLoadState, isReadonly, job, callback, cancelCallback);
+    public override void StartNewJob (JobState newTargetLoadState, bool isReadonly, Action job, Action callback, Action cancelCallback, bool runImidialty) {
+        base.StartNewJob(newTargetLoadState, isReadonly, job, callback, cancelCallback, runImidialty);
         
         if(jobs.Count > 0) {
             ThreadedJob newJob = new ThreadedJob(job, callback, cancelCallback, this, newTargetLoadState, isReadonly);
@@ -215,7 +215,7 @@ public class ChunkJobManager : ThreadedJobManager {
                 if(jobs[i].isReadonly == isReadonly) {
                     onlyOtherReadMode = false;
 
-                    if(jobs[i].IsCancelled()) {
+                    if(jobs[i].IsCancelled) {
                         continue;
                     } else if(jobs[i].loadState == JobState.Unloaded && newTargetLoadState == JobState.Loaded) {
                         jobs.Add(newJob);
@@ -246,12 +246,20 @@ public class ChunkJobManager : ThreadedJobManager {
             if(onlyOtherReadMode) {
                 Debug.Log("Only in other read mode");
                 jobs.Add(newJob);
-                newJob.Run();
+                if(TerrainManager.inst == null || runImidialty) {
+                    newJob.Run();
+                } else {
+                    TerrainManager.inst.EnqueueJobToRun(newJob);
+                }
             }
         } else {
             ThreadedJob newJob = new ThreadedJob(job, callback, cancelCallback, this, newTargetLoadState, isReadonly);
             jobs.Add(newJob);
-            newJob.Run();
+            if(TerrainManager.inst == null || runImidialty) {
+                newJob.Run();
+            } else {
+                TerrainManager.inst.EnqueueJobToRun(newJob);
+            }
         }
     }
 
@@ -277,8 +285,8 @@ public class EntityJobManager : ThreadedJobManager {
         this.uid = uid;
     }
 
-    public override void StartNewJob (JobState newTargetLoadState, bool isReadonly, Action job, Action callback, Action cancelCallback) {
-        base.StartNewJob(newTargetLoadState, isReadonly, job, callback, cancelCallback);
+    public override void StartNewJob (JobState newTargetLoadState, bool isReadonly, Action job, Action callback, Action cancelCallback, bool runImidialty) {
+        base.StartNewJob(newTargetLoadState, isReadonly, job, callback, cancelCallback, runImidialty);
 
         if(jobs.Count > 0) {
             ThreadedJob newJob = new ThreadedJob(job, callback, cancelCallback, this, newTargetLoadState, isReadonly);
@@ -288,7 +296,7 @@ public class EntityJobManager : ThreadedJobManager {
                 if(jobs[i].isReadonly == isReadonly) {
                     onlyOtherReadMode = false;
 
-                    if(jobs[i].IsCancelled()) {
+                    if(jobs[i].IsCancelled) {
                         continue;
                     } else if(jobs[i].loadState == JobState.Unloaded && newTargetLoadState == JobState.Loaded) {
                         jobs.Add(newJob);
@@ -317,14 +325,21 @@ public class EntityJobManager : ThreadedJobManager {
                 }
             }
             if(onlyOtherReadMode) {
-                Debug.Log("Only in other read mode");
                 jobs.Add(newJob);
-                newJob.Run();
+                if(TerrainManager.inst == null || runImidialty) {
+                    newJob.Run();
+                } else {
+                    TerrainManager.inst.EnqueueJobToRun(newJob);
+                }
             }
         } else {
             ThreadedJob newJob = new ThreadedJob(job, callback, cancelCallback, this, newTargetLoadState, isReadonly);
             jobs.Add(newJob);
-            newJob.Run();
+            if(TerrainManager.inst == null || runImidialty) {
+                newJob.Run();
+            } else {
+                TerrainManager.inst.EnqueueJobToRun(newJob);
+            }
         }
     }
 
@@ -380,6 +395,11 @@ public class ThreadedJob {
     }
 
     public void Run () {
+        if(IsCancelled) {
+            RunCallbacks(true);
+            return;
+        }
+
         isRunning = true;
         ThreadPool.QueueUserWorkItem((n) => {
             try {
@@ -414,8 +434,10 @@ public class ThreadedJob {
         }
     }
 
-    public bool IsCancelled () {
-        return cancelFlag;
+    public bool IsCancelled {
+        get {
+            return cancelFlag;
+        }
     }
 
     public bool IsRunning () {

@@ -176,8 +176,8 @@ public class EntityManager : MonoBehaviour {
         StartNewChunkJobAt(
             uid, 
             JobState.Loaded, 
-            GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly,
-            null, null, null
+            GameManager.inst.currentDataLoadMode == DataLoadMode.Readonly, // Consider this job a readonly even if we don't know if it will fail
+            null, null, null, true
         );
 
         return entity;
@@ -194,7 +194,7 @@ public class EntityManager : MonoBehaviour {
         StartNewChunkJobAt(
             uid,
             JobState.Loaded,
-            GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly,
+            GameManager.inst.currentDataLoadMode == DataLoadMode.DefaultElseReadonly,
             () => { // JOB
                 if(!WorldSaving.inst.LoadEntityFile(uid, gid, entityData, GameManager.inst.currentDataLoadMode)) {
                     return;
@@ -213,7 +213,8 @@ public class EntityManager : MonoBehaviour {
             },
             () => { //CALLBACK IF CANCELED
                 unusedEntityData[gid].Enqueue(entityData);
-            }
+            },
+            false
         );
     }
     #endregion
@@ -252,7 +253,7 @@ public class EntityManager : MonoBehaviour {
         StartNewChunkJobAt(
             entity.entityData.uid,
             JobState.Unloaded,
-            GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly,
+            GameManager.inst.currentDataLoadMode == DataLoadMode.DefaultElseReadonly,
             () => { // JOB
                 if(save) {
                     WorldSaving.inst.SaveEntity(entity);
@@ -270,15 +271,16 @@ public class EntityManager : MonoBehaviour {
             },
             () => { //CALLBACK IF CANCELED
 
-            }
+            },
+            runImidialty: false
         );
     }
 
-    public void SaveEntity (Entity entity) {
+    public void SaveEntity (Entity entity, bool runImidialty) {
         StartNewChunkJobAt(
             entity.entityData.uid,
             JobState.Saving,
-            GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly,
+            GameManager.inst.currentDataLoadMode == DataLoadMode.DefaultElseReadonly,
             () => { // JOB
                 WorldSaving.inst.SaveEntity(entity);
             },
@@ -287,7 +289,8 @@ public class EntityManager : MonoBehaviour {
             },
             () => { //CALLBACK IF CANCELED
 
-            }
+            },
+            runImidialty
         );
         
     }
@@ -302,14 +305,14 @@ public class EntityManager : MonoBehaviour {
         }
     }
 
-    public void StartNewChunkJobAt (int uid, JobState newLoadState, bool isReadonly, Action job, Action callback, Action cancelCallback) {
+    public void StartNewChunkJobAt (int uid, JobState newLoadState, bool isReadonly, Action job, Action callback, Action cancelCallback, bool runImidialty) {
         if(entityJobManagers.TryGetValue(uid, out EntityJobManager cjm)) {
-            cjm.StartNewJob(newLoadState, isReadonly, job, callback, cancelCallback);
+            cjm.StartNewJob(newLoadState, isReadonly, job, callback, cancelCallback, runImidialty);
         } else {
             EntityJobManager newCjm = new EntityJobManager(uid);
             entityJobManagers.Add(uid, newCjm);
             if(job != null) {
-                newCjm.StartNewJob(newLoadState, isReadonly, job, callback, cancelCallback);
+                newCjm.StartNewJob(newLoadState, isReadonly, job, callback, cancelCallback, runImidialty);
             } else if(newLoadState != JobState.Saving) {
                 newCjm.targetLoadState = newLoadState;
             }

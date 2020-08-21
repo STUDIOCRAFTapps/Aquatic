@@ -27,9 +27,9 @@ public class SavesMenuManager : MonoBehaviour {
     public static SavesMenuManager inst;
 
     public const string savesFolder = "saves";
+    public const string backupsFolder = "backups";
     public const string infoFile = "worldInfo.wdat";
-    public const string authorizedCharsString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-    public static readonly string[] newNames = { "_new","_newest","_the_final_one","_newer","_version42","_the_only_one","_2" };
+    
 
     public int selectedAikanID = 0;
     public int prevAikanUIID = 0;
@@ -38,7 +38,8 @@ public class SavesMenuManager : MonoBehaviour {
     StringBuilder sb;
     char s; // Separator char
     string datapath;
-    string saveFileDirectory;
+    string allSavesFolderDirectory;
+    string allBackupsFolderDirectory;
 
     private void Awake () {
         bool isNetworkManagerLoaded = false;
@@ -54,19 +55,21 @@ public class SavesMenuManager : MonoBehaviour {
 
         inst = this;
 
-        s = Path.DirectorySeparatorChar;
         datapath = Application.persistentDataPath;
+        s = Path.DirectorySeparatorChar;
         sb = new StringBuilder();
         bf = new BinaryFormatter();
 
-        saveFileDirectory = datapath + s + savesFolder;
+        allSavesFolderDirectory = datapath + s + savesFolder;
+        allBackupsFolderDirectory = datapath + s + backupsFolder;
 
         LoadAllSaveDisplay();
     }
 
-    #region SaveFileDisplayLoaders
+    #region Save Display Loaders
+    // Loads all save displays present in the save folder
     void LoadAllSaveDisplay () {
-        string[] allSavesDir = Directory.GetDirectories(saveFileDirectory);
+        string[] allSavesDir = Directory.GetDirectories(allSavesFolderDirectory);
         List<DirectoryInfo> allSaveDirInfo = new List<DirectoryInfo>();
         foreach(string dir in allSavesDir) {
             allSaveDirInfo.Add(new DirectoryInfo(dir));
@@ -78,8 +81,9 @@ public class SavesMenuManager : MonoBehaviour {
         }
     }
 
-    public void LoadSaveDisplay (string saveFolderPath) {
-        string saveFileDataDir = Path.Combine(saveFolderPath, infoFile);
+    // Loads a save given the path
+    public void LoadSaveDisplay (string saveFolderDir) {
+        string saveFileDataDir = Path.Combine(saveFolderDir, infoFile);
         SaveFileData saveFileData = null;
 
         if(File.Exists(saveFileDataDir)) {
@@ -91,7 +95,7 @@ public class SavesMenuManager : MonoBehaviour {
                 }
             }
             if(saveFileData != null) {
-                string folderName = new DirectoryInfo(saveFolderPath).Name;
+                string folderName = new DirectoryInfo(saveFolderDir).Name;
                 if(saveFileData.folderName != folderName) {
                     saveFileData.folderName = folderName;
 
@@ -104,13 +108,10 @@ public class SavesMenuManager : MonoBehaviour {
             saveFileData = new SaveFileData() {
                 aikonId = 0,
                 currentChaptre = 0,
-                folderName = new DirectoryInfo(saveFolderPath).Name,
-                fullName = "New Save File",
-                goldenShellsCollected = 0,
-                goldenShellsTotal = 0,
-                shellsCollected = 0,
-                shellsTotal = 0
+                folderName = new DirectoryInfo(saveFolderDir).Name,
+                fullName = "New Save File"
             };
+            saveFileData.LoadFolderName(allSavesFolderDirectory, allBackupsFolderDirectory);
             using(FileStream fs = new FileStream(saveFileDataDir, FileMode.Create)) {
                 try {
                     bf.Serialize(fs, saveFileData);
@@ -135,21 +136,12 @@ public class SavesMenuManager : MonoBehaviour {
 
     public void CreateWorld () {
         string worldName = worldNameInputField.text;
-        string newSaveFolderPath = Path.Combine(saveFileDirectory, CreateFolderNameFromWorldName(worldName));
-
-        Directory.CreateDirectory(newSaveFolderPath);
-        string saveInfoFilePath = Path.Combine(newSaveFolderPath, infoFile);
 
         SaveFileData saveFileData = new SaveFileData() {
-            aikonId = selectedAikanID,
-            currentChaptre = 0,
-            folderName = new DirectoryInfo(newSaveFolderPath).Name,
             fullName = worldName,
-            goldenShellsCollected = 0,
-            goldenShellsTotal = 0,
-            shellsCollected = 0,
-            shellsTotal = 0
+            aikonId = selectedAikanID
         };
+        saveFileData.GenerateFolderName(allSavesFolderDirectory, allBackupsFolderDirectory);
         using(FileStream fs = new FileStream(saveInfoFilePath, FileMode.Create)) {
             try {
                 bf.Serialize(fs, saveFileData);
@@ -174,30 +166,6 @@ public class SavesMenuManager : MonoBehaviour {
         } else {
             PromptConfigurator.QueuePromptText("Invalid Adress", "The ip you requested is not valid. Try verifying if the port has the correct \":\" symbol.");
         }
-    }
-    #endregion
-
-    #region Utils
-    public string CreateFolderNameFromWorldName (string worldName) {
-        sb.Clear();
-        foreach(char c in worldName) {
-            if(authorizedCharsString.Contains(c)) {
-                sb.Append(c);
-            } else if(char.IsWhiteSpace(c)) {
-                sb.Append('_');
-            }
-        }
-
-        string saveFolderPath = sb.ToString();
-        while(true) {
-            if(!Directory.Exists(Path.Combine(saveFileDirectory,saveFolderPath))) {
-                break;
-            } else {
-                saveFolderPath += newNames[Random.Range(0, newNames.Length)];
-            }
-        }
-
-        return saveFolderPath;
     }
     #endregion
 }

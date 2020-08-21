@@ -13,7 +13,11 @@ using MLAPI.Serialization.Pooled;
 using MLAPI.Serialization;
 
 public enum DataLoadMode {
-    TryReadonly,
+    DefaultElseReadonly,
+    Readonly
+}
+
+public enum DataSaveMode {
     Default,
     Readonly
 }
@@ -225,22 +229,20 @@ public class WorldSaving : MonoBehaviour {
 
     #region Front-End Functions
     #region Save
-    public void SaveChunk (DataChunk source, bool useReadonlyPath) {
+    public void SaveChunk (DataChunk source, DataSaveMode saveMode) {
         if(clientMode) {
             return;
         }
 
         //Serialize and save.
-        PooledBitStream bitStream = ThreadSafeBitStream.GetStreamSafe();
-        PooledBitWriter bw = ThreadSafeBitStream.GetWriterSafe(bitStream);
-        SerializeToStream(bw, source);
+        using(MPooledBitStream bitStream = MPooledBitStream.Get())
+        using(MPooledBitWriter bw = MPooledBitWriter.Get(bitStream)) {
+            SerializeToStream(bw, source);
 
-        using(FileStream fs = new FileStream(GetChunkDirectory(source, useReadonlyPath), FileMode.Create)) {
-            fs.Write(bitStream.GetBuffer(), 0, (int)bitStream.Length);
+            using(FileStream fs = new FileStream(GetChunkDirectory(source, saveMode == DataSaveMode.Readonly), FileMode.Create)) {
+                fs.Write(bitStream.GetBuffer(), 0, (int)bitStream.Length);
+            }
         }
-
-        bw.DisposeWriterSafe();
-        bitStream.DisposeStreamSafe();
     }
 
     public void WriteChunkToNetworkStream (DataChunk dataChunk, PooledBitWriter writer) {
@@ -253,16 +255,14 @@ public class WorldSaving : MonoBehaviour {
         }
 
         //Serialize and save.
-        PooledBitStream bitStream = ThreadSafeBitStream.GetStreamSafe();
-        PooledBitWriter bw = ThreadSafeBitStream.GetWriterSafe(bitStream);
-        SerializeToStream(bw, dataChunk);
+        using(MPooledBitStream bitStream = MPooledBitStream.Get())
+        using(MPooledBitWriter bw = MPooledBitWriter.Get(bitStream)) {
+            SerializeToStream(bw, dataChunk);
 
-        using(FileStream fs = new FileStream(GetChunkDirectory(dataChunk, false), FileMode.Create)) {
-            fs.Write(bitStream.GetBuffer(), 0, (int)bitStream.Length);
+            using(FileStream fs = new FileStream(GetChunkDirectory(dataChunk, false), FileMode.Create)) {
+                fs.Write(bitStream.GetBuffer(), 0, (int)bitStream.Length);
+            }
         }
-
-        bw.DisposeWriterSafe();
-        bitStream.DisposeStreamSafe();
     }
 
     public void SaveEntity (Entity entity) {
@@ -319,37 +319,36 @@ public class WorldSaving : MonoBehaviour {
             return false;
         }
 
+
         // The destination chunk should already have been cleaned and thus, 
         // its position should be correct and it can be passed to the GetChunkDirectory function.
         string chunkPath = string.Empty;
-        if(loadMode == DataLoadMode.Default || loadMode == DataLoadMode.TryReadonly)
+        if(loadMode == DataLoadMode.DefaultElseReadonly)
             chunkPath = GetChunkDirectory(dataChunk, false);
         if(loadMode == DataLoadMode.Readonly)
             chunkPath = GetChunkDirectory(dataChunk, true);
 
         bool hasSucceded;
+        // If default fails, try readonly
         if(!File.Exists(chunkPath)) {
-            if(loadMode == DataLoadMode.TryReadonly) {
+            if(loadMode == DataLoadMode.DefaultElseReadonly) {
                 return LoadChunkFile(dataChunk, DataLoadMode.Readonly);
             } else {
                 return false;
             }
         } else {
             try {
-                PooledBitStream bitStream = ThreadSafeBitStream.GetStreamSafe();
-
-                byte[] buffer = GetByteBuffer();
-                using(FileStream fs = new FileStream(chunkPath, FileMode.Open)) {
-                    fs.Read(buffer, 0, (int)fs.Length);
-                    bitStream.Write(buffer, 0, (int)fs.Length);
-                    bitStream.Position = 0;
+                using(MPooledBitStream bitStream = MPooledBitStream.Get()) {
+                    byte[] buffer = GetByteBuffer();
+                    using(FileStream fs = new FileStream(chunkPath, FileMode.Open)) {
+                        fs.Read(buffer, 0, (int)fs.Length);
+                        bitStream.Write(buffer, 0, (int)fs.Length);
+                        bitStream.Position = 0;
+                    }
+                    ReturnByteBuffer(buffer);
+                    using(MPooledBitReader bw = MPooledBitReader.Get(bitStream))
+                        hasSucceded = DeserializeFromStream(bw, dataChunk);
                 }
-                ReturnByteBuffer(buffer);
-                PooledBitReader bw = ThreadSafeBitStream.GetReaderSafe(bitStream);
-                hasSucceded = DeserializeFromStream(bw, dataChunk);
-
-                bw.DisposeReaderSafe();
-                bitStream.DisposeStreamSafe();
 
             } catch(Exception e) {
                 Debug.Log("Failed to load chunk: " + e.ToString());
@@ -362,7 +361,7 @@ public class WorldSaving : MonoBehaviour {
             //File.Delete(chunkPath);
         }
 
-        if(!hasSucceded && loadMode == DataLoadMode.TryReadonly) {
+        if(!hasSucceded && loadMode == DataLoadMode.DefaultElseReadonly) {
             return LoadChunkFile(dataChunk, DataLoadMode.Readonly);
         } else {
             return hasSucceded;
@@ -370,7 +369,6 @@ public class WorldSaving : MonoBehaviour {
     }
 
     public bool ReadChunkFromNetworkStream (DataChunk dataChunk, PooledBitReader reader) {
-        
         bool hasSucceded = DeserializeFromNetworkStream(reader, dataChunk);
         return hasSucceded;
     }
@@ -383,31 +381,30 @@ public class WorldSaving : MonoBehaviour {
         // The destination chunk should already have been cleaned and thus, 
         // its position should be correct and it can be passed to the GetChunkDirectory function.
         string chunkPath = string.Empty;
-        if(loadMode == DataLoadMode.Default || loadMode == DataLoadMode.TryReadonly)
+        if(loadMode == DataLoadMode.DefaultElseReadonly)
             chunkPath = GetMobileChunkDirectory(dataChunk, false);
         if(loadMode == DataLoadMode.Readonly)
             chunkPath = GetMobileChunkDirectory(dataChunk, true);
 
         bool hasSucceded;
         if(!File.Exists(chunkPath)) {
-            if(loadMode == DataLoadMode.TryReadonly) {
+            if(loadMode == DataLoadMode.DefaultElseReadonly) {
                 return LoadMobileChunkFile(dataChunk, DataLoadMode.Readonly);
             } else {
                 return false;
             }
         } else {
-            PooledBitStream bitStream = ThreadSafeBitStream.GetStreamSafe();
-            PooledBitReader bw = ThreadSafeBitStream.GetReaderSafe(bitStream);
-
-            hasSucceded = DeserializeFromStream(bw, dataChunk);
-            byte[] buffer = GetByteBuffer();
-            using(FileStream fs = new FileStream(chunkPath, FileMode.Open)) {
-                fs.Write(bitStream.GetBuffer(), 0, (int)fs.Length);
+            using(MPooledBitStream bitStream = MPooledBitStream.Get()) {
+                byte[] buffer = GetByteBuffer();
+                using(FileStream fs = new FileStream(chunkPath, FileMode.Open)) {
+                    fs.Read(buffer, 0, (int)fs.Length);
+                    bitStream.Write(buffer, 0, (int)fs.Length);
+                    bitStream.Position = 0;
+                }
+                ReturnByteBuffer(buffer);
+                using(MPooledBitReader bw = MPooledBitReader.Get(bitStream))
+                    hasSucceded = DeserializeFromStream(bw, dataChunk);
             }
-            ReturnByteBuffer(buffer);
-
-            bw.DisposeReaderSafe();
-            bitStream.DisposeStreamSafe();
         }
         
         if(!hasSucceded) {
@@ -415,7 +412,7 @@ public class WorldSaving : MonoBehaviour {
             File.Delete(chunkPath);
         }
 
-        if(!hasSucceded && loadMode == DataLoadMode.TryReadonly) {
+        if(!hasSucceded && loadMode == DataLoadMode.DefaultElseReadonly) {
             return LoadMobileChunkFile(dataChunk, DataLoadMode.Readonly);
         } else {
             return hasSucceded;
@@ -430,14 +427,14 @@ public class WorldSaving : MonoBehaviour {
         // The destination chunk should already have been cleaned and thus, 
         // its position should be correct and it can be passed to the GetChunkDirectory function.
         string entityPath = string.Empty;
-        if(loadMode == DataLoadMode.Default || loadMode == DataLoadMode.TryReadonly)
+        if(loadMode == DataLoadMode.DefaultElseReadonly)
             entityPath = GetEntityDirectory(uid, false);
         if(loadMode == DataLoadMode.Readonly)
             entityPath = GetEntityDirectory(uid, true);
 
         bool hasSucceded;
         if(!File.Exists(entityPath)) {
-            if(loadMode == DataLoadMode.TryReadonly) {
+            if(loadMode == DataLoadMode.DefaultElseReadonly) {
                 return LoadEntityFile(uid, gid, entityData, DataLoadMode.Readonly);
             } else {
                 entityData = null;
@@ -461,7 +458,7 @@ public class WorldSaving : MonoBehaviour {
             Debug.LogError($"An entity with uid {uid} failed to be deserialized. Its file was deleted.");
             File.Delete(entityPath);
         }
-        if(!hasSucceded && loadMode == DataLoadMode.TryReadonly) {
+        if(!hasSucceded && loadMode == DataLoadMode.DefaultElseReadonly) {
             return LoadEntityFile(uid, gid, entityData, DataLoadMode.Readonly);
         } else {
             return hasSucceded;
@@ -475,14 +472,14 @@ public class WorldSaving : MonoBehaviour {
         }
 
         string regionPath = string.Empty;
-        if(loadMode == DataLoadMode.Default || loadMode == DataLoadMode.TryReadonly)
+        if(loadMode == DataLoadMode.DefaultElseReadonly)
             regionPath = GetRegionDirectory(entityRegion, false);
         if(loadMode == DataLoadMode.Readonly)
             regionPath = GetRegionDirectory(entityRegion, true);
 
         bool hasSucceded;
         if(!File.Exists(regionPath)) {
-            if(loadMode == DataLoadMode.TryReadonly) {
+            if(loadMode == DataLoadMode.DefaultElseReadonly) {
                 return LoadRegionFile(entityRegion, DataLoadMode.Readonly);
             } else {
                 return false;
@@ -509,7 +506,7 @@ public class WorldSaving : MonoBehaviour {
             File.Delete(regionPath);
         }
 
-        if(!hasSucceded && loadMode == DataLoadMode.TryReadonly) {
+        if(!hasSucceded && loadMode == DataLoadMode.DefaultElseReadonly) {
             return LoadRegionFile(entityRegion, DataLoadMode.Readonly);
         } else {
             return hasSucceded;

@@ -78,12 +78,27 @@ public class GameManager : MonoBehaviour {
     }
 
     public DataLoadMode currentDataLoadMode {
-        private set => currentDataLoadMode = value;
         get {
             if(engineMode == EngineModes.Play) {
-                return DataLoadMode.TryReadonly;
+                return DataLoadMode.DefaultElseReadonly;
+            } else if(engineMode == EngineModes.Edit) {
+                return DataLoadMode.Readonly;
+            } else {
+                return DataLoadMode.Readonly;
             }
-            return DataLoadMode.Default;
+            
+        }
+    }
+
+    public DataSaveMode currentDataSaveMode {
+        get {
+            if(engineMode == EngineModes.Play) {
+                return DataSaveMode.Default;
+            } else if(engineMode == EngineModes.Edit) {
+                return DataSaveMode.Readonly;
+            } else {
+                return DataSaveMode.Default;
+            }
         }
     }
     #endregion
@@ -117,6 +132,8 @@ public class GameManager : MonoBehaviour {
 
     #region Saving
     public void AutoSaves () {
+        DataSaveMode dataSaveMode = currentDataSaveMode;
+
         foreach(KeyValuePair<long, DataChunk> kvp in TerrainManager.inst.chunks) {
             if(Time.time - kvp.Value.timeOfLastAutosave > autoSaveTimeLimit) {
                 kvp.Value.timeOfLastAutosave = Time.time;
@@ -124,16 +141,17 @@ public class GameManager : MonoBehaviour {
                 TerrainManager.inst.StartNewChunkJobAt(
                     kvp.Value.chunkPosition,
                     JobState.Saving,
-                    currentDataLoadMode == DataLoadMode.TryReadonly,
+                    currentDataSaveMode == DataSaveMode.Readonly,
                     () => { // JOB
-                        WorldSaving.inst.SaveChunk(kvp.Value, currentDataLoadMode == DataLoadMode.TryReadonly);
+                        WorldSaving.inst.SaveChunk(kvp.Value, dataSaveMode);
                     },
                     () => { // CALLBACK
 
                     },
                     () => { // CALLBACK IF CANCELLED
 
-                    }
+                    },
+                    runImidialty: false
                 );
 
                 //WorldSaving.inst.SaveChunk(kvp.Value, currentDataLoadMode == DataLoadMode.TryReadonly);
@@ -148,7 +166,7 @@ public class GameManager : MonoBehaviour {
         foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
             if(Time.time - kvp.Value.entityData.timeOfLastAutosave > autoSaveTimeLimit) {
                 kvp.Value.entityData.timeOfLastAutosave = Time.time;
-                EntityManager.inst.SaveEntity(kvp.Value);
+                EntityManager.inst.SaveEntity(kvp.Value, false);
             }
         }
         foreach(PlayerController pc in allPlayers) {
@@ -165,13 +183,13 @@ public class GameManager : MonoBehaviour {
             return;
         }
         foreach(KeyValuePair<long, DataChunk> kvp in TerrainManager.inst.chunks) {
-            WorldSaving.inst.SaveChunk(kvp.Value, currentDataLoadMode == DataLoadMode.TryReadonly);
+            WorldSaving.inst.SaveChunk(kvp.Value, currentDataSaveMode);
         }
         foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
             WorldSaving.inst.SaveMobileChunk(kvp.Value.mobileDataChunk);
         }
         foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
-            EntityManager.inst.SaveEntity(kvp.Value);
+            EntityManager.inst.SaveEntity(kvp.Value, true);
         }
         foreach(PlayerController pc in allPlayers) {
             WorldSaving.inst.SavePlayer(pc.status, 0);
@@ -181,7 +199,7 @@ public class GameManager : MonoBehaviour {
 
     public void CompleteEntitySave () {
         foreach(KeyValuePair<int, Entity> kvp in EntityManager.inst.entitiesByUID) {
-            EntityManager.inst.SaveEntity(kvp.Value);
+            EntityManager.inst.SaveEntity(kvp.Value, true);
         }
         foreach(KeyValuePair<int, MobileChunk> kvp in VisualChunkManager.inst.mobileChunkPool) {
             WorldSaving.inst.SaveMobileChunk(kvp.Value.mobileDataChunk);

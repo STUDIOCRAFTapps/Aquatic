@@ -40,7 +40,7 @@ public class CollectableTileAsset : BaseTileAsset {
 
 
     public virtual void OnCollect (int x, int y) {
-        TerrainManager.inst.SetGlobalIDAt(x, y, TerrainLayers.Ground, 0);
+        TerrainManager.inst.SetGlobalIDAt(x, y, TerrainLayers.Ground, 0, null, true);
         ParticleManager.inst.PlayTileBreak(new Vector2Int(x, y), this);
     }
 }

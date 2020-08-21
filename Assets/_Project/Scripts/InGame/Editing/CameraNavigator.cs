@@ -42,6 +42,7 @@ public class CameraNavigator : MonoBehaviour {
 
     private void OnPostRender () {
         OnRevertLerpEvent?.Invoke();
+        OnPostRevertLerpEvent?.Invoke();
     }
     #endregion
 
@@ -88,7 +89,7 @@ public class CameraNavigator : MonoBehaviour {
 
         if(playerFollowMode) {
             maintainedVelocity = Vector2.zero;
-            transform.position = new Vector3(playerCenter.parent.position.x, playerCenter.parent.position.y, transform.position.z);
+            transform.position = new Vector3(playerCenter.position.x, playerCenter.position.y, transform.position.z);
 
             zoomIn = true;
         } else {
@@ -99,6 +100,7 @@ public class CameraNavigator : MonoBehaviour {
     private void LateUpdate () {
         OnApplyLerpEvent?.Invoke();
         PostLerpCameraUpdate();
+        OnPostApplyLerpEvent?.Invoke();
     }
 
     public void CalculateResolution () {

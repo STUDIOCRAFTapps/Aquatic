@@ -37,6 +37,14 @@ public class BackgroundManager : MonoBehaviour {
         CreateLayers();
         RearangeLayers();
         previousCamSize = GetCamSize();
+
+        CameraNavigator.inst.OnPostApplyLerpEvent += RearangeLayers;
+    }
+
+    private void OnDestroy () {
+        if(CameraNavigator.inst != null) {
+            CameraNavigator.inst.OnPostApplyLerpEvent -= RearangeLayers;
+        }
     }
 
     void Update () {
@@ -44,8 +52,6 @@ public class BackgroundManager : MonoBehaviour {
         if(!Mathf.Approximately(currentCamSize.x, previousCamSize.x) || !Mathf.Approximately(currentCamSize.y, previousCamSize.y)) {
             CreateLayers();
         }
-
-        RearangeLayers();
     }
 
     public void CreateLayers () {

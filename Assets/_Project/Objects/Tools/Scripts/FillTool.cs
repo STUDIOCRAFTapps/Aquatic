@@ -17,8 +17,6 @@ public class FillTool : BaseToolAsset {
             writer.WriteByte((byte)info.layer);
             writer.WriteInt32(info.materialID);
         });
-
-        
     }
 
     public override void OnHold (ToolUseInfo info) {
@@ -46,6 +44,7 @@ public class FillTool : BaseToolAsset {
         Vector2Int currentPos = new Vector2Int(reader.ReadInt32(), reader.ReadInt32());
         TerrainLayers layer = (TerrainLayers)reader.ReadByte();
         int gid = reader.ReadInt32();
+        Debug.Log(gid);
 
         ToolUseInfo info = new ToolUseInfo() {
             currentPos = currentPos,

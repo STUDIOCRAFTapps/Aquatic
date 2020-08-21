@@ -14,7 +14,6 @@ public class ChunkLoader : MonoBehaviour {
     
     // Per chunk data
     public Dictionary<long, ChunkLoadCounter> loadCounters;
-    Dictionary<long, ChunkStateTask> chunkStateTasks;
 
     // Per player data
     public Dictionary<ulong, ChunkLoaderEntity> loaderEntities;
@@ -24,7 +23,6 @@ public class ChunkLoader : MonoBehaviour {
     void Awake () {
         loadCounters = new Dictionary<long, ChunkLoadCounter>();
         loaderEntities = new Dictionary<ulong, ChunkLoaderEntity>();
-        chunkStateTasks = new Dictionary<long, ChunkStateTask>();
 
 
         // If entities have joined before the chunk loader was present, they must be added
@@ -45,27 +43,6 @@ public class ChunkLoader : MonoBehaviour {
     void FixedUpdate () {
         foreach(KeyValuePair<ulong, ChunkLoaderEntity> kvp in loaderEntities) {
             TrackPlayerMovement(kvp.Value);
-        }
-
-        // Will get any task and execute it.
-        for(int t = 0; t < taskPerFrame; t++) {
-            if(chunkStateTasks.Count > 0) {
-                KeyValuePair<long, ChunkStateTask> cst = chunkStateTasks.First();
-                long firstKey = cst.Key;
-
-                // Get any task
-                if(!cst.Value.GetAnyTask(out ulong clientID, out JobState taskObjective)) {
-                    // There's no more task left for this chunk
-                    chunkStateTasks.Remove(firstKey);
-                }
-
-                // Executes the task
-                if(taskObjective == JobState.Loaded) {
-                    LoadChunkAt(clientID, cst.Value.position);
-                } else {
-                    UnloadChunkAt(clientID, cst.Value.position);
-                }
-            }
         }
     }
     #endregion
@@ -94,25 +71,6 @@ public class ChunkLoader : MonoBehaviour {
 
         loaderEntities[clientID].OnRemove();
         loaderEntities.Remove(clientID);
-    }
-    #endregion
-
-
-    #region Managing Chunk Load Task
-    void AddChunkStateTask (ulong clientID, Vector2Int chunkPosition, JobState state) {
-        long key = Hash.longFrom2D(chunkPosition);
-
-        if(!chunkStateTasks.ContainsKey(key)) {
-            chunkStateTasks.Add(key, new ChunkStateTask(chunkPosition));
-        }
-
-        if(state == JobState.Loaded) {
-            Debug.Log("Load: " + chunkPosition);
-        } else {
-            Debug.Log("Unload: " + chunkPosition);
-        }
-
-        chunkStateTasks[key].SetObjective(clientID, state);
     }
     #endregion
 
@@ -271,12 +229,12 @@ public class ChunkLoader : MonoBehaviour {
     void MoveLoadBounds (ChunkLoaderEntity player) {
         ExecuteInNewBoundOnly(player.currentLoadBounds, player.previousLoadBounds, (x, y) => {
             Vector2Int pos = new Vector2Int(x, y);
-            AddChunkStateTask(player.clientID, pos, JobState.Loaded);
+            LoadChunkAt(player.clientID, pos);
         });
 
         ExecuteInOldBoundOnly(player.currentLoadBounds, player.previousLoadBounds, (x, y) => {
             Vector2Int pos = new Vector2Int(x, y);
-            AddChunkStateTask(player.clientID, pos, JobState.Unloaded);
+            UnloadChunkAt(player.clientID, pos);
         });
     }
     #endregion
@@ -305,11 +263,11 @@ public class ChunkLoader : MonoBehaviour {
             DataChunk dataChunk = TerrainManager.inst.GetNewDataChunk(chunkPosition, false);
             DataLoadMode dlm = GameManager.inst.currentDataLoadMode;
             bool needFullRefresh = false;
-
+            
             TerrainManager.inst.StartNewChunkJobAt(
                 chunkPosition,
                 JobState.Loaded,
-                GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly,
+                GameManager.inst.currentDataLoadMode == DataLoadMode.DefaultElseReadonly,
                 () => { // JOB
                     if(!WorldSaving.inst.LoadChunkFile(dataChunk, dlm)) {
                         needFullRefresh = true;
@@ -356,7 +314,8 @@ public class ChunkLoader : MonoBehaviour {
                 },
                 () => { // CALLBACK IF CANCELLED
                     TerrainManager.inst.EnqueueDataChunkToUnusedQueue(dataChunk);
-                }
+                },
+                runImidialty: false
             );
         }
     }   
@@ -384,7 +343,7 @@ public class ChunkLoader : MonoBehaviour {
             }
 
             // The chunk can now be set as loaded
-            TerrainManager.inst.StartNewChunkJobAt(chunkPosition, JobState.Loaded, GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly, null, null, null);
+            TerrainManager.inst.StartNewChunkJobAt(chunkPosition, JobState.Loaded, GameManager.inst.currentDataLoadMode == DataLoadMode.DefaultElseReadonly, null, null, null, true);
             TerrainManager.inst.AddDataChunkToDictionnairy(dataChunk);
 
             // This will take care of calculating the bitmasks.
@@ -398,7 +357,7 @@ public class ChunkLoader : MonoBehaviour {
             loadCounters[key].loaders.Add(clientID);
 
             // The chunk can now be set as loaded
-            TerrainManager.inst.StartNewChunkJobAt(chunkPosition, JobState.Loaded, GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly, null, null, null);
+            TerrainManager.inst.StartNewChunkJobAt(chunkPosition, JobState.Loaded, GameManager.inst.currentDataLoadMode == DataLoadMode.DefaultElseReadonly, null, null, null, true);
             TerrainManager.inst.AddDataChunkToDictionnairy(dataChunk);
 
             // This will take care of calculating the bitmasks.
@@ -424,14 +383,16 @@ public class ChunkLoader : MonoBehaviour {
                     TerrainManager.inst.RemoveDataChunkFromDictionnairy(chunkPosition, false);
                 }
 
+                DataSaveMode dataSaveMode = GameManager.inst.currentDataSaveMode;
+
                 // A new unload job must be send to take care of the rest of the unload process
                 TerrainManager.inst.StartNewChunkJobAt(
                     chunkPosition,
                     JobState.Unloaded,
-                    GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly,
+                    GameManager.inst.currentDataLoadMode == DataLoadMode.DefaultElseReadonly,
                     () => { // JOB
                          if(doSave && dataChunkExist) {
-                            WorldSaving.inst.SaveChunk(dataChunk, GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly);
+                            WorldSaving.inst.SaveChunk(dataChunk, dataSaveMode);
                         }
                     },
                     () => { // CALLBACK
@@ -448,7 +409,8 @@ public class ChunkLoader : MonoBehaviour {
                         }
                         
                         //To verify; should the data chunk be readed to the dictionnairy or not?
-                    }
+                    },
+                    runImidialty: false
                 );
             } else {
                 if(!unloadOnlyMode) {
@@ -467,7 +429,7 @@ public class ChunkLoader : MonoBehaviour {
         // Unload data/visual only if the chunk is present
         if(TerrainManager.inst.chunks.TryGetValue(key, out DataChunk dataChunk)) {
 
-            if(doSave) WorldSaving.inst.SaveChunk(dataChunk, GameManager.inst.currentDataLoadMode == DataLoadMode.TryReadonly);
+            if(doSave) WorldSaving.inst.SaveChunk(dataChunk, GameManager.inst.currentDataSaveMode);
             TerrainManager.inst.RemoveDataChunkFromDictionnairy(chunkPosition, true);
             VisualChunkManager.inst.UnloadChunkAt(chunkPosition);
 
@@ -492,7 +454,6 @@ public class ChunkLoader : MonoBehaviour {
                 kvp.Value.timer.Cancel();
             }
         }
-        chunkStateTasks.Clear();
         loadCounters.Clear();
     }
 
@@ -508,7 +469,7 @@ public class ChunkLoader : MonoBehaviour {
         ExecuteInBound(bound, (x, y) => {
             Vector2Int pos = new Vector2Int(x, y);
 
-            AddChunkStateTask(clientID, pos, JobState.Loaded);
+            LoadChunkAt(clientID, pos);
         });
     }
 
@@ -516,7 +477,7 @@ public class ChunkLoader : MonoBehaviour {
         ExecuteInBound(bound, (x, y) => {
             Vector2Int pos = new Vector2Int(x, y);
 
-            AddChunkStateTask(clientID, pos, JobState.Unloaded);
+            UnloadChunkAt(clientID, pos);
         });
     }
     #endregion
@@ -564,66 +525,6 @@ public class ChunkLoader : MonoBehaviour {
     }
     #endregion
 
-}
-
-/// <summary>
-/// This class is meant to hold multiple chunk state request made for a particuliar chunk,
-/// so the tasks can be delayed without issues.
-/// </summary>
-public class ChunkStateTask {
-    public Vector2Int position { get; private set; }
-    private HashSet<ulong> loadClientsID;
-    private HashSet<ulong> unloadClientsID;
-
-    public ChunkStateTask (Vector2Int position) {
-        this.position = position;
-        loadClientsID = new HashSet<ulong>();
-        unloadClientsID = new HashSet<ulong>();
-    }
-
-    public void SetObjective (ulong clientID, JobState clientTaskObjective) {
-        if(clientTaskObjective == JobState.Saving) {
-            throw new Exception("A saving request cannot by made by a particuliar client.");
-        }
-
-        if(clientTaskObjective == JobState.Loaded) {
-            // When adding a new load task request, the unload request for the same client, if present, must be removed
-            loadClientsID.Add(clientID);
-            unloadClientsID.Remove(clientID);
-        } else if(clientTaskObjective == JobState.Unloaded) {
-            // When adding a new unload task request, the load request for the same client, if present, must be removed
-            unloadClientsID.Add(clientID);
-            loadClientsID.Remove(clientID);
-        }
-    }
-
-    /// <summary>
-    /// Will return any task that needs to be completed
-    /// </summary>
-    /// <param name="clientID">The client that started the task</param>
-    /// <param name="taskObjective">The action that the client asked for</param>
-    /// <returns>Whenever there is anymore task to return</returns>
-    public bool GetAnyTask (out ulong clientID, out JobState taskObjective) {
-        if(loadClientsID.Count > 0) {
-            clientID = loadClientsID.First();
-            taskObjective = JobState.Loaded;
-            loadClientsID.Remove(clientID);
-
-            return (loadClientsID.Count > 0) || (unloadClientsID.Count > 0);
-        }
-        if(unloadClientsID.Count > 0) {
-            clientID = unloadClientsID.First();
-            taskObjective = JobState.Unloaded;
-            unloadClientsID.Remove(clientID);
-
-            return unloadClientsID.Count > 0;
-        }
-
-        Debug.LogError("No task remaining! Did you forget to remove this ChunkStateTask instance from your dictionnairy?");
-        clientID = 0;
-        taskObjective = JobState.Unloaded;
-        return false;
-    }
 }
 
 public class ChunkLoaderEntity {
