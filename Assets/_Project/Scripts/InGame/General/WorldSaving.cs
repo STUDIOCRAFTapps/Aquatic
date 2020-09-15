@@ -80,6 +80,8 @@ public class WorldSaving : MonoBehaviour {
     string regionsReadonlyDatapath;
     string playerDatapath;
 
+    public string currentSaveFolder;
+
     //StringBuilder sb;
     Dictionary<char, byte> charToByte;
     List<string> layerNames;
@@ -114,6 +116,8 @@ public class WorldSaving : MonoBehaviour {
         }
 
         layerNames = Enum.GetNames(typeof(TerrainLayers)).ToList();
+
+        currentSaveFolder = datapath + s + savesFolder + s + saveFolderName;
     }
 
     public void PrepareNewSave (string folderName) {

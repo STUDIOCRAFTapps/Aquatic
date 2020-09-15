@@ -25,7 +25,7 @@ public class SaveFileDisplayItem : MonoBehaviour {
         title.SetText(saveFileData.fullName);
         titleShadow.SetText(saveFileData.fullName);
 
-        aikanImage.sprite = SavesMenuManager.inst.aikansSprites[saveFileData.aikonId];
+        aikanImage.sprite = SavesMenuManager.inst.aikansSprites[saveFileData.aikanId];
 
         StringBuilder sb = new StringBuilder();
         sb.Append("Chapter ");
@@ -53,12 +53,13 @@ public class SaveFileDisplayItem : MonoBehaviour {
     }
 
     public void PlaySaveFileData () {
-        string ip = ((RufflesTransport.RufflesTransport)MLAPI.NetworkingManager.Singleton.NetworkConfig.NetworkTransport).ConnectAddress;
-        string port = ((RufflesTransport.RufflesTransport)MLAPI.NetworkingManager.Singleton.NetworkConfig.NetworkTransport).Port.ToString();
-
         WorldSaving.inst.PrepareNewSave(saveFileData.folderName);
         SceneManager.LoadScene("Main", LoadSceneMode.Single);
 
         NetworkAssistant.inst.StartHost();
+    }
+
+    public void OpenOptionMenu () {
+        SavesMenuManager.inst.OpenOptionMenuFor(saveFileData);
     }
 }

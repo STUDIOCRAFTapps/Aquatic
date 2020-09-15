@@ -16,6 +16,9 @@ public class NetworkAssistant : MonoBehaviour {
 
     public Dictionary<ulong, ServerPlayerData> serverPlayerData = new Dictionary<ulong, ServerPlayerData>();
     public ServerPlayerData clientPlayerDataCopy;
+    
+    public delegate void OnNetworkDataChangedHandler (int count);
+    public event OnNetworkDataChangedHandler OnNetworkDataChanged;
 
     public bool IsServer {
         get {
@@ -52,6 +55,20 @@ public class NetworkAssistant : MonoBehaviour {
             return NetworkingManager.Singleton.LocalClientId;
         }
     }
+
+    public int PlayerCount {
+        get {
+            return NetworkingManager.Singleton.ConnectedClients.Count;
+        }
+    }
+
+    public ushort HostPort {
+        get {
+            return hostPort;
+        }
+    }
+
+    private ushort hostPort;
 
     #region Init & Connection
     private void Start () {
@@ -91,6 +108,8 @@ public class NetworkAssistant : MonoBehaviour {
             serverPlayerData[clientID].permissions.SetHighPermission();
 
             NetworkingManager.Singleton.ConnectedClients[clientID].PlayerObject.GetComponent<LocalPlayer>().SyncPermisionsFromServer(clientID, serverPlayerData[clientID].permissions);
+
+            OnNetworkDataChanged?.Invoke(NetworkingManager.Singleton.ConnectedClients.Count);
         }
     }
 
@@ -105,7 +124,9 @@ public class NetworkAssistant : MonoBehaviour {
                 "Check if the ip is correct, if the server is up or if your firewall is enabled. ",
                 () => {
                     UnityEngine.SceneManagement.SceneManager.LoadScene("SavesMenu");
-                });
+                }
+            );
+            OnNetworkDataChanged?.Invoke(NetworkingManager.Singleton.ConnectedClients.Count);
         }
     }
 
@@ -128,6 +149,10 @@ public class NetworkAssistant : MonoBehaviour {
         string ip = "127.0.0.1";
         ushort port = 7777;
 
+        FindFreePort();
+        OnNetworkDataChanged?.Invoke(PlayerCount);
+        port = hostPort;
+
         transp.ConnectAddress = ip;
         transp.Port = port;
         config.RegisteredScenes.Add("Main");
@@ -144,12 +169,28 @@ public class NetworkAssistant : MonoBehaviour {
         string ip = "127.0.0.1";
         ushort port = 7777;
 
+        FindFreePort();
+        OnNetworkDataChanged?.Invoke(PlayerCount);
+        port = hostPort;
+
         transp.ConnectAddress = ip;
         transp.Port = port;
         config.RegisteredScenes.Add("Main");
         NetworkingManager.Singleton.StartHost(Vector3.zero, Quaternion.identity, true, SpawnManager.GetPrefabHashFromGenerator("LocalPlayer"));
 
         OnClientConnect(ClientID);
+    }
+
+    void FindFreePort () {
+        hostPort = 7778;
+        while(HTTPServerHandler.PortInUse(hostPort)) {
+            hostPort++;
+            if(hostPort > 9999) {
+                throw new System.Exception("NoPortFound");
+                break;
+            }
+        }
+        Debug.Log($"mlapiPort: {hostPort}");
     }
     #endregion
 }

@@ -570,3 +570,18 @@ public struct Bounds2D {
         );
     }
 }
+
+[Serializable]
+public class ServerHttpJsonData {
+    public string message;
+    public int playersConnected;
+    public ushort mlapiPort;
+    public byte[] clientProtectionSalt;
+
+    public ServerHttpJsonData (string message, int playersConnected, ushort mlapiPort, byte[] clientProtectionSalt) {
+        this.message = message;
+        this.playersConnected = playersConnected;
+        this.mlapiPort = mlapiPort;
+        this.clientProtectionSalt = clientProtectionSalt;
+    }
+}

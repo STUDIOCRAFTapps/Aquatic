@@ -5,8 +5,13 @@ using UnityEngine;
 public class AikanSelectionUI : MonoBehaviour {
     public int uiID;
     public int aikanID;
+    public bool inOptions;
 
     public void SelectAikan () {
-        SavesMenuManager.inst.SelectAikan(uiID, aikanID);
+        if(inOptions) {
+            SavesMenuManager.inst.saveOptionMenuManager.SelectAikan(uiID, aikanID);
+        } else {
+            SavesMenuManager.inst.SelectAikan(uiID, aikanID);
+        }
     }
 }

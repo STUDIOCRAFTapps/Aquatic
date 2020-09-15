@@ -43,8 +43,8 @@ public class CameraNavigator : MonoBehaviour {
     private void OnPostRender () {
         OnRevertLerpEvent?.Invoke();
         OnPostRevertLerpEvent?.Invoke();
-    }
-    #endregion
+        }
+        #endregion
 
     private void Awake () {
         inst = this;
