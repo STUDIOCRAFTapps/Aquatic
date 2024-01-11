@@ -1,0 +1,1 @@
+This project (now abandonned) was a 2D tile-base game system. It supported infinite worlds, a built-in stage editor, a play mode/edit mode switching system, dynamic rule-based tile updates, multiplayer and more.
